@@ -1,14 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { SearchBar } from "@/components/SearchBar";
 import { BreedCard } from "@/components/BreedCard";
-import { Button } from "@/components/ui/button";
 import { Loading, LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
-import { Cat, PawPrint, Heart } from "lucide-react";
+import { Cat, PawPrint } from "lucide-react";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,25 +62,12 @@ const Index = () => {
             >
               Discover the perfect feline companion and learn how to bond with them.
             </motion.p>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="mt-6"
-            >
-              <Link to="/adopt">
-                <Button size="lg" className="rounded-full shadow-md hover:shadow-lg">
-                  <Heart className="mr-2" /> Adopt a Cat
-                </Button>
-              </Link>
-            </motion.div>
           </motion.div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
             className="mt-8"
           >
             <SearchBar onSearch={setSearchTerm} />
