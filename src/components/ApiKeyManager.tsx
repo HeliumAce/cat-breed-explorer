@@ -26,7 +26,7 @@ export function ApiKeyManager() {
       toast({
         title: "API Key Saved",
         description: "Your Google Maps API key has been saved. Please refresh the page.",
-        variant: "success",
+        variant: "default", // Changed from "success" to "default" as it's a valid variant
       });
       setOpen(false);
       
