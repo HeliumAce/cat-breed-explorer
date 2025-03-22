@@ -51,7 +51,12 @@ export const useGeolocation = () => {
       maximumAge: 0,
     };
 
-    // Request location
+    setState(prev => ({ ...prev, loading: true }));
+    
+    // Get position immediately
+    navigator.geolocation.getCurrentPosition(geoSuccess, geoError, geoOptions);
+    
+    // And then watch for changes
     const watchId = navigator.geolocation.watchPosition(
       geoSuccess, 
       geoError, 

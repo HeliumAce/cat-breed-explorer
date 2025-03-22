@@ -11,6 +11,7 @@ export function LoadingState() {
     >
       <Loader2 className="h-10 w-10 text-amber-500 animate-spin mb-4" />
       <p className="text-muted-foreground">Finding adoption locations near you...</p>
+      <p className="text-xs text-muted-foreground mt-2">This may take a moment as we calculate distances</p>
     </motion.div>
   );
 }

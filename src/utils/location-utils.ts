@@ -54,6 +54,8 @@ export function updateLocationDistances(
 ) {
   if (!userLat || !userLng) return locations;
 
+  console.log(`Updating distances for ${locations.length} locations using coordinates: ${userLat}, ${userLng}`);
+  
   return locations.map((location) => {
     const distance = calculateDistance(
       userLat,

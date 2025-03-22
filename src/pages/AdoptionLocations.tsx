@@ -36,35 +36,50 @@ const AdoptionLocations = () => {
   // Update location distances when user location changes
   useEffect(() => {
     if (latitude && longitude) {
+      console.log("Applying user location to adoption locations:", latitude, longitude);
+      
       const locationsWithDistances = updateLocationDistances(
         adoptionLocations,
         latitude,
         longitude
       );
+      
       setLocationsData(locationsWithDistances);
       
+      // Apply filters & sorting
+      let result = [...locationsWithDistances];
+      
+      // Apply type filters
+      if (filters.length > 0) {
+        result = result.filter(location => filters.includes(location.type));
+      }
+      
+      // Apply sorting
       if (sortBy === "distance") {
         // Auto-sort by distance when location is available
-        const sorted = [...locationsWithDistances].sort((a, b) => a.distance - b.distance);
-        setFilteredLocations(sorted.slice(0, 10));
-      } else {
-        setFilteredLocations(locationsWithDistances.slice(0, 10));
+        result = result.sort((a, b) => a.distance - b.distance);
+      } else if (sortBy === "name") {
+        result = result.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sortBy === "type") {
+        result = result.sort((a, b) => a.type.localeCompare(b.type));
       }
+      
+      setFilteredLocations(result);
+      setIsLoading(false);
       
       toast.success("Showing locations near you!");
     }
   }, [latitude, longitude]);
 
+  // Re-apply filters and sorting when they change
   useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    // Skip if we don't have location data yet and are using distance sorting
+    if (!userLocation && sortBy === "distance") {
+      return;
+    }
     
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
+    setIsLoading(true);
+    
     // Filter and sort locations based on user selections
     let result = [...locationsData];
     
@@ -88,8 +103,10 @@ const AdoptionLocations = () => {
         break;
     }
     
-    // Display only the first 10 results
-    setFilteredLocations(result.slice(0, 10));
+    setTimeout(() => {
+      setFilteredLocations(result);
+      setIsLoading(false);
+    }, 300);
   }, [sortBy, filters, zipCode, locationsData]);
 
   const handleRequestLocation = () => {
@@ -120,6 +137,9 @@ const AdoptionLocations = () => {
     setFilters([]);
     setZipCode("");
   };
+
+  // Determine if we need to show loading state
+  const showLoading = isLoading || (loading && !locationPermissionAsked);
 
   return (
     <PageTransition>
@@ -168,6 +188,7 @@ const AdoptionLocations = () => {
                 onSortChange={setSortBy}
                 onFilterChange={setFilters}
                 onZipCodeChange={setZipCode}
+                hasUserLocation={!!userLocation}
               />
             </motion.div>
             
@@ -194,7 +215,7 @@ const AdoptionLocations = () => {
                 activeFilters={filters}
               />
               
-              {isLoading ? (
+              {showLoading ? (
                 <LoadingState />
               ) : hasError ? (
                 <ErrorState onRetry={handleRetry} />
