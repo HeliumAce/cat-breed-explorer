@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Map } from "lucide-react";
 import { toast } from "sonner";
+import { useGeolocation } from "@/hooks/use-geolocation";
 
 const mapContainerStyle = {
   width: "100%",
@@ -21,57 +22,120 @@ const MapTest = () => {
   const [apiKey, setApiKey] = useState<string>("");
   const [isKeySubmitted, setIsKeySubmitted] = useState<boolean>(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [loadRetries, setLoadRetries] = useState(0);
+  const location = useGeolocation();
   
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     libraries,
   });
 
-  // Center on Los Angeles by default
-  const center = {
-    lat: 34.052235,
-    lng: -118.243683,
-  };
+  // Use geolocation if available, otherwise default to Los Angeles
+  const center = location.latitude && location.longitude 
+    ? { lat: location.latitude, lng: location.longitude }
+    : { lat: 34.052235, lng: -118.243683 }; // Los Angeles
 
   useEffect(() => {
     // Log the status to help with debugging
     if (isKeySubmitted) {
-      console.log("Map loading status:", { isLoaded, loadError });
+      console.log("Map loading status:", { 
+        isLoaded, 
+        loadError, 
+        mapState: map ? "Map instance created" : "No map instance", 
+        windowGoogleStatus: window.google ? "Google object exists" : "No Google object",
+        currentCenter: center,
+        retryCount: loadRetries
+      });
       
       if (loadError) {
-        toast.error("Failed to load Google Maps with the provided API key.");
+        const errorMessage = loadError instanceof Error 
+          ? loadError.message 
+          : "Unknown error loading maps";
+        
+        console.error("Map load error:", errorMessage);
+        toast.error("Failed to load Google Maps: " + errorMessage);
+        setMapError(errorMessage);
       } else if (isLoaded) {
         toast.success("Google Maps API loaded successfully!");
+        setMapError(null);
+        
+        // Check if the map instance is created after a short delay
+        setTimeout(() => {
+          if (!map && loadRetries < 3) {
+            console.log("Map instance not created yet, forcing re-render");
+            setLoadRetries(prev => prev + 1);
+          }
+        }, 2000);
       }
     }
-  }, [isLoaded, loadError, isKeySubmitted]);
+  }, [isLoaded, loadError, isKeySubmitted, map, center, loadRetries]);
 
   const handleSubmitKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKey.trim()) {
       setIsKeySubmitted(true);
+      setMapError(null);
+      setLoadRetries(0);
       toast.info("Attempting to load Google Maps...");
+      
+      // Force clear previous Google Maps state
+      if (window.google && window.google.maps) {
+        console.log("Clearing previous Google Maps state");
+        // This is a workaround to force reload the API
+        // @ts-ignore - Intentionally modifying window.google for cleanup
+        delete window.google.maps;
+      }
     } else {
       toast.error("Please enter a valid API key");
     }
   };
 
   const onMapLoad = (mapInstance: google.maps.Map) => {
-    console.log("Map loaded successfully");
+    console.log("Map instance loaded successfully", mapInstance);
     setMap(mapInstance);
     
-    // Add a marker to show that the map is working
-    new google.maps.Marker({
-      position: center,
-      map: mapInstance,
-      title: "Los Angeles"
-    });
+    try {
+      // Add a marker to show that the map is working
+      new google.maps.Marker({
+        position: center,
+        map: mapInstance,
+        title: "Your Location"
+      });
+      
+      console.log("Marker added at", center);
+    } catch (err) {
+      console.error("Error adding marker:", err);
+    }
   };
 
   const resetApiKey = () => {
     setIsKeySubmitted(false);
     setApiKey("");
     setMap(null);
+    setMapError(null);
+    setLoadRetries(0);
+  };
+
+  // Handle specific error cases or map initialization issues
+  const renderErrorHelp = () => {
+    if (!mapError) return null;
+    
+    let helpText = "Try checking:";
+    
+    if (mapError.includes("API key")) {
+      helpText += " Is your API key valid and has the Maps JavaScript API enabled?";
+    } else if (mapError.includes("library")) {
+      helpText += " There might be an issue with the Places library. Try again without it.";
+    } else if (mapError.includes("script")) {
+      helpText += " The script failed to load. Check your network connection or try again later.";
+    }
+    
+    return (
+      <div className="mt-3 text-sm text-amber-700">
+        {helpText}
+      </div>
+    );
   };
 
   return (
@@ -116,8 +180,9 @@ const MapTest = () => {
                       <div>
                         <h3 className="font-medium text-red-800">Map failed to load</h3>
                         <p className="text-sm text-red-700 mt-1">
-                          {loadError.message || "There was an error loading Google Maps with your API key. Please check that your key is correct and has the proper permissions."}
+                          {mapError || "There was an error loading Google Maps with your API key. Please check that your key is correct and has the proper permissions."}
                         </p>
+                        {renderErrorHelp()}
                       </div>
                     </div>
                   ) : !isLoaded ? (
