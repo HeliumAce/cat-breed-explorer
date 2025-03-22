@@ -69,8 +69,13 @@ export function useQuiz() {
     setTimeout(() => {
       try {
         if (!breeds || breeds.length === 0) {
-          // If we don't have real breeds data, use mock data
-          setBreedMatches(mockBreedMatches);
+          // Make sure mockBreedMatches have the required description property
+          const validatedMatches: BreedMatch[] = mockBreedMatches.map(match => ({
+            ...match,
+            description: match.description || `The ${match.name} is a wonderful breed that matches your preferences.`,
+            imageUrl: match.imageUrl || undefined
+          }));
+          setBreedMatches(validatedMatches);
         } else {
           // Here we would implement the actual matching algorithm using the real breeds data
           // For now, implement a simple matching algorithm

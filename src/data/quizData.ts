@@ -97,6 +97,7 @@ export const mockBreedMatches = [
     id: "ragdoll",
     name: "Ragdoll",
     matchPercentage: 98,
+    description: "The Ragdoll is known for its docile and placid temperament and affectionate nature. The breed is characterized by large blue eyes and a semi-longhair coat.",
     matchReasons: [
       "Matches your cuddly preferences",
       "Quiet demeanor fits your noise tolerance",
@@ -107,6 +108,7 @@ export const mockBreedMatches = [
     id: "maine-coon",
     name: "Maine Coon",
     matchPercentage: 91,
+    description: "The Maine Coon is one of the largest domesticated cat breeds. It has a distinctive physical appearance and valuable hunting skills.",
     matchReasons: [
       "Social nature matches your interaction style",
       "Good with other pets in your home",
@@ -117,6 +119,7 @@ export const mockBreedMatches = [
     id: "british-shorthair",
     name: "British Shorthair",
     matchPercentage: 87,
+    description: "The British Shorthair is the pedigreed version of the traditional British domestic cat. The breed has a distinctively stocky body, dense coat, and broad face.",
     matchReasons: [
       "Independent but affectionate on their terms",
       "Low maintenance grooming",
