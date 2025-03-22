@@ -3,8 +3,9 @@ import { useState, useCallback, useRef } from "react";
 import { AlertCircle, MapPin } from "lucide-react";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
-import { GOOGLE_MAPS_API_KEY, mapConfig } from "@/config/maps-config";
+import { GOOGLE_MAPS_API_KEY, mapConfig, isValidGoogleMapsApiKey } from "@/config/maps-config";
 import { LocationInfoWindow } from "./LocationInfoWindow";
+import { FallbackMapView } from "./FallbackMapView";
 
 interface GoogleMapViewProps {
   locations: AdoptionLocation[];
@@ -23,7 +24,8 @@ const libraries: ["places"] = ["places"];
 export function GoogleMapView({ locations, userLocation }: GoogleMapViewProps) {
   const [selectedLocation, setSelectedLocation] = useState<AdoptionLocation | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-
+  
+  // Only attempt to load the API if we have a valid key
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
@@ -56,10 +58,30 @@ export function GoogleMapView({ locations, userLocation }: GoogleMapViewProps) {
     }
   }, [locations, userLocation]);
 
-  if (loadError) {
-    return <MapLoadError />;
+  // If no valid API key, show a message about adding an API key
+  if (!isValidGoogleMapsApiKey) {
+    return (
+      <FallbackMapView 
+        locations={locations} 
+        userLocation={userLocation} 
+        error="No Google Maps API key provided. Please add your API key to the environment variables."
+      />
+    );
   }
 
+  // If there's a load error, show the fallback view with the error
+  if (loadError) {
+    console.error("Google Maps load error:", loadError);
+    return (
+      <FallbackMapView 
+        locations={locations} 
+        userLocation={userLocation} 
+        error="Failed to load Google Maps. Please check your API key and network connection."
+      />
+    );
+  }
+
+  // If still loading, show the loading state
   if (!isLoaded) {
     return <MapLoading />;
   }
@@ -81,7 +103,7 @@ export function GoogleMapView({ locations, userLocation }: GoogleMapViewProps) {
         <Marker
           position={userLocation}
           icon={{
-            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+            url: mapConfig.markerIcons.user,
             scaledSize: new window.google.maps.Size(40, 40),
           }}
           title="Your Location"
@@ -115,22 +137,6 @@ export function GoogleMapView({ locations, userLocation }: GoogleMapViewProps) {
   );
 }
 
-function MapLoadError() {
-  return (
-    <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
-      <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
-      <div className="flex flex-col">
-        <span className="font-semibold">Error loading Google Maps</span>
-        <span className="text-xs mt-1">
-          {GOOGLE_MAPS_API_KEY 
-            ? "Check your API key configuration or network connection." 
-            : "No Google Maps API key provided. Set the VITE_GOOGLE_MAPS_API_KEY environment variable."}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function MapLoading() {
   return (
     <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
@@ -141,14 +147,5 @@ function MapLoading() {
 }
 
 function getMarkerIcon(type: string) {
-  switch (type) {
-    case "shelter":
-      return "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
-    case "humane_society":
-      return "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
-    case "pet_store":
-      return "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
-    default:
-      return "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
-  }
+  return mapConfig.markerIcons[type as keyof typeof mapConfig.markerIcons] || mapConfig.markerIcons.default;
 }
