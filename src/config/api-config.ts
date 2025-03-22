@@ -6,7 +6,7 @@ export const API_URL = 'https://api.thecatapi.com/v1';
 // Fallback image map for specific breeds that have issues with their images
 export const FALLBACK_IMAGES: Record<string, string> = {
   'ebur': 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=800', // European Burmese
-  'jbob': 'https://cdn2.thecatapi.com/images/xoI_fJqy7.jpg', // Japanese Bobtail
+  'jbob': 'https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=800', // Japanese Bobtail - Updated image URL
   'mala': 'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800', // Malayan
 };
 
