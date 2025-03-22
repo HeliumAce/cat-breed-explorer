@@ -1,11 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import { useJsApiLoader, GoogleMap, Marker } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Map } from "lucide-react";
+import { toast } from "sonner";
 
 const mapContainerStyle = {
   width: "100%",
@@ -19,23 +20,58 @@ const libraries: ["places"] = ["places"];
 const MapTest = () => {
   const [apiKey, setApiKey] = useState<string>("");
   const [isKeySubmitted, setIsKeySubmitted] = useState<boolean>(false);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey,
     libraries,
   });
 
-  const handleSubmitKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (apiKey.trim()) {
-      setIsKeySubmitted(true);
-    }
-  };
-
   // Center on Los Angeles by default
   const center = {
     lat: 34.052235,
     lng: -118.243683,
+  };
+
+  useEffect(() => {
+    // Log the status to help with debugging
+    if (isKeySubmitted) {
+      console.log("Map loading status:", { isLoaded, loadError });
+      
+      if (loadError) {
+        toast.error("Failed to load Google Maps with the provided API key.");
+      } else if (isLoaded) {
+        toast.success("Google Maps API loaded successfully!");
+      }
+    }
+  }, [isLoaded, loadError, isKeySubmitted]);
+
+  const handleSubmitKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (apiKey.trim()) {
+      setIsKeySubmitted(true);
+      toast.info("Attempting to load Google Maps...");
+    } else {
+      toast.error("Please enter a valid API key");
+    }
+  };
+
+  const onMapLoad = (mapInstance: google.maps.Map) => {
+    console.log("Map loaded successfully");
+    setMap(mapInstance);
+    
+    // Add a marker to show that the map is working
+    new google.maps.Marker({
+      position: center,
+      map: mapInstance,
+      title: "Los Angeles"
+    });
+  };
+
+  const resetApiKey = () => {
+    setIsKeySubmitted(false);
+    setApiKey("");
+    setMap(null);
   };
 
   return (
@@ -86,27 +122,40 @@ const MapTest = () => {
                     </div>
                   ) : !isLoaded ? (
                     <div className="h-[400px] flex items-center justify-center bg-slate-50 rounded-lg">
-                      <p className="text-muted-foreground">Loading map...</p>
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600 mx-auto mb-3"></div>
+                        <p className="text-muted-foreground">Loading map...</p>
+                      </div>
                     </div>
                   ) : (
-                    <GoogleMap
-                      mapContainerStyle={mapContainerStyle}
-                      center={center}
-                      zoom={12}
-                      options={{
-                        mapTypeControl: true,
-                        streetViewControl: true,
-                        fullscreenControl: true,
-                      }}
-                    >
-                      <Marker position={center} />
-                    </GoogleMap>
+                    <div className="relative">
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={center}
+                        zoom={12}
+                        onLoad={onMapLoad}
+                        options={{
+                          mapTypeControl: true,
+                          streetViewControl: true,
+                          fullscreenControl: true,
+                        }}
+                      >
+                        <Marker position={center} />
+                      </GoogleMap>
+                      
+                      {/* Overlay to check if map container is rendering */}
+                      {!map && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50/70 rounded-lg">
+                          <p className="text-amber-700">Map container loaded but no map displayed. Check console for errors.</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
               
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setIsKeySubmitted(false)}>
+                <Button variant="outline" onClick={resetApiKey}>
                   Try Different API Key
                 </Button>
                 <Button 
