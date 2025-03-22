@@ -1,8 +1,10 @@
-
 // Google Maps configuration
 
-// Your API key should be here after the git integration
-export const MAPS_API_KEY = 'AIzaSyBgvftUaflViUzJlLD9s5dquYo_8V2jWms';
+export const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+if (!MAPS_API_KEY) {
+  console.error('Google Maps API key is missing. Please check your .env file.');
+}
 
 // Default map options
 export const DEFAULT_MAP_OPTIONS = {

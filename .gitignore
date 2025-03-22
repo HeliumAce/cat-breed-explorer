@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Additional environment files to exclude
+.env.*
+!.env.example
+
+# Coverage directory used by testing tools
+coverage/
+
+# Optional: Temporary files
+*.tmp
+temp/
+
+# Optional: If you use yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
