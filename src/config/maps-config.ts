@@ -23,5 +23,5 @@ export const DEFAULT_MAP_OPTIONS = {
   ]
 };
 
-// Map loading options
+// Map loading options - make sure to include 'places' for address autocompletion
 export const MAPS_LIBRARIES = ['places'];

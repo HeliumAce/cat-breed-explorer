@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 interface UseScriptStatus {
@@ -29,15 +30,28 @@ export function useScript(src: string): UseScriptStatus {
       script.async = true;
       script.defer = true;
       
+      // Mark when script is loaded
+      script.setAttribute('data-status', 'loading');
+      
       // Add script to document body
       document.body.appendChild(script);
 
       // Store status in state
       const setStateFromEvent = (event: Event) => {
-        setStatus({
-          loaded: event.type === 'load',
-          error: event.type === 'error' ? new Error(`Failed to load script: ${src}`) : null
-        });
+        if (event.type === 'load') {
+          script.setAttribute('data-status', 'loaded');
+          script.setAttribute('data-loaded', 'true');
+          setStatus({
+            loaded: true,
+            error: null
+          });
+        } else {
+          script.setAttribute('data-status', 'error');
+          setStatus({
+            loaded: false,
+            error: new Error(`Failed to load script: ${src}`)
+          });
+        }
       };
 
       script.addEventListener('load', setStateFromEvent);
@@ -52,8 +66,14 @@ export function useScript(src: string): UseScriptStatus {
       };
     } else {
       // Script already exists, check if it's already loaded
-      if (script.getAttribute('data-loaded') === 'true') {
+      const dataStatus = script.getAttribute('data-status');
+      if (dataStatus === 'loaded' || script.getAttribute('data-loaded') === 'true') {
         setStatus({ loaded: true, error: null });
+      } else if (dataStatus === 'error') {
+        setStatus({ 
+          loaded: false, 
+          error: new Error(`Script previously failed to load: ${src}`) 
+        });
       } else {
         // If the script is still loading, add event listeners
         const setStateFromEvent = (event: Event) => {
