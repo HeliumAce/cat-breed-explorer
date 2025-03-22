@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuiz } from "@/hooks/useQuiz";
 import { PrimaryMatch } from "./results/PrimaryMatch";
 import { OtherMatches } from "./results/OtherMatches";
@@ -13,6 +13,11 @@ interface QuizResultsProps {
 export function QuizResults({ onReset, onClose }: QuizResultsProps) {
   const { breedMatches } = useQuiz();
   const [confettiTriggered, setConfettiTriggered] = useState(false);
+  
+  // For debugging - log what results we have
+  useEffect(() => {
+    console.log("QuizResults rendering with matches:", breedMatches);
+  }, [breedMatches]);
   
   // Trigger confetti animation on first render
   if (!confettiTriggered) {
@@ -28,11 +33,8 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
     });
   }
 
-  // Always ensure we have at least one match
-  const primaryMatch = breedMatches[0];
-  const otherMatches = breedMatches.slice(1, 4); // Get up to 3 additional matches
-
-  if (!primaryMatch) {
+  // Only try to get matches when breedMatches is actually an array with items
+  if (!breedMatches || !Array.isArray(breedMatches) || breedMatches.length === 0) {
     return (
       <div className="text-center py-8">
         <p>No matches found. Please try again with different preferences.</p>
@@ -40,6 +42,10 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
       </div>
     );
   }
+
+  // Get the primary match and other matches
+  const primaryMatch = breedMatches[0];
+  const otherMatches = breedMatches.slice(1, 4); // Get up to 3 additional matches
 
   return (
     <div className="space-y-8">
