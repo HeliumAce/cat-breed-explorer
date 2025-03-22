@@ -1,16 +1,15 @@
 
-import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation } from "lucide-react";
-import AdoptMap, { AdoptMapRef } from "@/components/AdoptMap";
 import { Shelter } from "@/types/shelters";
+import GoogleMap, { GoogleMapRef } from "@/features/maps/components/GoogleMap";
 
 interface MapContainerProps {
   userCoordinates: { lat: number; lng: number } | null;
   shelters: Shelter[];
   selectedShelterId: string | null;
   onMarkerClick: (shelterId: string) => void;
-  mapRef: React.RefObject<AdoptMapRef>;
+  mapRef: React.RefObject<GoogleMapRef>;
 }
 
 const MapContainer = ({ 
@@ -39,7 +38,7 @@ const MapContainer = ({
             </div>
           </div>
         ) : (
-          <AdoptMap
+          <GoogleMap
             ref={mapRef}
             userLocation={userCoordinates}
             shelters={shelters}

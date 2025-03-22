@@ -1,9 +1,6 @@
 
 import { useRef } from "react";
 import { PageTransition } from "@/components/PageTransition";
-import { Card } from "@/components/ui/card";
-import AdoptMap, { AdoptMapRef } from "@/components/AdoptMap";
-import ShelterList from "@/components/ShelterList";
 import { useShelters } from "@/hooks/useShelters";
 import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete";
 import { toast } from "sonner";
@@ -14,6 +11,8 @@ import LocationSearch from "@/features/adopt/components/LocationSearch";
 import MapContainer from "@/features/adopt/components/MapContainer";
 import { useLocationState } from "@/features/adopt/hooks/useLocationState";
 import { useShelterState } from "@/features/adopt/hooks/useShelterState";
+import ShelterList from "@/components/ShelterList";
+import { GoogleMapRef } from "@/features/maps/components/GoogleMap";
 
 const AdoptCat = () => {
   const {
@@ -32,8 +31,7 @@ const AdoptCat = () => {
     sortBy,
     setSortBy,
     filters,
-    updateFilters,
-    toggleListView
+    updateFilters
   } = useShelterState();
 
   const { 
@@ -43,7 +41,7 @@ const AdoptCat = () => {
     fetchShelters 
   } = useShelters();
 
-  const mapRef = useRef<AdoptMapRef>(null);
+  const mapRef = useRef<GoogleMapRef>(null);
 
   // Use the address autocomplete hook
   const { inputRef, inputValue, setInputValue, isLoaded: isAutocompleteLoaded } = 
