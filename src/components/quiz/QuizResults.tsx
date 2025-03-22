@@ -27,8 +27,9 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
     setConfettiTriggered(true);
   }
 
-  const topMatches = breedMatches.slice(0, 3);
-  const primaryMatch = topMatches[0];
+  // Always ensure we have at least one match
+  const primaryMatch = breedMatches[0];
+  const otherMatches = breedMatches.slice(1, 4); // Get up to 3 additional matches
 
   if (!primaryMatch) {
     return (
@@ -124,8 +125,20 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
             </div>
           </motion.div>
           
-          {/* Other top matches */}
-          {topMatches.slice(1).map((match, index) => (
+          {/* Section title for other matches */}
+          {otherMatches.length > 0 && (
+            <motion.h3 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-lg font-medium mt-6 mb-2"
+            >
+              Other Possible Pals
+            </motion.h3>
+          )}
+          
+          {/* Other matches */}
+          {otherMatches.map((match, index) => (
             <motion.div
               key={match.id}
               initial={{ opacity: 0, y: 20 }}

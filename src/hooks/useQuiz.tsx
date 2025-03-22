@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { QuizAnswer, BreedMatch } from '@/types/quiz';
 import { quizQuestions, mockBreedMatches } from '@/data/quizData';
@@ -67,19 +68,39 @@ export function useQuiz() {
     // Simulate calculation time for UX
     setTimeout(() => {
       try {
+        let calculatedMatches: BreedMatch[] = [];
+        
         if (!breeds || breeds.length === 0) {
-          // Make sure mockBreedMatches have the required description property
-          const validatedMatches: BreedMatch[] = mockBreedMatches.map(match => ({
+          // If no real breeds data, use mock data with required fields
+          calculatedMatches = mockBreedMatches.map(match => ({
             ...match,
-            description: match.description || `The ${match.name} is a wonderful breed that matches your preferences.`
+            description: match.description || `The ${match.name} is a wonderful breed that matches your preferences.`,
+            matchReasons: match.matchReasons || ["Great personality match", "Fits your lifestyle preferences"]
           }));
-          setBreedMatches(validatedMatches);
         } else {
-          // Use the actual matching algorithm using the real breeds data
-          const matches = calculateBreedMatches(answers, breeds);
-          setBreedMatches(matches);
+          // Use the actual matching algorithm with real breeds data
+          calculatedMatches = calculateBreedMatches(answers, breeds);
         }
         
+        // Ensure we have at least one match
+        if (calculatedMatches.length === 0) {
+          // If no matches found, create a fallback match
+          const fallbackMatch: BreedMatch = {
+            id: "domestic-shorthair",
+            name: "Domestic Shorthair",
+            matchPercentage: 85,
+            description: "The Domestic Shorthair is a versatile and adaptable cat that suits many lifestyles.",
+            imageUrl: breeds && breeds.length > 0 ? breeds[0].image?.url : undefined,
+            matchReasons: [
+              "Adaptable to various lifestyles",
+              "Generally friendly and sociable",
+              "Low maintenance requirements"
+            ]
+          };
+          calculatedMatches = [fallbackMatch];
+        }
+        
+        setBreedMatches(calculatedMatches);
         setShowResults(true);
         setIsCalculating(false);
       } catch (error) {
@@ -118,6 +139,13 @@ export function useQuiz() {
 
 // Improved helper function to calculate breed matches
 function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]): BreedMatch[] {
+  if (!answers.length || !breeds.length) {
+    console.log("No answers or breeds to match");
+    return mockBreedMatches;
+  }
+
+  console.log("Calculating matches with:", { answersCount: answers.length, breedsCount: breeds.length });
+  
   // Create a scoring map for each breed
   const breedScores = breeds.map(breed => {
     let score = 0;
@@ -303,23 +331,37 @@ function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]):
     }
 
     // Calculate match percentage (0-100)
-    const matchPercentage = Math.round((score / maxScore) * 100);
+    let matchPercentage = Math.round((score / maxScore) * 100);
     
     // Add a small random factor for variety (±5%)
     const randomFactor = Math.floor(Math.random() * 11) - 5;
-    const adjustedPercentage = Math.min(100, Math.max(5, matchPercentage + randomFactor));
+    matchPercentage = Math.min(100, Math.max(30, matchPercentage + randomFactor));
     
+    // Create a valid BreedMatch object
     return {
       id: breed.id,
       name: breed.name,
-      matchPercentage: adjustedPercentage,
+      matchPercentage: matchPercentage,
       imageUrl: breed.image?.url,
       description: breed.description || `A ${breed.name} cat that matches your lifestyle preferences.`,
       matchReasons: matchReasons.slice(0, 3) // Limit to top 3 reasons
     };
   });
 
-  // Sort by match percentage (descending)
-  return breedScores.sort((a, b) => b.matchPercentage - a.matchPercentage);
-}
+  // Ensure we never return an empty array
+  if (breedScores.length === 0) {
+    console.log("No breed scores generated, using mock data");
+    return mockBreedMatches.map(match => ({
+      ...match,
+      description: match.description || `The ${match.name} is a wonderful breed.`,
+    }));
+  }
 
+  // Sort by match percentage (descending)
+  const sortedMatches = breedScores.sort((a, b) => b.matchPercentage - a.matchPercentage);
+  
+  // Log match results for debugging
+  console.log(`Generated ${sortedMatches.length} matches. Top match: ${sortedMatches[0]?.name} (${sortedMatches[0]?.matchPercentage}%)`);
+  
+  return sortedMatches;
+}
