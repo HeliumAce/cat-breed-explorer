@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { HeartHandshake } from "lucide-react";
-import { useQuiz } from "@/hooks/useQuiz";
+import { useQuiz } from "@/providers/QuizProvider";
 import { motion } from "framer-motion";
 
 export function QuizButton() {

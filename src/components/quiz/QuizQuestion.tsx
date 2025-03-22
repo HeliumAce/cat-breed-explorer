@@ -1,193 +1,240 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { QuizQuestion as QuestionType } from "@/types/quiz";
+import { useQuiz } from "@/providers/QuizProvider";
+import {
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
+  CircleCheck,
+} from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useQuiz } from "@/hooks/useQuiz";
-import { QuizQuestion as QuizQuestionType } from "@/types/quiz";
-import { ChevronRight, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface QuizQuestionProps {
-  question: QuizQuestionType;
+  question: QuestionType;
   onNext: () => void;
   onBack: () => void;
   isFinalQuestion: boolean;
 }
 
-export function QuizQuestion({ question, onNext, onBack, isFinalQuestion }: QuizQuestionProps) {
+export function QuizQuestion({
+  question,
+  onNext,
+  onBack,
+  isFinalQuestion,
+}: QuizQuestionProps) {
   const { saveAnswer, getAnswerForQuestion } = useQuiz();
-  const [answer, setAnswer] = useState<string | number | string[] | number[]>(
-    getAnswerForQuestion(question.id) || 
-    (question.type === "checkbox" ? [] : 
-      question.type === "slider" ? question.sliderConfig?.min || 1 : "")
-  );
-  const [isAnswered, setIsAnswered] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<
+    string | number | string[] | number[]
+  >(getAnswerForQuestion(question.id) || "");
+  const [hasAnswered, setHasAnswered] = useState(false);
 
+  // Reset selected option when question changes
   useEffect(() => {
-    // Check if there's an existing answer
-    const currentAnswer = getAnswerForQuestion(question.id);
-    if (currentAnswer !== undefined) {
-      setAnswer(currentAnswer);
-      setIsAnswered(true);
+    const savedAnswer = getAnswerForQuestion(question.id);
+    if (savedAnswer !== undefined) {
+      setSelectedOption(savedAnswer);
+      setHasAnswered(true);
     } else {
-      // Set default values for sliders
-      if (question.type === "slider" && question.sliderConfig) {
-        setAnswer(question.sliderConfig.min);
-      }
-      // Set empty array for checkboxes
-      else if (question.type === "checkbox") {
-        setAnswer([]);
+      // Initialize with empty array for checkbox questions
+      if (question.type === "checkbox") {
+        setSelectedOption([]);
       } else {
-        setAnswer("");
+        setSelectedOption("");
       }
-      setIsAnswered(false);
+      setHasAnswered(false);
     }
-  }, [question.id, getAnswerForQuestion, question.type, question.sliderConfig]);
+  }, [question.id, getAnswerForQuestion]);
 
-  const handleNext = () => {
-    saveAnswer(question.id, answer);
-    onNext();
+  const handleOptionSelect = (optionValue: string | number) => {
+    setSelectedOption(optionValue);
+    setHasAnswered(true);
+    saveAnswer(question.id, optionValue);
   };
 
-  const handleMultipleChoiceChange = (value: string) => {
-    setAnswer(value);
-    setIsAnswered(true);
+  const handleCheckboxChange = (optionValue: string, checked: boolean) => {
+    // Ensure we're working with an array
+    const currentValue = Array.isArray(selectedOption)
+      ? [...selectedOption]
+      : [];
+      
+    const updatedValue = checked
+      ? [...currentValue, optionValue]
+      : currentValue.filter((value) => value !== optionValue);
+      
+    setSelectedOption(updatedValue);
+    setHasAnswered(updatedValue.length > 0);
+    saveAnswer(question.id, updatedValue);
   };
 
   const handleSliderChange = (value: number[]) => {
-    setAnswer(value[0]);
-    setIsAnswered(true);
-  };
-
-  const handleCheckboxChange = (checked: boolean, value: string) => {
-    if (question.type === "checkbox") {
-      setAnswer(prev => {
-        const prevArray = Array.isArray(prev) ? prev : [];
-        if (checked) {
-          return [...prevArray, value];
-        } else {
-          return prevArray.filter(item => item !== value);
-        }
-      });
-      setIsAnswered(true);
-    }
+    const sliderValue = value[0];
+    setSelectedOption(sliderValue);
+    setHasAnswered(true);
+    saveAnswer(question.id, sliderValue);
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <motion.h2
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-bold"
-        >
-          {question.question}
-        </motion.h2>
+      <div>
+        <h3 className="text-xl font-bold mb-2">{question.question}</h3>
         {question.description && (
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { delay: 0.1 } }}
-            className="text-muted-foreground"
-          >
-            {question.description}
-          </motion.p>
+          <p className="text-muted-foreground mb-4">{question.description}</p>
         )}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
-        className="py-4"
-      >
-        {question.type === "multiple-choice" && (
-          <RadioGroup
-            value={answer as string}
-            onValueChange={handleMultipleChoiceChange}
-            className="space-y-3"
-          >
-            {question.options?.map((option) => (
-              <div
+      <div className="space-y-4">
+        {question.type === "multiple-choice" && question.options && (
+          <div className="grid gap-3">
+            {question.options.map((option) => (
+              <motion.div
                 key={option.id}
-                className="flex items-center space-x-2 bg-white/70 hover:bg-white rounded-lg p-4 transition-colors cursor-pointer"
-                onClick={() => handleMultipleChoiceChange(option.value as string)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <RadioGroupItem value={option.value as string} id={option.id} />
-                <label htmlFor={option.id} className="flex-1 cursor-pointer font-medium">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`w-full justify-start text-left h-auto py-3 px-4 ${
+                    selectedOption === option.value
+                      ? "bg-amber-100 border-amber-300"
+                      : ""
+                  }`}
+                  onClick={() => handleOptionSelect(option.value)}
+                >
+                  <span className="mr-2">
+                    {selectedOption === option.value ? (
+                      <CheckCircle2 className="h-5 w-5 text-amber-500" />
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
+                    )}
+                  </span>
                   {option.text}
-                </label>
-              </div>
+                </Button>
+              </motion.div>
             ))}
-          </RadioGroup>
+          </div>
         )}
 
         {question.type === "slider" && question.sliderConfig && (
-          <div className="space-y-6 px-4">
-            <div className="pt-6">
-              <Slider
-                value={[answer as number]}
-                min={question.sliderConfig.min}
-                max={question.sliderConfig.max}
-                step={question.sliderConfig.step}
-                onValueChange={handleSliderChange}
-                className="mt-6"
-              />
-            </div>
-            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+          <div className="space-y-6 py-4">
+            <Slider
+              defaultValue={[
+                typeof selectedOption === "number"
+                  ? selectedOption
+                  : question.sliderConfig.min,
+              ]}
+              max={question.sliderConfig.max}
+              min={question.sliderConfig.min}
+              step={question.sliderConfig.step}
+              onValueChange={handleSliderChange}
+              className="w-full"
+            />
+            <div className="flex justify-between text-sm text-muted-foreground pt-2">
               <span>{question.sliderConfig.minLabel}</span>
               <span>{question.sliderConfig.maxLabel}</span>
             </div>
           </div>
         )}
 
-        {question.type === "checkbox" && (
-          <div className="space-y-3">
-            {question.options?.map((option) => (
-              <div 
+        {question.type === "checkbox" && question.options && (
+          <div className="grid gap-3">
+            {question.options.map((option) => {
+              const isChecked = Array.isArray(selectedOption) && 
+                selectedOption.includes(option.value as string);
+                
+              return (
+                <motion.div
+                  key={option.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-2"
+                >
+                  <Checkbox
+                    id={option.id}
+                    checked={isChecked}
+                    onCheckedChange={(checked) =>
+                      handleCheckboxChange(option.value as string, checked === true)
+                    }
+                    className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  />
+                  <label
+                    htmlFor={option.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {option.text}
+                  </label>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {question.type === "image-selection" && question.imageOptions && (
+          <div className="grid grid-cols-2 gap-4">
+            {question.imageOptions.map((option) => (
+              <motion.div
                 key={option.id}
-                className="flex items-center space-x-2 bg-white/70 hover:bg-white rounded-lg p-4 transition-colors"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className={`cursor-pointer relative rounded-lg overflow-hidden border-2 ${
+                  selectedOption === option.value
+                    ? "border-amber-500"
+                    : "border-transparent"
+                }`}
+                onClick={() => handleOptionSelect(option.value)}
               >
-                <Checkbox
-                  id={option.id}
-                  checked={(answer as string[]).includes(option.value as string)}
-                  onCheckedChange={(checked) => 
-                    handleCheckboxChange(checked as boolean, option.value as string)
-                  }
+                <img
+                  src={option.imageUrl}
+                  alt={option.caption}
+                  className="w-full h-32 object-cover"
                 />
-                <label htmlFor={option.id} className="flex-1 cursor-pointer font-medium">
-                  {option.text}
-                </label>
-              </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 text-white text-sm">
+                  {option.caption}
+                </div>
+                {selectedOption === option.value && (
+                  <div className="absolute top-2 right-2">
+                    <CircleCheck className="h-6 w-6 text-amber-500" />
+                  </div>
+                )}
+              </motion.div>
             ))}
           </div>
         )}
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { delay: 0.4 } }}
-        className="flex justify-between pt-4"
-      >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBack}
-          className="gap-1"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Back
-        </Button>
+      <div className="flex justify-between pt-6">
+        {currentQuestionIndex > 1 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onBack}
+            className="gap-1"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </Button>
+        ) : (
+          <div></div>
+        )}
 
         <Button
-          onClick={handleNext}
-          disabled={!isAnswered && question.type !== "slider" && question.type !== "checkbox"}
-          className="gap-1 bg-amber-600 hover:bg-amber-700"
+          type="button"
+          onClick={onNext}
+          disabled={!hasAnswered}
+          className={`gap-1 ${
+            isFinalQuestion
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-amber-500 hover:bg-amber-600"
+          }`}
         >
           {isFinalQuestion ? "See Results" : "Next"}
           <ChevronRight className="h-4 w-4" />
         </Button>
-      </motion.div>
+      </div>
     </div>
   );
 }

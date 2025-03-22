@@ -224,7 +224,7 @@ function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]):
       name: breed.name,
       matchPercentage: adjustedPercentage,
       imageUrl: breed.image?.url,
-      description: breed.description || '',
+      description: breed.description || 'A wonderful cat breed that matches your preferences.',
       matchReasons: selectedReasons.length > 0 ? selectedReasons : ["This breed has qualities that match your preferences"]
     };
   });
@@ -232,3 +232,4 @@ function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]):
   // Sort by match percentage (descending)
   return breedScores.sort((a, b) => b.matchPercentage - a.matchPercentage);
 }
+

@@ -1,9 +1,9 @@
 
 import { createContext, ReactNode, useContext } from "react";
-import { useQuiz } from "@/hooks/useQuiz";
+import { useQuiz as useQuizHook } from "@/hooks/useQuiz";
 
 // Create the context
-export const QuizContext = createContext<ReturnType<typeof useQuiz> | undefined>(undefined);
+export const QuizContext = createContext<ReturnType<typeof useQuizHook> | undefined>(undefined);
 
 interface QuizProviderProps {
   children: ReactNode;
@@ -11,17 +11,17 @@ interface QuizProviderProps {
 
 // Create provider component
 export function QuizProvider({ children }: QuizProviderProps) {
-  const quiz = useQuiz();
+  const quiz = useQuizHook();
   
   return <QuizContext.Provider value={quiz}>{children}</QuizContext.Provider>;
 }
 
 // Hook for consuming the quiz context
-export const useQuizContext = () => {
+export const useQuiz = () => {
   const context = useContext(QuizContext);
   
   if (context === undefined) {
-    throw new Error("useQuizContext must be used within a QuizProvider");
+    throw new Error("useQuiz must be used within a QuizProvider");
   }
   
   return context;
