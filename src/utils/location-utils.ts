@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for location-based operations
  */
@@ -68,23 +69,4 @@ export function updateLocationDistances(
       distance: Number(distance.toFixed(1))
     };
   });
-}
-
-/**
- * Returns a human-readable label for a location type
- * 
- * @param type The location type 
- * @returns A human-readable label
- */
-export function getLocationTypeLabel(type: string) {
-  switch (type) {
-    case "shelter":
-      return "Animal Shelter";
-    case "humane_society":
-      return "Humane Society";
-    case "pet_store":
-      return "Pet Store";
-    default:
-      return type;
-  }
 }
