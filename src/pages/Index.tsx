@@ -7,6 +7,8 @@ import { BreedCard } from "@/components/BreedCard";
 import { Loading, LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
 import { Cat, PawPrint } from "lucide-react";
+import { QuizButton } from "@/components/quiz/QuizButton";
+import { QuizModal } from "@/components/quiz/QuizModal";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,17 +60,27 @@ const Index = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="max-w-md mx-auto text-lg text-muted-foreground"
+              className="max-w-md mx-auto text-lg text-muted-foreground mb-6"
             >
               Discover the perfect feline companion and learn how to bond with them.
             </motion.p>
+            
+            {/* Add Quiz Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex justify-center mb-8"
+            >
+              <QuizButton />
+            </motion.div>
           </motion.div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-8"
+            className="mt-2"
           >
             <SearchBar onSearch={setSearchTerm} />
           </motion.div>
@@ -122,6 +134,9 @@ const Index = () => {
           </div>
         </footer>
       </div>
+      
+      {/* Add Quiz Modal */}
+      <QuizModal />
     </PageTransition>
   );
 };
