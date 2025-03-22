@@ -5,8 +5,15 @@ import { toast } from 'sonner';
 import { Breed, BreedWithImage } from '@/types/breeds';
 
 // Free API key - this is a public key
-const API_KEY = 'live_sLpYuUXHjzXh0l5Ni1A3tpqYvmFdXF3MHrJeAYdRCMTd5XeKbfHrKYQDNn73O4z0';
+const API_KEY = 'live_sLpYuUXHjzXh0l1A3tpqYvmFdXF3MHrJeAYdRCMTd5XeKbfHrKYQDNn73O4z0';
 const API_URL = 'https://api.thecatapi.com/v1';
+
+// Fallback image map for specific breeds that have issues with their images
+const FALLBACK_IMAGES: Record<string, string> = {
+  'ebur': 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=800', // European Burmese
+  'jbob': 'https://cdn2.thecatapi.com/images/xoI_fJqy7.jpg', // Japanese Bobtail
+  'mala': 'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800', // Malayan
+};
 
 // Function to fetch all breeds
 const fetchBreeds = async (): Promise<BreedWithImage[]> => {
@@ -25,10 +32,25 @@ const fetchBreeds = async (): Promise<BreedWithImage[]> => {
   // Fetch images for breeds without image data
   const breedsWithImages = await Promise.all(
     breeds.map(async (breed) => {
+      // If breed already has an image, use it
       if (breed.image) {
         return breed as BreedWithImage;
       }
       
+      // Check if we have a fallback image for this breed
+      if (FALLBACK_IMAGES[breed.id]) {
+        return {
+          ...breed,
+          image: {
+            id: `fallback-${breed.id}`,
+            url: FALLBACK_IMAGES[breed.id],
+            width: 800,
+            height: 600
+          }
+        };
+      }
+      
+      // Try to fetch image using reference_image_id
       if (breed.reference_image_id) {
         try {
           const imageResponse = await fetch(`${API_URL}/images/${breed.reference_image_id}`, {
@@ -44,8 +66,8 @@ const fetchBreeds = async (): Promise<BreedWithImage[]> => {
               image: {
                 id: imageData.id,
                 url: imageData.url,
-                width: imageData.width,
-                height: imageData.height
+                width: imageData.width || 800,
+                height: imageData.height || 600
               }
             };
           }
@@ -54,14 +76,22 @@ const fetchBreeds = async (): Promise<BreedWithImage[]> => {
         }
       }
       
-      // Fallback for breeds without images
+      // Fallback - use a generic cat image based on breed ID's first character
+      // This creates some visual variety in fallback images
+      const fallbackIndex = breed.id.charCodeAt(0) % 3;
+      const fallbackImages = [
+        'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', // Orange cat
+        'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=800', // Tabby cat
+        'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=800', // Black cat
+      ];
+      
       return {
         ...breed,
         image: {
-          id: 'no-image',
-          url: '/placeholder.svg',
-          width: 300,
-          height: 300
+          id: 'fallback-generic',
+          url: fallbackImages[fallbackIndex],
+          width: 800,
+          height: 600
         }
       };
     })
@@ -84,6 +114,19 @@ const fetchBreedById = async (breedId: string): Promise<BreedWithImage> => {
 
   const breed: Breed = await response.json();
   
+  // Check if we have a fallback image for this breed
+  if (FALLBACK_IMAGES[breed.id]) {
+    return {
+      ...breed,
+      image: {
+        id: `fallback-${breed.id}`,
+        url: FALLBACK_IMAGES[breed.id],
+        width: 800,
+        height: 600
+      }
+    };
+  }
+  
   // If the breed doesn't have an image, fetch it using the reference_image_id
   if (!breed.image && breed.reference_image_id) {
     try {
@@ -100,8 +143,8 @@ const fetchBreedById = async (breedId: string): Promise<BreedWithImage> => {
           image: {
             id: imageData.id,
             url: imageData.url,
-            width: imageData.width,
-            height: imageData.height
+            width: imageData.width || 800,
+            height: imageData.height || 600
           }
         };
       }
@@ -110,15 +153,23 @@ const fetchBreedById = async (breedId: string): Promise<BreedWithImage> => {
     }
   }
   
-  // Return the breed with a placeholder image if no image was found
+  // Return the breed with a fallback image if no image was found
   if (!breed.image) {
+    // Fallback - use a generic cat image based on breed ID's first character
+    const fallbackIndex = breed.id.charCodeAt(0) % 3;
+    const fallbackImages = [
+      'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', // Orange cat
+      'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=800', // Tabby cat
+      'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=800', // Black cat
+    ];
+    
     return {
       ...breed,
       image: {
-        id: 'no-image',
-        url: '/placeholder.svg',
-        width: 300,
-        height: 300
+        id: 'fallback-generic',
+        url: fallbackImages[fallbackIndex],
+        width: 800,
+        height: 600
       }
     };
   }
