@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, Share, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useQuiz } from "@/providers/QuizProvider";
+import { useQuiz } from "@/hooks/useQuiz";
 
 interface ResultsActionsProps {
   onReset: () => void;

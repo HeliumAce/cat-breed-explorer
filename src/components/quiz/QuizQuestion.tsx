@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { QuizQuestion as QuestionType } from "@/types/quiz";
-import { useQuiz } from "@/providers/QuizProvider";
+import { useQuiz } from "@/hooks/useQuiz";
 import {
   ChevronRight,
   ChevronLeft,

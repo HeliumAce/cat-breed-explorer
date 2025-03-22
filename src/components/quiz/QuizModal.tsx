@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useQuiz } from "@/providers/QuizProvider";
+import { useQuiz } from "@/hooks/useQuiz";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { QuizWelcome } from "./QuizWelcome";
