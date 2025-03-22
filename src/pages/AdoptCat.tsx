@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -47,7 +46,6 @@ const AdoptCat = () => {
 
   const mapRef = useRef(null);
 
-  // Request user location on component mount
   useEffect(() => {
     requestUserLocation();
   }, []);
@@ -69,7 +67,6 @@ const AdoptCat = () => {
           lng: position.coords.longitude,
         });
         setIsLocating(false);
-        // Fetch shelters once we have coordinates
         fetchShelters({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -101,13 +98,10 @@ const AdoptCat = () => {
 
   const handleManualLocationSearch = () => {
     if (manualLocation.trim()) {
-      // In a real app, we would use the Google Geocoding API here
-      // For now, we'll simulate a fetch with a slight delay
       setIsLocating(true);
       setTimeout(() => {
-        // Simulate coordinates for demo purposes - this would normally come from Geocoding API
         const simulatedCoords = {
-          lat: 37.7749, // San Francisco coordinates as example
+          lat: 37.7749,
           lng: -122.4194,
         };
         setUserCoordinates(simulatedCoords);
@@ -123,7 +117,6 @@ const AdoptCat = () => {
 
   const handleMarkerClick = (shelterId: string) => {
     setSelectedShelterId(shelterId);
-    // Expand the list view on mobile when a marker is clicked
     if (window.innerWidth < 768) {
       setExpandedListView(true);
     }
@@ -163,7 +156,6 @@ const AdoptCat = () => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          {/* Location section */}
           <Card className="p-4 mb-6">
             <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
               <div className="w-full sm:w-auto flex-1">
@@ -214,15 +206,8 @@ const AdoptCat = () => {
             )}
           </Card>
 
-          {/* Map and list container */}
-          <div className="grid grid-cols-1 gap-6">
-            {/* Map section */}
-            <div 
-              className={cn(
-                "relative h-[400px] md:h-[500px] rounded-lg overflow-hidden shadow-md mb-4",
-                expandedListView && "md:h-[300px]"
-              )}
-            >
+          <div className="mb-6 rounded-lg overflow-hidden shadow-md">
+            <div className="h-[300px] sm:h-[400px]">
               {!userCoordinates ? (
                 <div className="flex h-full items-center justify-center bg-muted/20">
                   <div className="text-center p-8">
@@ -242,59 +227,28 @@ const AdoptCat = () => {
                 />
               )}
             </div>
+          </div>
 
-            {/* Mobile toggle for list view */}
-            <div className="block md:hidden -mt-2 mb-2">
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center"
-                onClick={toggleListView}
-              >
-                {expandedListView ? (
-                  <>
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                    <span>Show Less</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronUp className="h-4 w-4 mr-2" />
-                    <span>Show Shelters</span>
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Shelter list section */}
-            <div
-              className={cn(
-                "bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300",
-                {
-                  "h-[300px] sm:h-[400px]": !expandedListView && userCoordinates,
-                  "h-[500px] sm:h-[600px]": expandedListView && userCoordinates,
-                  "h-auto": !userCoordinates,
-                }
-              )}
-            >
-              {userCoordinates ? (
-                <ShelterList
-                  shelters={shelters}
-                  isLoading={isLoading}
-                  error={error}
-                  selectedShelterId={selectedShelterId}
-                  onShelterSelect={handleShelterSelect}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                  filters={filters}
-                  onFilterChange={updateFilters}
-                />
-              ) : (
-                <div className="flex h-64 items-center justify-center">
-                  <p className="text-muted-foreground">
-                    Provide your location to see nearby shelters
-                  </p>
-                </div>
-              )}
-            </div>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {userCoordinates ? (
+              <ShelterList
+                shelters={shelters}
+                isLoading={isLoading}
+                error={error}
+                selectedShelterId={selectedShelterId}
+                onShelterSelect={handleShelterSelect}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                filters={filters}
+                onFilterChange={updateFilters}
+              />
+            ) : (
+              <div className="flex h-64 items-center justify-center">
+                <p className="text-muted-foreground">
+                  Provide your location to see nearby shelters
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

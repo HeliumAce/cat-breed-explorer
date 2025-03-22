@@ -119,7 +119,7 @@ const ShelterList = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="w-full">
       {/* Filters and sorting header */}
       <div className="p-4 border-b flex justify-between items-center">
         <div className="text-lg font-medium">
@@ -186,8 +186,8 @@ const ShelterList = ({
         </div>
       </div>
 
-      {/* List content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* List content - now directly in the page flow */}
+      <div>
         {isLoading ? (
           <div className="p-8 flex justify-center">
             <LoadingInline text="Loading shelters..." />
