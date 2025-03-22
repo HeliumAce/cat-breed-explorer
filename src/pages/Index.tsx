@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -8,7 +7,6 @@ import { Loading, LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
 import { Cat, PawPrint } from "lucide-react";
 import { QuizButton } from "@/components/quiz/QuizButton";
-import { AdoptButton } from "@/components/AdoptButton";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,15 +63,14 @@ const Index = () => {
               Discover the perfect feline companion and learn how to bond with them.
             </motion.p>
             
-            {/* Action Buttons */}
+            {/* Add Quiz Button */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="flex flex-wrap justify-center gap-4 mb-8"
+              className="flex justify-center mb-8"
             >
               <QuizButton />
-              <AdoptButton />
             </motion.div>
           </motion.div>
           
