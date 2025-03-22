@@ -2,12 +2,12 @@
 import { useEffect } from "react";
 import { useQuiz } from "@/hooks/useQuiz";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { QuizWelcome } from "./QuizWelcome";
 import { QuizQuestion } from "./QuizQuestion";
 import { QuizResults } from "./QuizResults";
 import { QuizProgress } from "./QuizProgress";
-import { Cat, Loader2 } from "lucide-react";
+import { Cat, Loader2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 export function QuizModal() {
@@ -42,6 +42,15 @@ export function QuizModal() {
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-0 bg-amber-50 border-amber-200 overflow-hidden">
         {/* Adding DialogTitle for accessibility - visually hidden */}
         <DialogTitle className="sr-only">Cat Breed Quiz</DialogTitle>
+        
+        {/* Add explicit close button since the default one isn't working */}
+        <DialogClose 
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-20"
+          onClick={closeQuiz}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         
         <div className="relative overflow-hidden">
           {/* Decorative elements */}

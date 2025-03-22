@@ -39,8 +39,8 @@ export function QuizQuestion({
       setSelectedOption(savedAnswer);
       setHasAnswered(true);
     } else {
-      // Initialize with empty array for checkbox questions
-      if (question.type === "checkbox") {
+      // Initialize with empty array for checkbox or multi-select questions
+      if (question.type === "checkbox" || question.isMultiSelect) {
         setSelectedOption([]);
       } else {
         setSelectedOption("");
@@ -55,7 +55,7 @@ export function QuizQuestion({
     saveAnswer(question.id, optionValue);
   };
 
-  const handleCheckboxChange = (optionValue: string, checked: boolean) => {
+  const handleMultiSelectChange = (optionValue: string, checked: boolean) => {
     // Ensure we're working with an array
     const currentValue = Array.isArray(selectedOption)
       ? [...selectedOption]
@@ -71,12 +71,43 @@ export function QuizQuestion({
     saveAnswer(question.id, updatedValue as string[]);
   };
 
+  const handleCheckboxChange = (optionValue: string, checked: boolean) => {
+    // Ensure we're working with an array
+    const currentValue = Array.isArray(selectedOption)
+      ? [...selectedOption]
+      : [];
+      
+    // Make sure we're dealing with string arrays for checkbox values
+    const updatedValue = checked
+      ? [...currentValue, optionValue]
+      : currentValue.filter((value) => value !== optionValue);
+      
+    setSelectedOption(updatedValue as string[]);
+    
+    // Question 7 doesn't require a selection to see results
+    if (question.id !== 7) {
+      setHasAnswered(updatedValue.length > 0);
+    } else {
+      // Always consider question 7 as answered, even with no selections
+      setHasAnswered(true);
+    }
+    
+    saveAnswer(question.id, updatedValue as string[]);
+  };
+
   const handleSliderChange = (value: number[]) => {
     const sliderValue = value[0];
     setSelectedOption(sliderValue);
     setHasAnswered(true);
     saveAnswer(question.id, sliderValue);
   };
+
+  // Special handling for question 7 - mark it as answered immediately
+  useEffect(() => {
+    if (question.id === 7) {
+      setHasAnswered(true);
+    }
+  }, [question.id]);
 
   return (
     <div className="space-y-6">
@@ -88,7 +119,7 @@ export function QuizQuestion({
       </div>
 
       <div className="space-y-4">
-        {question.type === "multiple-choice" && question.options && (
+        {question.type === "multiple-choice" && question.options && !question.isMultiSelect && (
           <div className="grid gap-3">
             {question.options.map((option) => (
               <motion.div
@@ -117,6 +148,39 @@ export function QuizQuestion({
                 </Button>
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {question.type === "multiple-choice" && question.options && question.isMultiSelect && (
+          <div className="grid gap-3">
+            {question.options.map((option) => {
+              const isChecked = Array.isArray(selectedOption) && 
+                selectedOption.includes(option.value.toString());
+                
+              return (
+                <motion.div
+                  key={option.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-2"
+                >
+                  <Checkbox
+                    id={option.id}
+                    checked={isChecked}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelectChange(option.value.toString(), checked === true)
+                    }
+                    className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  />
+                  <label
+                    htmlFor={option.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {option.text}
+                  </label>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
