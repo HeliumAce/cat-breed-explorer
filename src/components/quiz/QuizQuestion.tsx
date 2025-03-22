@@ -144,8 +144,9 @@ export function QuizQuestion({
         {question.type === "checkbox" && question.options && (
           <div className="grid gap-3">
             {question.options.map((option) => {
+              // Fix for TypeScript error - safely check if the option value is in the selected options
               const isChecked = Array.isArray(selectedOption) && 
-                selectedOption.includes(option.value.toString());
+                selectedOption.some(val => val.toString() === option.value.toString());
                 
               return (
                 <motion.div

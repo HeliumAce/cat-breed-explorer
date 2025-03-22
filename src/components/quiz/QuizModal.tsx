@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useQuiz } from "@/providers/QuizProvider";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { QuizWelcome } from "./QuizWelcome";
 import { QuizQuestion } from "./QuizQuestion";
 import { QuizResults } from "./QuizResults";
@@ -40,6 +40,9 @@ export function QuizModal() {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeQuiz()}>
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-0 bg-amber-50 border-amber-200 overflow-hidden">
+        {/* Adding DialogTitle for accessibility - visually hidden */}
+        <DialogTitle className="sr-only">Cat Breed Quiz</DialogTitle>
+        
         <div className="relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 left-0 w-24 h-24 bg-amber-200/40 rounded-full -translate-x-12 -translate-y-12" />
