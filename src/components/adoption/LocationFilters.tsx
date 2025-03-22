@@ -1,23 +1,31 @@
 
 import { useState } from "react";
-import { SlidersHorizontal, ArrowDownAZ, ArrowUpDown, Home, Building, Store, Search } from "lucide-react";
+import { SlidersHorizontal, ArrowDownAZ, ArrowUpDown, Home, Building, Store, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface LocationFiltersProps {
   onSortChange: (sort: string) => void;
   onFilterChange: (filters: string[]) => void;
   onZipCodeChange: (zipCode: string) => void;
+  hasUserLocation?: boolean;
 }
 
-export function LocationFilters({ onSortChange, onFilterChange, onZipCodeChange }: LocationFiltersProps) {
+export function LocationFilters({ 
+  onSortChange, 
+  onFilterChange, 
+  onZipCodeChange,
+  hasUserLocation = false
+}: LocationFiltersProps) {
   const [activeSort, setActiveSort] = useState<string>("distance");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [zipCode, setZipCode] = useState<string>("");
   const [address, setAddress] = useState<string>("");
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleSortChange = (sort: string) => {
     setActiveSort(sort);
@@ -36,7 +44,6 @@ export function LocationFilters({ onSortChange, onFilterChange, onZipCodeChange 
   const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setZipCode(value);
-    onZipCodeChange(value);
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,9 +53,25 @@ export function LocationFilters({ onSortChange, onFilterChange, onZipCodeChange 
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically geocode the address to coordinates
-    // Then use those coordinates to filter locations by distance
-    onZipCodeChange(zipCode || address);
+    
+    if (!zipCode && !address) {
+      toast.error("Please enter a ZIP code or address");
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    // In a real app, we would geocode the address or ZIP code here
+    // For this demo, we'll just use the ZIP code as is
+    if (zipCode) {
+      onZipCodeChange(zipCode);
+      toast.success(`Showing results for ${zipCode}`);
+    } else if (address) {
+      onZipCodeChange(address);
+      toast.success(`Showing results for "${address}"`);
+    }
+    
+    setIsSearching(false);
   };
 
   return (
@@ -69,7 +92,12 @@ export function LocationFilters({ onSortChange, onFilterChange, onZipCodeChange 
                 value={address}
                 onChange={handleAddressChange}
               />
-              <Button type="submit" size="sm" className="shrink-0 bg-amber-500 hover:bg-amber-600">
+              <Button 
+                type="submit" 
+                size="sm" 
+                className="shrink-0 bg-amber-500 hover:bg-amber-600"
+                disabled={isSearching}
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </div>
@@ -89,17 +117,20 @@ export function LocationFilters({ onSortChange, onFilterChange, onZipCodeChange 
             />
           </div>
           
-          <p className="text-xs text-muted-foreground mt-1">
-            Enter your location to find nearby adoption centers, or allow browser location access
-          </p>
+          <div className="flex items-center gap-2 pt-1">
+            {hasUserLocation && (
+              <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Using your location
+              </Badge>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {hasUserLocation 
+                ? "We're showing adoption centers near your current location" 
+                : "Enter your location to find nearby adoption centers"}
+            </p>
+          </div>
         </form>
-      </div>
-      
-      {/* Sort and Filter buttons - These will be moved to the list header */}
-      <div className="hidden">
-        {/* These controls will be moved to LocationHeader component */}
-        <Button onClick={() => handleSortChange("distance")}>Distance</Button>
-        <Button onClick={() => handleFilterToggle("shelter")}>Shelters</Button>
       </div>
     </div>
   );

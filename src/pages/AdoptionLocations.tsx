@@ -15,8 +15,11 @@ import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { adoptionLocations } from "@/data/adoptionLocations";
 import { useGeolocation } from "@/hooks/use-geolocation";
+import { updateLocationDistances } from "@/utils/location-utils";
+import { toast } from "sonner";
 
 const AdoptionLocations = () => {
+  const [locationsData, setLocationsData] = useState(adoptionLocations);
   const [filteredLocations, setFilteredLocations] = useState(adoptionLocations);
   const [sortBy, setSortBy] = useState<string>("distance");
   const [filters, setFilters] = useState<string[]>([]);
@@ -30,6 +33,28 @@ const AdoptionLocations = () => {
     ? { lat: latitude, lng: longitude }
     : undefined;
 
+  // Update location distances when user location changes
+  useEffect(() => {
+    if (latitude && longitude) {
+      const locationsWithDistances = updateLocationDistances(
+        adoptionLocations,
+        latitude,
+        longitude
+      );
+      setLocationsData(locationsWithDistances);
+      
+      if (sortBy === "distance") {
+        // Auto-sort by distance when location is available
+        const sorted = [...locationsWithDistances].sort((a, b) => a.distance - b.distance);
+        setFilteredLocations(sorted.slice(0, 10));
+      } else {
+        setFilteredLocations(locationsWithDistances.slice(0, 10));
+      }
+      
+      toast.success("Showing locations near you!");
+    }
+  }, [latitude, longitude]);
+
   useEffect(() => {
     // Simulate loading data
     const timer = setTimeout(() => {
@@ -41,7 +66,7 @@ const AdoptionLocations = () => {
 
   useEffect(() => {
     // Filter and sort locations based on user selections
-    let result = [...adoptionLocations];
+    let result = [...locationsData];
     
     // Apply type filters
     if (filters.length > 0) {
@@ -65,16 +90,19 @@ const AdoptionLocations = () => {
     
     // Display only the first 10 results
     setFilteredLocations(result.slice(0, 10));
-  }, [sortBy, filters, zipCode]);
+  }, [sortBy, filters, zipCode, locationsData]);
 
   const handleRequestLocation = () => {
-    // This would normally request geolocation access
-    // For this demo, we're just setting a flag that it was asked
     setLocationPermissionAsked(true);
+    // The useGeolocation hook will automatically try to get the location
+    if (error) {
+      toast.error("Could not access your location. Please check your browser settings.");
+    }
   };
 
   const handleSkipLocationPermission = () => {
     setLocationPermissionAsked(true);
+    toast.info("You can enter your ZIP code to find nearby locations");
   };
 
   const handleRetry = () => {

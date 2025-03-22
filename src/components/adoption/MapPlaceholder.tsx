@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { MapPin, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
@@ -7,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import { GOOGLE_MAPS_API_KEY, mapConfig } from "@/config/maps-config";
+import { Badge } from "@/components/ui/badge";
 
 interface MapPlaceholderProps {
   locations: AdoptionLocation[];
@@ -35,7 +35,30 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-  }, []);
+    
+    // If we have locations, fit bounds to show all markers
+    if (locations.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      
+      // Add user location to bounds if available
+      if (userLocation) {
+        bounds.extend(new google.maps.LatLng(userLocation.lat, userLocation.lng));
+      }
+      
+      // Add all location markers to bounds
+      locations.forEach(location => {
+        bounds.extend(new google.maps.LatLng(location.latitude, location.longitude));
+      });
+      
+      // Fit the map to the bounds
+      map.fitBounds(bounds);
+      
+      // Don't zoom in too far
+      if (map.getZoom() && map.getZoom()! > 15) {
+        map.setZoom(15);
+      }
+    }
+  }, [locations, userLocation]);
 
   const getMarkerIcon = (type: string) => {
     switch (type) {
@@ -70,7 +93,11 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
           <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
           <div className="flex flex-col">
             <span className="font-semibold">Error loading Google Maps</span>
-            <span className="text-xs mt-1">Check your API key configuration or network connection.</span>
+            <span className="text-xs mt-1">
+              {GOOGLE_MAPS_API_KEY 
+                ? "Check your API key configuration or network connection." 
+                : "No Google Maps API key provided. Set the VITE_GOOGLE_MAPS_API_KEY environment variable."}
+            </span>
           </div>
         </div>
       );
@@ -105,6 +132,7 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
               url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
               scaledSize: new window.google.maps.Size(40, 40),
             }}
+            title="Your Location"
           />
         )}
 
@@ -118,6 +146,7 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
               scaledSize: new window.google.maps.Size(30, 30),
             }}
             onClick={() => setSelectedLocation(location)}
+            title={location.name}
           />
         ))}
 
@@ -133,6 +162,11 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
               <p className="text-xs mt-1">{selectedLocation.address}</p>
               <p className="text-xs">{selectedLocation.city}, {selectedLocation.state} {selectedLocation.zipCode}</p>
               <p className="text-xs mt-1">{selectedLocation.phone}</p>
+              {userLocation && (
+                <p className="text-xs mt-1 font-medium">
+                  {selectedLocation.distance.toFixed(1)} miles from you
+                </p>
+              )}
             </div>
           </InfoWindow>
         )}
@@ -166,6 +200,9 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
           >
             <MapPin className="w-5 h-5 mr-2" />
             <span>Map view is collapsed. Tap to expand.</span>
+            {userLocation && (
+              <Badge className="ml-2 bg-green-100 text-green-800">Location active</Badge>
+            )}
           </div>
         ) : (
           renderMap()

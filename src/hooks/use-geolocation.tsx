@@ -27,6 +27,7 @@ export const useGeolocation = () => {
     }
 
     const geoSuccess = (position: GeolocationPosition) => {
+      console.log('Got geolocation:', position.coords.latitude, position.coords.longitude);
       setState({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -36,6 +37,7 @@ export const useGeolocation = () => {
     };
 
     const geoError = (error: GeolocationPositionError) => {
+      console.error('Geolocation error:', error.message);
       setState(prev => ({
         ...prev,
         error: error.message,
@@ -43,11 +45,23 @@ export const useGeolocation = () => {
       }));
     };
 
-    navigator.geolocation.getCurrentPosition(geoSuccess, geoError, {
+    const geoOptions = {
       enableHighAccuracy: true,
       timeout: 5000,
       maximumAge: 0,
-    });
+    };
+
+    // Request location
+    const watchId = navigator.geolocation.watchPosition(
+      geoSuccess, 
+      geoError, 
+      geoOptions
+    );
+
+    // Cleanup
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
   return state;
