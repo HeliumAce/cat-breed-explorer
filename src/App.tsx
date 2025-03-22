@@ -4,6 +4,7 @@ import Index from "@/pages/Index";
 import BreedDetail from "@/pages/BreedDetail";
 import NotFound from "@/pages/NotFound";
 import AdoptionLocations from "@/pages/AdoptionLocations";
+import MapTest from "@/pages/MapTest";
 import { Toaster } from "@/components/ui/sonner";
 import { QuizProvider } from "@/providers/QuizProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/breeds/:breedId" element={<BreedDetail />} />
               <Route path="/adopt" element={<AdoptionLocations />} />
+              <Route path="/map-test" element={<MapTest />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
