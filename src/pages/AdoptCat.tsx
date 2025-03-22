@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingInline } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
 import AdoptMap from "@/components/AdoptMap";
+import { ApiKeyManager } from "@/components/ApiKeyManager";
 import ShelterList from "@/components/ShelterList";
 import {
   MapPin,
@@ -251,6 +252,9 @@ const AdoptCat = () => {
             )}
           </div>
         </div>
+
+        {/* Add the API key manager component */}
+        <ApiKeyManager />
       </div>
     </PageTransition>
   );
