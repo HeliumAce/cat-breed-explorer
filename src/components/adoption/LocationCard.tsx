@@ -55,29 +55,23 @@ export function LocationCard({ location, index }: LocationCardProps) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
       <Card className="overflow-hidden hover-lift">
-        <div className="relative h-36 overflow-hidden">
-          <img 
-            src={location.imageUrl} 
-            alt={location.name} 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute top-2 left-2">
+        <CardHeader className="pb-2 flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold">{location.name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {location.address}, {location.city}, {location.state} {location.zipCode}
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
             <Badge className={getLocationTypeColor(location.type)}>
               {getLocationTypeLabel(location.type)}
             </Badge>
-          </div>
-          <div className="absolute bottom-2 right-2">
-            <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
+            
+            <Badge variant="outline" className="bg-white/80">
               {location.distance.toFixed(1)} miles away
             </Badge>
           </div>
-        </div>
-        
-        <CardHeader className="pb-2">
-          <h3 className="text-lg font-semibold">{location.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {location.address}, {location.city}, {location.state} {location.zipCode}
-          </p>
         </CardHeader>
         
         <CardContent className="pb-2">

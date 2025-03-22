@@ -5,6 +5,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { MapPlaceholder } from "@/components/adoption/MapPlaceholder";
 import { LocationCard } from "@/components/adoption/LocationCard";
 import { LocationFilters } from "@/components/adoption/LocationFilters";
+import { LocationHeader } from "@/components/adoption/LocationHeader";
 import { EmptyState } from "@/components/adoption/EmptyState";
 import { LoadingState } from "@/components/adoption/LoadingState";
 import { ErrorState } from "@/components/adoption/ErrorState";
@@ -123,21 +124,11 @@ const AdoptionLocations = () => {
               />
             )}
             
-            {/* Map area */}
+            {/* Location Input - Now ABOVE the map */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-6"
-            >
-              <MapPlaceholder locations={filteredLocations} />
-            </motion.div>
-            
-            {/* Filters */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
             >
               <LocationFilters 
                 onSortChange={setSortBy}
@@ -146,13 +137,28 @@ const AdoptionLocations = () => {
               />
             </motion.div>
             
-            {/* Locations grid */}
+            {/* Map area */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mb-6"
+            >
+              <MapPlaceholder locations={filteredLocations} />
+            </motion.div>
+            
+            {/* Locations list */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <h2 className="text-xl font-semibold mb-4">Locations Near You</h2>
+              {/* Location list header with sort/filter buttons */}
+              <LocationHeader 
+                onSortChange={setSortBy}
+                onFilterChange={setFilters}
+                activeFilters={filters}
+              />
               
               {isLoading ? (
                 <LoadingState />
@@ -161,7 +167,7 @@ const AdoptionLocations = () => {
               ) : filteredLocations.length === 0 ? (
                 <EmptyState onReset={handleReset} />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-col gap-4">
                   {filteredLocations.map((location, index) => (
                     <LocationCard 
                       key={location.id} 
