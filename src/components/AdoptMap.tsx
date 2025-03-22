@@ -96,11 +96,11 @@ const AdoptMap = forwardRef<AdoptMapRef, AdoptMapProps>(
       
       // Add markers for shelters
       shelters.forEach(shelter => {
-        if (shelter.coordinates) {
+        if (shelter.location) {
           const marker = new window.google.maps.Marker({
             position: {
-              lat: shelter.coordinates.lat,
-              lng: shelter.coordinates.lng
+              lat: shelter.location.lat,
+              lng: shelter.location.lng
             },
             map,
             title: shelter.name
@@ -129,11 +129,11 @@ const AdoptMap = forwardRef<AdoptMapRef, AdoptMapProps>(
       
       // Add markers for shelters
       shelters.forEach(shelter => {
-        if (shelter.coordinates) {
+        if (shelter.location) {
           const marker = new window.google.maps.Marker({
             position: {
-              lat: shelter.coordinates.lat,
-              lng: shelter.coordinates.lng
+              lat: shelter.location.lat,
+              lng: shelter.location.lng
             },
             map: googleMapRef.current,
             title: shelter.name
