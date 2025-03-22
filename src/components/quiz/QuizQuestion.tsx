@@ -27,6 +27,7 @@ export function QuizQuestion({
   isFinalQuestion,
 }: QuizQuestionProps) {
   const { saveAnswer, getAnswerForQuestion, currentQuestionIndex } = useQuiz();
+  
   // Properly type the state to handle all possible answer types
   const [selectedOption, setSelectedOption] = useState<
     string | number | string[] | number[]
@@ -56,14 +57,13 @@ export function QuizQuestion({
     saveAnswer(question.id, optionValue);
   };
 
+  // Fixed handleMultiSelectChange function with proper typing
   const handleMultiSelectChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with a string array
     const currentValue = Array.isArray(selectedOption)
       ? [...selectedOption as string[]]
       : [] as string[];
       
-    // Now TypeScript knows we're working with string[]
-    const updatedValue = checked
+    const updatedValue: string[] = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
       
@@ -72,14 +72,13 @@ export function QuizQuestion({
     saveAnswer(question.id, updatedValue);
   };
 
+  // Fixed handleCheckboxChange function with proper typing
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with a string array
     const currentValue = Array.isArray(selectedOption)
       ? [...selectedOption as string[]]
       : [] as string[];
       
-    // Now TypeScript knows we're working with string[]
-    const updatedValue = checked
+    const updatedValue: string[] = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
       
@@ -155,8 +154,9 @@ export function QuizQuestion({
         {question.type === "multiple-choice" && question.options && question.isMultiSelect && (
           <div className="grid gap-3">
             {question.options.map((option) => {
+              // Type assertion to ensure selectedOption is treated as string[] when it's an array
               const isChecked = Array.isArray(selectedOption) && 
-                selectedOption.includes(option.value.toString());
+                (selectedOption as string[]).includes(option.value.toString());
                 
               return (
                 <motion.div
@@ -209,9 +209,9 @@ export function QuizQuestion({
         {question.type === "checkbox" && question.options && (
           <div className="grid gap-3">
             {question.options.map((option) => {
-              // Safely check if the option value is in the selected options
+              // Use proper type assertion for selectedOption
               const isChecked = Array.isArray(selectedOption) && 
-                selectedOption.includes(option.value.toString());
+                (selectedOption as string[]).includes(option.value.toString());
                 
               return (
                 <motion.div
@@ -305,3 +305,4 @@ export function QuizQuestion({
     </div>
   );
 }
+
