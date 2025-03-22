@@ -1,8 +1,6 @@
 
-// Get API key from localStorage or use the fallback value
-export const MAPS_API_KEY = 
-  typeof window !== 'undefined' && localStorage.getItem('GOOGLE_MAPS_API_KEY') || 
-  'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+// Google Maps configuration
+export const MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
 
 // Default map options
 export const DEFAULT_MAP_OPTIONS = {
