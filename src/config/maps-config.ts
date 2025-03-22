@@ -1,6 +1,6 @@
 
 // Google Maps configuration
-export const MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+export const MAPS_API_KEY = 'AIzaSyBgvftUaflViUzJlLD9s5dquYo_8V2jWms';
 
 // Default map options
 export const DEFAULT_MAP_OPTIONS = {
