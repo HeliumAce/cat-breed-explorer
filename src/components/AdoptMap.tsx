@@ -1,14 +1,15 @@
-
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Shelter } from '@/types/shelters';
 import { LoadingInline } from '@/components/Loading';
 import { AlertCircle, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MAPS_API_KEY, DEFAULT_MAP_OPTIONS } from '@/config/maps-config';
+import { MAPS_API_KEY, DEFAULT_MAP_OPTIONS, MAPS_LIBRARIES } from '@/config/maps-config';
 
-// Note: This is still a simulation. To use the actual Google Maps API:
-// 1. Replace 'YOUR_GOOGLE_MAPS_API_KEY_HERE' in maps-config.ts with your actual API key
-// 2. Add the Google Maps script to index.html or load it dynamically
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
 
 interface AdoptMapProps {
   userLocation: { lat: number; lng: number };
@@ -25,7 +26,6 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
     const googleMapRef = useRef<google.maps.Map | null>(null);
     const markersRef = useRef<Record<string, google.maps.Marker>>({});
 
-    // Initialize map (simulation for now)
     useEffect(() => {
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -33,15 +33,12 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
 
       return () => clearTimeout(timer);
       
-      // For real Google Maps implementation, this would be:
-      /*
       if (!MAPS_API_KEY || MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
         setError('Google Maps API key not configured');
         setIsLoading(false);
         return;
       }
 
-      // This assumes Google Maps script is already loaded
       if (window.google && mapRef.current && userLocation) {
         try {
           const map = new window.google.maps.Map(mapRef.current, {
@@ -51,7 +48,6 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
           
           googleMapRef.current = map;
           
-          // Add user marker
           new window.google.maps.Marker({
             position: userLocation,
             map,
@@ -73,19 +69,13 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
           setIsLoading(false);
         }
       }
-      */
     }, [userLocation]);
 
-    // Update shelter markers (simulation for now)
     useEffect(() => {
-      // For real Google Maps implementation, this would update the markers
-      /*
       if (googleMapRef.current && shelters.length > 0) {
-        // Clear existing markers
         Object.values(markersRef.current).forEach(marker => marker.setMap(null));
         markersRef.current = {};
         
-        // Add new markers
         shelters.forEach(shelter => {
           const marker = new window.google.maps.Marker({
             position: shelter.location,
@@ -100,45 +90,42 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
           markersRef.current[shelter.id] = marker;
         });
       }
-      */
     }, [shelters, selectedShelterId, onMarkerClick]);
 
-    // Calculate position on the map (for simulation only)
-    const calculatePosition = (lat: number, lng: number) => {
-      // Normalize to our view area
+    const calculatePosition = (lat: number, lng: number, shelters: Shelter[] = [], userLocation: { lat: number; lng: number } | null = null) => {
       const mapWidth = 1000;
       const mapHeight = 500;
       
-      // Get min/max coordinates to establish bounds
-      const lats = [userLocation.lat, ...shelters.map(s => s.location.lat)];
-      const lngs = [userLocation.lng, ...shelters.map(s => s.location.lng)];
+      const lats = [
+        ...(userLocation ? [userLocation.lat] : []),
+        ...(shelters.length > 0 ? shelters.map(s => s.location.lat) : [lat]),
+      ];
+      
+      const lngs = [
+        ...(userLocation ? [userLocation.lng] : []),
+        ...(shelters.length > 0 ? shelters.map(s => s.location.lng) : [lng]),
+      ];
       
       const minLat = Math.min(...lats) - 0.01;
       const maxLat = Math.max(...lats) + 0.01;
       const minLng = Math.min(...lngs) - 0.01;
       const maxLng = Math.max(...lngs) + 0.01;
       
-      // Convert to x,y coordinates in our container
       const x = ((lng - minLng) / (maxLng - minLng)) * mapWidth;
       const y = ((maxLat - lat) / (maxLat - minLat)) * mapHeight;
       
       return { x, y };
     };
 
-    // Expose methods to parent component
     useImperativeHandle(ref, () => ({
-      // Method that would pan to a specific marker in a real implementation
       panToMarker: (shelterId: string) => {
         const shelter = shelters.find(s => s.id === shelterId);
         if (shelter) {
           console.log(`Panning to shelter: ${shelter.name}`);
-          // In a real implementation, this would use the Google Maps API to pan
         }
       },
-      // Method to pan to user location
       panToUserLocation: () => {
         console.log(`Panning to user location: ${userLocation.lat}, ${userLocation.lng}`);
-        // In a real implementation, this would use the Google Maps API to pan
       }
     }));
 
@@ -161,19 +148,15 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
       );
     }
 
-    // For real Google Maps, this would just be a div with ref={mapRef}
     return (
       <div className="w-full h-full relative bg-amber-50 overflow-hidden">
-        {/* This div would be the actual Google Map container in the real implementation */}
         <div ref={mapRef} className="absolute inset-0">
-          {/* Simulation content - would be replaced by actual Google Maps */}
           <div className="w-full h-full grid grid-cols-8 grid-rows-4">
             {Array.from({ length: 32 }).map((_, i) => (
               <div key={i} className="border border-amber-100/50" />
             ))}
           </div>
           
-          {/* User location marker */}
           <div 
             className="absolute transform -translate-x-1/2 -translate-y-1/2"
             style={{ 
@@ -187,7 +170,6 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
             </div>
           </div>
           
-          {/* Shelter markers */}
           {shelters.map(shelter => {
             const { x, y } = calculatePosition(shelter.location.lat, shelter.location.lng);
             const isSelected = selectedShelterId === shelter.id;
