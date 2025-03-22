@@ -51,7 +51,7 @@ export function PrimaryMatch({ match, onClose }: PrimaryMatchProps) {
             ))}
           </div>
           
-          <Link to={`/breed/${match.id}`}>
+          <Link to={`/breeds/${match.id}`}>
             <Button 
               size="sm" 
               className="gap-1 bg-amber-500 hover:bg-amber-600"

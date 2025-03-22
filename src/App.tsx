@@ -13,8 +13,8 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <QuizProvider>
-        <Router>
+      <Router>
+        <QuizProvider>
           <main className="min-h-screen">
             <Routes>
               <Route path="/" element={<Index />} />
@@ -23,8 +23,8 @@ function App() {
             </Routes>
           </main>
           <Toaster />
-        </Router>
-      </QuizProvider>
+        </QuizProvider>
+      </Router>
     </QueryClientProvider>
   );
 }

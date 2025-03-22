@@ -21,7 +21,7 @@ export function BreedCard({ breed, index }: BreedCardProps) {
       className="group"
     >
       <Link 
-        to={`/breed/${breed.id}`} 
+        to={`/breeds/${breed.id}`} 
         className="block h-full focus-ring rounded-2xl"
       >
         <div className="relative overflow-hidden rounded-2xl bg-white border border-amber-100 shadow-sm hover-lift">

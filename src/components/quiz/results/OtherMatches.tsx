@@ -47,7 +47,7 @@ export function OtherMatches({ matches, onClose }: OtherMatchesProps) {
             
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-amber-600">{match.matchPercentage}%</span>
-              <Link to={`/breed/${match.id}`}>
+              <Link to={`/breeds/${match.id}`}>
                 <Button 
                   size="sm" 
                   variant="ghost" 
