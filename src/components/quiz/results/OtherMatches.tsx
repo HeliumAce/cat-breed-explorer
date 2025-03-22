@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -45,8 +44,7 @@ export function OtherMatches({ matches, onClose }: OtherMatchesProps) {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-amber-600">{match.matchPercentage}%</span>
+            <div className="flex items-center">
               <Link to={`/breeds/${match.id}`}>
                 <Button 
                   size="sm" 
