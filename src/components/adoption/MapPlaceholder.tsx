@@ -1,16 +1,22 @@
-import { useState, useCallback, useRef } from "react";
+
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { MapPin, AlertCircle, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import { GOOGLE_MAPS_API_KEY, mapConfig } from "@/config/maps-config";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface MapPlaceholderProps {
   locations: AdoptionLocation[];
   userLocation?: { lat: number; lng: number };
+  isMainFocus?: boolean;
+  isLoading?: boolean;
+  hasError?: boolean;
+  onRetry?: () => void;
 }
 
 const mapContainerStyle = {
@@ -22,10 +28,18 @@ const mapContainerStyle = {
 // Define libraries correctly as an array of strings
 const libraries: ["places"] = ["places"];
 
-export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps) {
+export function MapPlaceholder({ 
+  locations, 
+  userLocation, 
+  isMainFocus = false,
+  isLoading = false,
+  hasError = false,
+  onRetry 
+}: MapPlaceholderProps) {
   const isMobile = useIsMobile();
-  const [isCollapsed, setIsCollapsed] = useState(isMobile);
+  const [isCollapsed, setIsCollapsed] = useState(isMobile && !isMainFocus);
   const [selectedLocation, setSelectedLocation] = useState<AdoptionLocation | null>(null);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -33,8 +47,17 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
     libraries,
   });
 
+  useEffect(() => {
+    // If this is the main focus, never collapse on mobile
+    if (isMainFocus) {
+      setIsCollapsed(false);
+    }
+  }, [isMainFocus]);
+
   const onMapLoad = useCallback((map: google.maps.Map) => {
+    console.log("Map loaded successfully");
     mapRef.current = map;
+    setMapInstance(map);
     
     // If we have locations, fit bounds to show all markers
     if (locations.length > 0) {
@@ -59,6 +82,25 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
       }
     }
   }, [locations, userLocation]);
+
+  // Handle map resize when collapsed state changes
+  useEffect(() => {
+    if (mapInstance && !isCollapsed) {
+      window.google?.maps.event.trigger(mapInstance, 'resize');
+      
+      // Re-center the map if needed
+      if (userLocation) {
+        mapInstance.setCenter(userLocation);
+      } else if (locations.length > 0) {
+        mapInstance.setCenter({
+          lat: locations[0].latitude, 
+          lng: locations[0].longitude
+        });
+      } else {
+        mapInstance.setCenter(mapConfig.defaultCenter);
+      }
+    }
+  }, [isCollapsed, mapInstance, locations, userLocation]);
 
   const getMarkerIcon = (type: string) => {
     switch (type) {
@@ -89,25 +131,44 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
   const renderMap = () => {
     if (loadError) {
       return (
-        <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
-          <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
-          <div className="flex flex-col">
-            <span className="font-semibold">Error loading Google Maps</span>
-            <span className="text-xs mt-1">
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
+          <AlertCircle className="w-8 h-8 mb-4 text-red-500" />
+          <div className="flex flex-col items-center text-center">
+            <span className="font-semibold text-lg mb-2">Error loading Google Maps</span>
+            <span className="text-sm max-w-md">
               {GOOGLE_MAPS_API_KEY 
                 ? "Check your API key configuration or network connection." 
                 : "No Google Maps API key provided. Set the VITE_GOOGLE_MAPS_API_KEY environment variable."}
             </span>
+            {onRetry && (
+              <Button onClick={onRetry} variant="secondary" className="mt-4">
+                Try Again
+              </Button>
+            )}
           </div>
         </div>
       );
     }
 
-    if (!isLoaded) {
+    if (!isLoaded || isLoading) {
       return (
-        <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
-          <MapPin className="w-5 h-5 mr-2" />
-          <span>Loading maps...</span>
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
+          <Loader2 className="w-8 h-8 mb-4 animate-spin text-amber-500" />
+          <span className="font-medium">Loading map...</span>
+        </div>
+      );
+    }
+
+    if (hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
+          <AlertCircle className="w-8 h-8 mb-4 text-red-500" />
+          <span className="font-medium mb-2">Error loading locations</span>
+          {onRetry && (
+            <Button onClick={onRetry} variant="secondary" className="mt-2">
+              Try Again
+            </Button>
+          )}
         </div>
       );
     }
@@ -118,11 +179,7 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
         center={userLocation || mapConfig.defaultCenter}
         zoom={mapConfig.defaultZoom}
         onLoad={onMapLoad}
-        options={{
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        }}
+        options={mapConfig.options}
       >
         {/* User location marker */}
         {userLocation && (
@@ -174,10 +231,15 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
     );
   };
 
+  // For main focus map, calculate height based on viewport
+  const mapHeight = isMainFocus 
+    ? "h-[70vh]" // Taller when main focus
+    : "h-[60vh]";
+
   return (
     <div className="relative w-full">
       {/* Map toggle button for mobile */}
-      {isMobile && (
+      {isMobile && !isMainFocus && (
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="absolute top-2 right-2 z-10 bg-white p-2 rounded-full shadow-md"
@@ -190,7 +252,7 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
       <div 
         className={cn(
           "relative bg-amber-50 rounded-lg border border-amber-100 shadow-inner overflow-hidden transition-all duration-300 ease-in-out",
-          isCollapsed ? "h-16" : "h-[60vh]"
+          isCollapsed ? "h-16" : mapHeight
         )}
       >
         {isCollapsed ? (
@@ -208,6 +270,30 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
           renderMap()
         )}
       </div>
+
+      {/* Map Legend - Only show when map is expanded and is main focus */}
+      {!isCollapsed && isMainFocus && (
+        <div className="flex flex-wrap gap-2 justify-center mt-2 bg-white p-2 rounded-md shadow-sm">
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-blue-500 mr-1.5"></div>
+            <span className="text-xs text-muted-foreground">Animal Shelter</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-green-500 mr-1.5"></div>
+            <span className="text-xs text-muted-foreground">Humane Society</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 rounded-full bg-yellow-500 mr-1.5"></div>
+            <span className="text-xs text-muted-foreground">Pet Store</span>
+          </div>
+          {userLocation && (
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-blue-700 border border-white mr-1.5"></div>
+              <span className="text-xs text-muted-foreground">Your Location</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

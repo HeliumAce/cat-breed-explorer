@@ -9,5 +9,12 @@ export const mapConfig = {
     lat: 34.052235,
     lng: -118.243683
   },
-  defaultZoom: 10
+  defaultZoom: 10,
+  // Map style options
+  options: {
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+    zoomControl: true,
+  }
 };
