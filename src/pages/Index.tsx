@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -8,7 +7,6 @@ import { Loading, LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
 import { Cat, PawPrint } from "lucide-react";
 import { QuizButton } from "@/components/quiz/QuizButton";
-import { QuizModal } from "@/components/quiz/QuizModal";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,9 +132,6 @@ const Index = () => {
           </div>
         </footer>
       </div>
-      
-      {/* Add Quiz Modal */}
-      <QuizModal />
     </PageTransition>
   );
 };
