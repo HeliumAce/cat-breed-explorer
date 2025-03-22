@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { adoptionLocations } from "@/data/adoptionLocations";
+import { useGeolocation } from "@/hooks/use-geolocation";
 
 const AdoptionLocations = () => {
   const [filteredLocations, setFilteredLocations] = useState(adoptionLocations);
@@ -23,6 +24,11 @@ const AdoptionLocations = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [locationPermissionAsked, setLocationPermissionAsked] = useState(false);
+  const { latitude, longitude, error, loading } = useGeolocation();
+
+  const userLocation = latitude && longitude 
+    ? { lat: latitude, lng: longitude }
+    : undefined;
 
   useEffect(() => {
     // Simulate loading data
@@ -117,7 +123,7 @@ const AdoptionLocations = () => {
           {/* Main content */}
           <div className="space-y-6">
             {/* Location permission request */}
-            {!locationPermissionAsked && (
+            {!locationPermissionAsked && !userLocation && !loading && (
               <LocationPermission 
                 onRequestLocation={handleRequestLocation}
                 onSkip={handleSkipLocationPermission}
@@ -144,7 +150,7 @@ const AdoptionLocations = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="mb-6"
             >
-              <MapPlaceholder locations={filteredLocations} />
+              <MapPlaceholder locations={filteredLocations} userLocation={userLocation} />
             </motion.div>
             
             {/* Locations list */}
