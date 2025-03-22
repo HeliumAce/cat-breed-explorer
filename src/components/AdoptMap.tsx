@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Shelter } from '@/types/shelters';
 import { LoadingInline } from '@/components/Loading';
-import { AlertCircle, MapPin } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MAPS_API_KEY, DEFAULT_MAP_OPTIONS, MAPS_LIBRARIES } from '@/config/maps-config';
+import { useScript } from '@/hooks/useScript';
 
 declare global {
   interface Window {
@@ -18,192 +20,181 @@ interface AdoptMapProps {
   onMarkerClick: (shelterId: string) => void;
 }
 
-const AdoptMap = forwardRef<any, AdoptMapProps>(
+export interface AdoptMapRef {
+  panToMarker: (shelterId: string) => void;
+  panToUserLocation: () => void;
+}
+
+const AdoptMap = forwardRef<AdoptMapRef, AdoptMapProps>(
   ({ userLocation, shelters, selectedShelterId, onMarkerClick }, ref) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const mapRef = useRef<HTMLDivElement>(null);
     const googleMapRef = useRef<google.maps.Map | null>(null);
     const markersRef = useRef<Record<string, google.maps.Marker>>({});
-
+    const userMarkerRef = useRef<google.maps.Marker | null>(null);
+    
+    // Load the Google Maps script
+    const mapsUrl = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=${MAPS_LIBRARIES.join(',')}`;
+    const { loaded: mapsLoaded, error: mapsError } = useScript(mapsUrl);
+    
+    // Initialize the map once the script is loaded
     useEffect(() => {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-      
-      if (!MAPS_API_KEY || MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
-        setError('Google Maps API key not configured');
-        setIsLoading(false);
+      if (!mapsLoaded || !mapRef.current || !userLocation) {
         return;
       }
-
-      if (window.google && mapRef.current && userLocation) {
-        try {
-          const map = new window.google.maps.Map(mapRef.current, {
-            ...DEFAULT_MAP_OPTIONS,
-            center: userLocation,
-          });
-          
-          googleMapRef.current = map;
-          
-          new window.google.maps.Marker({
-            position: userLocation,
-            map,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 7,
-              fillColor: '#4285F4',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            },
-            title: 'Your Location'
-          });
-          
-          setIsLoading(false);
-        } catch (err) {
-          console.error('Error initializing map:', err);
-          setError('Failed to initialize Google Maps');
-          setIsLoading(false);
-        }
+      
+      try {
+        // Create the map
+        const map = new window.google.maps.Map(mapRef.current, {
+          ...DEFAULT_MAP_OPTIONS,
+          center: userLocation,
+        });
+        
+        googleMapRef.current = map;
+        
+        // Add user location marker
+        userMarkerRef.current = new window.google.maps.Marker({
+          position: userLocation,
+          map,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: '#4285F4',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          },
+          title: 'Your Location'
+        });
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error initializing map:', err);
+        setError('Failed to initialize Google Maps');
+        setIsLoading(false);
+      }
+    }, [mapsLoaded, userLocation]);
+    
+    // Update user location marker when location changes
+    useEffect(() => {
+      if (googleMapRef.current && userMarkerRef.current && userLocation) {
+        userMarkerRef.current.setPosition(userLocation);
       }
     }, [userLocation]);
-
+    
+    // Add or update shelter markers when shelters change
     useEffect(() => {
-      if (googleMapRef.current && shelters.length > 0) {
-        Object.values(markersRef.current).forEach(marker => marker.setMap(null));
-        markersRef.current = {};
+      if (!googleMapRef.current || !mapsLoaded || shelters.length === 0) {
+        return;
+      }
+      
+      // Clear existing markers
+      Object.values(markersRef.current).forEach(marker => marker.setMap(null));
+      markersRef.current = {};
+      
+      // Bounds to fit all markers
+      const bounds = new window.google.maps.LatLngBounds();
+      
+      // Add user location to bounds
+      if (userLocation) {
+        bounds.extend(userLocation);
+      }
+      
+      // Add shelter markers
+      shelters.forEach(shelter => {
+        const marker = new window.google.maps.Marker({
+          position: shelter.location,
+          map: googleMapRef.current,
+          title: shelter.name,
+          animation: selectedShelterId === shelter.id 
+            ? window.google.maps.Animation.BOUNCE 
+            : undefined,
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+          }
+        });
         
-        shelters.forEach(shelter => {
-          const marker = new window.google.maps.Marker({
-            position: shelter.location,
-            map: googleMapRef.current,
-            title: shelter.name,
-            animation: selectedShelterId === shelter.id 
-              ? window.google.maps.Animation.BOUNCE 
-              : undefined
-          });
-          
-          marker.addListener('click', () => onMarkerClick(shelter.id));
-          markersRef.current[shelter.id] = marker;
+        // Add click listener
+        marker.addListener('click', () => onMarkerClick(shelter.id));
+        
+        // Store marker reference
+        markersRef.current[shelter.id] = marker;
+        
+        // Add to bounds
+        bounds.extend(shelter.location);
+      });
+      
+      // Fit map to show all markers
+      if (shelters.length > 0) {
+        googleMapRef.current.fitBounds(bounds);
+        
+        // Don't zoom in too far
+        const listener = window.google.maps.event.addListener(googleMapRef.current, 'idle', () => {
+          if (googleMapRef.current && googleMapRef.current.getZoom() > 15) {
+            googleMapRef.current.setZoom(15);
+          }
+          window.google.maps.event.removeListener(listener);
         });
       }
-    }, [shelters, selectedShelterId, onMarkerClick]);
-
-    const calculatePosition = (lat: number, lng: number, shelters: Shelter[] = [], userLocation: { lat: number; lng: number } | null = null) => {
-      const mapWidth = 1000;
-      const mapHeight = 500;
+    }, [shelters, selectedShelterId, onMarkerClick, mapsLoaded, userLocation]);
+    
+    // Update animation for selected shelter marker
+    useEffect(() => {
+      if (!mapsLoaded) return;
       
-      const lats = [
-        ...(userLocation ? [userLocation.lat] : []),
-        ...(shelters.length > 0 ? shelters.map(s => s.location.lat) : [lat]),
-      ];
-      
-      const lngs = [
-        ...(userLocation ? [userLocation.lng] : []),
-        ...(shelters.length > 0 ? shelters.map(s => s.location.lng) : [lng]),
-      ];
-      
-      const minLat = Math.min(...lats) - 0.01;
-      const maxLat = Math.max(...lats) + 0.01;
-      const minLng = Math.min(...lngs) - 0.01;
-      const maxLng = Math.max(...lngs) + 0.01;
-      
-      const x = ((lng - minLng) / (maxLng - minLng)) * mapWidth;
-      const y = ((maxLat - lat) / (maxLat - minLat)) * mapHeight;
-      
-      return { x, y };
-    };
-
+      Object.entries(markersRef.current).forEach(([id, marker]) => {
+        if (id === selectedShelterId) {
+          marker.setAnimation(window.google.maps.Animation.BOUNCE);
+        } else {
+          marker.setAnimation(null);
+        }
+      });
+    }, [selectedShelterId, mapsLoaded]);
+    
+    // Expose methods via ref
     useImperativeHandle(ref, () => ({
       panToMarker: (shelterId: string) => {
-        const shelter = shelters.find(s => s.id === shelterId);
-        if (shelter) {
-          console.log(`Panning to shelter: ${shelter.name}`);
-        }
+        if (!googleMapRef.current || !markersRef.current[shelterId]) return;
+        
+        const marker = markersRef.current[shelterId];
+        googleMapRef.current.panTo(marker.getPosition() as google.maps.LatLng);
+        googleMapRef.current.setZoom(14);
       },
       panToUserLocation: () => {
-        console.log(`Panning to user location: ${userLocation.lat}, ${userLocation.lng}`);
+        if (!googleMapRef.current || !userLocation) return;
+        
+        googleMapRef.current.panTo(userLocation);
+        googleMapRef.current.setZoom(14);
       }
     }));
-
-    if (isLoading) {
+    
+    // Show loading state
+    if (isLoading && !mapsError) {
       return (
         <div className="w-full h-full flex items-center justify-center bg-gray-100">
           <LoadingInline text="Loading map..." />
         </div>
       );
     }
-
-    if (error) {
+    
+    // Show error state
+    if (error || mapsError) {
       return (
         <div className="w-full h-full flex items-center justify-center bg-gray-100">
           <Alert variant="destructive" className="max-w-md">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              {error || "Failed to load Google Maps. Please check your API key."}
+            </AlertDescription>
           </Alert>
         </div>
       );
     }
-
+    
     return (
-      <div className="w-full h-full relative bg-amber-50 overflow-hidden">
-        <div ref={mapRef} className="absolute inset-0">
-          <div className="w-full h-full grid grid-cols-8 grid-rows-4">
-            {Array.from({ length: 32 }).map((_, i) => (
-              <div key={i} className="border border-amber-100/50" />
-            ))}
-          </div>
-          
-          <div 
-            className="absolute transform -translate-x-1/2 -translate-y-1/2"
-            style={{ 
-              left: calculatePosition(userLocation.lat, userLocation.lng).x, 
-              top: calculatePosition(userLocation.lat, userLocation.lng).y 
-            }}
-          >
-            <div className="h-4 w-4 bg-blue-500 rounded-full animate-pulse border-2 border-white shadow-lg" />
-            <div className="mt-1 bg-white rounded px-2 py-0.5 text-xs shadow-md">
-              You
-            </div>
-          </div>
-          
-          {shelters.map(shelter => {
-            const { x, y } = calculatePosition(shelter.location.lat, shelter.location.lng);
-            const isSelected = selectedShelterId === shelter.id;
-            
-            return (
-              <div
-                key={shelter.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200"
-                style={{ left: x, top: y }}
-                onClick={() => onMarkerClick(shelter.id)}
-              >
-                <div className={`
-                  flex items-center justify-center h-6 w-6 rounded-full 
-                  ${isSelected ? 'bg-amber-600' : 'bg-amber-500'} 
-                  ${isSelected ? 'scale-125' : 'hover:scale-110'}
-                  text-white shadow-md transition-all duration-200
-                `}>
-                  <MapPin size={15} />
-                </div>
-                {isSelected && (
-                  <div className="mt-1 bg-white rounded px-2 py-1 text-xs shadow-md whitespace-nowrap">
-                    {shelter.name}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        <div className="absolute bottom-1 right-1 text-xs text-gray-500 bg-white/70 px-1 rounded">
-          Map Simulation
-          {!MAPS_API_KEY || MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE' ? 
-            " (API key needed)" : ""}
-        </div>
+      <div className="w-full h-full relative">
+        <div ref={mapRef} className="absolute inset-0" />
       </div>
     );
   }

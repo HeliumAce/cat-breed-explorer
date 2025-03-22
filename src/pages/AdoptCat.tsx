@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -6,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingInline } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import AdoptMap from "@/components/AdoptMap";
+import AdoptMap, { AdoptMapRef } from "@/components/AdoptMap";
 import ShelterList from "@/components/ShelterList";
 import {
   MapPin,
@@ -15,10 +16,12 @@ import {
   AlertCircle,
   ChevronUp,
   ChevronDown,
+  Navigation,
 } from "lucide-react";
 import { useShelters } from "@/hooks/useShelters";
 import { cn } from "@/lib/utils";
 import { FilterOptions, SortOption } from "@/types/shelters";
+import { toast } from "sonner";
 
 const AdoptCat = () => {
   const [manualLocation, setManualLocation] = useState("");
@@ -44,7 +47,7 @@ const AdoptCat = () => {
     fetchShelters 
   } = useShelters();
 
-  const mapRef = useRef(null);
+  const mapRef = useRef<AdoptMapRef>(null);
 
   useEffect(() => {
     requestUserLocation();
@@ -99,6 +102,8 @@ const AdoptCat = () => {
   const handleManualLocationSearch = () => {
     if (manualLocation.trim()) {
       setIsLocating(true);
+      // This is where we would use the Google Places API to geocode the address
+      // For now, we'll use a simulated location
       setTimeout(() => {
         const simulatedCoords = {
           lat: 37.7749,
@@ -107,12 +112,17 @@ const AdoptCat = () => {
         setUserCoordinates(simulatedCoords);
         fetchShelters(simulatedCoords);
         setIsLocating(false);
+        toast("Using simulated location for demonstration");
       }, 1000);
     }
   };
 
   const handleShelterSelect = (shelterId: string) => {
     setSelectedShelterId(shelterId);
+    // Pan the map to the selected shelter
+    if (mapRef.current) {
+      mapRef.current.panToMarker(shelterId);
+    }
   };
 
   const handleMarkerClick = (shelterId: string) => {
@@ -131,6 +141,12 @@ const AdoptCat = () => {
 
   const toggleListView = () => {
     setExpandedListView(!expandedListView);
+  };
+
+  const centerOnUserLocation = () => {
+    if (mapRef.current) {
+      mapRef.current.panToUserLocation();
+    }
   };
 
   return (
@@ -206,7 +222,7 @@ const AdoptCat = () => {
             )}
           </Card>
 
-          <div className="mb-6 rounded-lg overflow-hidden shadow-md">
+          <div className="mb-6 rounded-lg overflow-hidden shadow-md relative">
             <div className="h-[300px] sm:h-[400px]">
               {!userCoordinates ? (
                 <div className="flex h-full items-center justify-center bg-muted/20">
@@ -227,6 +243,17 @@ const AdoptCat = () => {
                 />
               )}
             </div>
+            
+            {userCoordinates && (
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={centerOnUserLocation}
+                className="absolute bottom-3 right-3 bg-white shadow-md hover:bg-gray-100"
+              >
+                <Navigation size={16} className="mr-2" /> Center on Me
+              </Button>
+            )}
           </div>
 
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
