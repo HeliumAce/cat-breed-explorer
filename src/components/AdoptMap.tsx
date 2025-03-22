@@ -4,7 +4,12 @@ import { Shelter } from '@/types/shelters';
 import { LoadingInline } from '@/components/Loading';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MAPS_API_KEY, DEFAULT_MAP_OPTIONS, getMapsUrl } from '@/config/maps-config';
+import { 
+  MAPS_API_KEY, 
+  DEFAULT_MAP_OPTIONS, 
+  getMapsUrl, 
+  MAPS_SCRIPT_ID 
+} from '@/config/maps-config';
 import { useScript } from '@/hooks/useScript';
 
 interface AdoptMapProps {
@@ -30,7 +35,7 @@ const AdoptMap = forwardRef<AdoptMapRef, AdoptMapProps>(
     
     // Load the Google Maps script
     const mapsUrl = getMapsUrl();
-    const { loaded: mapsLoaded, error: mapsError } = useScript(mapsUrl);
+    const { loaded: mapsLoaded, error: mapsError } = useScript(mapsUrl, MAPS_SCRIPT_ID);
     
     // Initialize the map once the script is loaded
     useEffect(() => {
@@ -39,38 +44,109 @@ const AdoptMap = forwardRef<AdoptMapRef, AdoptMapProps>(
       }
       
       try {
-        console.log("Initializing map with center:", userLocation);
-        
-        // Create the map
-        const map = new window.google.maps.Map(mapRef.current, {
-          ...DEFAULT_MAP_OPTIONS,
-          center: userLocation,
-        });
-        
-        googleMapRef.current = map;
-        
-        // Add user location marker
-        userMarkerRef.current = new window.google.maps.Marker({
-          position: userLocation,
-          map,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-          title: 'Your Location'
-        });
-        
-        setIsLoading(false);
+        // Check if google variable exists and if map is already initialized
+        if (!window.google || !window.google.maps) {
+          console.log("Google Maps API not available yet");
+          // Listen for the custom event that we dispatch in the initMap callback
+          const handleMapsLoaded = () => {
+            initializeMap();
+          };
+          
+          window.addEventListener('google-maps-loaded', handleMapsLoaded);
+          return () => {
+            window.removeEventListener('google-maps-loaded', handleMapsLoaded);
+          };
+        } else {
+          initializeMap();
+        }
       } catch (err) {
         console.error('Error initializing map:', err);
         setError(`Failed to initialize Google Maps: ${err instanceof Error ? err.message : String(err)}`);
         setIsLoading(false);
       }
     }, [mapsLoaded, userLocation]);
+    
+    const initializeMap = () => {
+      if (!mapRef.current || !userLocation || !window.google || !window.google.maps) return;
+      
+      console.log("Initializing map with center:", userLocation);
+      
+      // Create the map
+      const map = new window.google.maps.Map(mapRef.current, {
+        ...DEFAULT_MAP_OPTIONS,
+        center: userLocation,
+      });
+      
+      googleMapRef.current = map;
+      
+      // Add user location marker
+      userMarkerRef.current = new window.google.maps.Marker({
+        position: userLocation,
+        map,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 7,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+        },
+        title: 'Your Location'
+      });
+      
+      // Add markers for shelters
+      shelters.forEach(shelter => {
+        if (shelter.coordinates) {
+          const marker = new window.google.maps.Marker({
+            position: {
+              lat: shelter.coordinates.lat,
+              lng: shelter.coordinates.lng
+            },
+            map,
+            title: shelter.name
+          });
+          
+          marker.addListener('click', () => {
+            onMarkerClick(shelter.id);
+          });
+          
+          markersRef.current[shelter.id] = marker;
+        }
+      });
+      
+      setIsLoading(false);
+    };
+    
+    // Update shelter markers when shelters change
+    useEffect(() => {
+      if (!googleMapRef.current || !window.google || !shelters.length) return;
+      
+      // Clear existing shelter markers first
+      Object.values(markersRef.current).forEach(marker => {
+        marker.setMap(null);
+      });
+      markersRef.current = {};
+      
+      // Add markers for shelters
+      shelters.forEach(shelter => {
+        if (shelter.coordinates) {
+          const marker = new window.google.maps.Marker({
+            position: {
+              lat: shelter.coordinates.lat,
+              lng: shelter.coordinates.lng
+            },
+            map: googleMapRef.current,
+            title: shelter.name
+          });
+          
+          marker.addListener('click', () => {
+            onMarkerClick(shelter.id);
+          });
+          
+          markersRef.current[shelter.id] = marker;
+        }
+      });
+    }, [shelters, onMarkerClick]);
     
     // Expose methods via ref
     useImperativeHandle(ref, () => ({

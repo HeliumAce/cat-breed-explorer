@@ -5,7 +5,7 @@ interface UseScriptStatus {
   error: Error | null;
 }
 
-export function useScript(src: string): UseScriptStatus {
+export function useScript(src: string, id?: string): UseScriptStatus {
   // Keep track of script status (loaded or error)
   const [status, setStatus] = useState<UseScriptStatus>({
     loaded: false,
@@ -20,32 +20,25 @@ export function useScript(src: string): UseScriptStatus {
     }
 
     // Check if the script already exists in the DOM
-    let script = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement;
+    const scriptId = id || `script-${src.replace(/[^a-zA-Z0-9]/g, '')}`;
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
 
     if (!script) {
       // Create script
       script = document.createElement('script');
       script.src = src;
+      script.id = scriptId;
       script.async = true;
       script.defer = true;
       
-      // Mark when script is loaded
-      script.setAttribute('data-status', 'loading');
-      
-      // Add script to document body
-      document.body.appendChild(script);
-
       // Store status in state
       const setStateFromEvent = (event: Event) => {
         if (event.type === 'load') {
-          script.setAttribute('data-status', 'loaded');
-          script.setAttribute('data-loaded', 'true');
           setStatus({
             loaded: true,
             error: null
           });
         } else {
-          script.setAttribute('data-status', 'error');
           setStatus({
             loaded: false,
             error: new Error(`Failed to load script: ${src}`)
@@ -55,6 +48,9 @@ export function useScript(src: string): UseScriptStatus {
 
       script.addEventListener('load', setStateFromEvent);
       script.addEventListener('error', setStateFromEvent);
+      
+      // Add script to document body
+      document.body.appendChild(script);
 
       // Remove event listeners on cleanup
       return () => {
@@ -64,22 +60,32 @@ export function useScript(src: string): UseScriptStatus {
         }
       };
     } else {
-      // Script already exists, check if it's already loaded
-      const dataStatus = script.getAttribute('data-status');
-      if (dataStatus === 'loaded' || script.getAttribute('data-loaded') === 'true') {
+      // Script already exists
+      
+      // If Google Maps, check if API is already loaded
+      if (id === 'google-maps-script' && window.google && window.google.maps) {
         setStatus({ loaded: true, error: null });
-      } else if (dataStatus === 'error') {
-        setStatus({ 
-          loaded: false, 
-          error: new Error(`Script previously failed to load: ${src}`) 
-        });
+        return;
+      }
+      
+      // For other scripts, check if onload already fired
+      if (script.hasAttribute('data-loaded')) {
+        setStatus({ loaded: true, error: null });
       } else {
         // If the script is still loading, add event listeners
         const setStateFromEvent = (event: Event) => {
-          setStatus({
-            loaded: event.type === 'load',
-            error: event.type === 'error' ? new Error(`Failed to load script: ${src}`) : null
-          });
+          if (event.type === 'load') {
+            script.setAttribute('data-loaded', 'true');
+            setStatus({
+              loaded: true,
+              error: null
+            });
+          } else {
+            setStatus({
+              loaded: false,
+              error: new Error(`Failed to load script: ${src}`)
+            });
+          }
         };
 
         script.addEventListener('load', setStateFromEvent);
@@ -93,7 +99,7 @@ export function useScript(src: string): UseScriptStatus {
         };
       }
     }
-  }, [src]);
+  }, [src, id]);
 
   return status;
 }
