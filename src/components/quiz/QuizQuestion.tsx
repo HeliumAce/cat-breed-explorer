@@ -57,12 +57,12 @@ export function QuizQuestion({
   };
 
   const handleMultiSelectChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with an array and properly type it
+    // Ensure we're working with a string array
     const currentValue = Array.isArray(selectedOption)
-      ? [...selectedOption]
-      : [];
+      ? [...selectedOption as string[]]
+      : [] as string[];
       
-    // Fix the type issue - explicitly cast to string[]
+    // Now TypeScript knows we're working with string[]
     const updatedValue = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
@@ -73,10 +73,10 @@ export function QuizQuestion({
   };
 
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with an array and properly type it
+    // Ensure we're working with a string array
     const currentValue = Array.isArray(selectedOption)
-      ? [...selectedOption as string[]]  // Explicitly cast to string[]
-      : [] as string[];  // Explicitly initialize as string[]
+      ? [...selectedOption as string[]]
+      : [] as string[];
       
     // Now TypeScript knows we're working with string[]
     const updatedValue = checked
@@ -209,9 +209,9 @@ export function QuizQuestion({
         {question.type === "checkbox" && question.options && (
           <div className="grid gap-3">
             {question.options.map((option) => {
-              // Fix for TypeScript error - safely check if the option value is in the selected options
+              // Safely check if the option value is in the selected options
               const isChecked = Array.isArray(selectedOption) && 
-                selectedOption.some(val => val.toString() === option.value.toString());
+                selectedOption.includes(option.value.toString());
                 
               return (
                 <motion.div
