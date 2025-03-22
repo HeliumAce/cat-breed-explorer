@@ -1,12 +1,12 @@
 
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Home, Building, Store, Navigation, ChevronUp, ChevronDown } from "lucide-react";
+import { MapPin, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
-import { GOOGLE_MAPS_API_KEY } from "@/config/maps-config";
+import { GOOGLE_MAPS_API_KEY, mapConfig } from "@/config/maps-config";
 
 interface MapPlaceholderProps {
   locations: AdoptionLocation[];
@@ -19,13 +19,8 @@ const mapContainerStyle = {
   borderRadius: '0.5rem'
 };
 
-const defaultCenter = {
-  lat: 34.052235,
-  lng: -118.243683
-};
-
-// Define libraries correctly as Libraries type
-const libraries = ["places"] as ("places" | "drawing" | "geometry" | "visualization")[];
+// Define libraries correctly as an array of strings
+const libraries: ["places"] = ["places"];
 
 export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps) {
   const isMobile = useIsMobile();
@@ -72,21 +67,34 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
     if (loadError) {
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
-          <MapPin className="w-5 h-5 mr-2 text-red-500" />
-          <span>Error loading maps. Please try again later.</span>
+          <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
+          <div className="flex flex-col">
+            <span className="font-semibold">Error loading Google Maps</span>
+            <span className="text-xs mt-1">Check your API key configuration or network connection.</span>
+          </div>
         </div>
       );
     }
 
-    return isLoaded ? (
+    if (!isLoaded) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
+          <MapPin className="w-5 h-5 mr-2" />
+          <span>Loading maps...</span>
+        </div>
+      );
+    }
+
+    return (
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={userLocation || defaultCenter}
-        zoom={10}
+        center={userLocation || mapConfig.defaultCenter}
+        zoom={mapConfig.defaultZoom}
         onLoad={onMapLoad}
         options={{
           mapTypeControl: false,
           streetViewControl: false,
+          fullscreenControl: false,
         }}
       >
         {/* User location marker */}
@@ -129,11 +137,6 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
           </InfoWindow>
         )}
       </GoogleMap>
-    ) : (
-      <div className="flex items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
-        <MapPin className="w-5 h-5 mr-2" />
-        <span>Loading maps...</span>
-      </div>
     );
   };
 
@@ -157,7 +160,10 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
         )}
       >
         {isCollapsed ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
+          <div 
+            className="flex items-center justify-center h-full text-muted-foreground cursor-pointer"
+            onClick={() => setIsCollapsed(false)}
+          >
             <MapPin className="w-5 h-5 mr-2" />
             <span>Map view is collapsed. Tap to expand.</span>
           </div>
