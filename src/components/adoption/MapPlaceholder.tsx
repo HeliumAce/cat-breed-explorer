@@ -117,13 +117,6 @@ export function MapPlaceholder({
     }
   }, [locations, userLocation]);
 
-  // Handle errors during map rendering
-  const onMapError = useCallback((error: google.maps.MapError) => {
-    logMapStatus("Error occurred while rendering map", error);
-    setMapLoadError(`Map error: ${error.message}`);
-    toast.error("Error displaying map. Please try again later.");
-  }, []);
-
   // Handle map resize when collapsed state changes
   useEffect(() => {
     if (mapInstance && !isCollapsed) {
@@ -236,7 +229,6 @@ export function MapPlaceholder({
         center={userLocation || mapConfig.defaultCenter}
         zoom={mapConfig.defaultZoom}
         onLoad={onMapLoad}
-        onError={onMapError}
         options={mapConfig.options}
       >
         {/* User location marker */}
