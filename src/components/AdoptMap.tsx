@@ -1,12 +1,14 @@
 
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Shelter } from '@/types/shelters';
 import { LoadingInline } from '@/components/Loading';
 import { AlertCircle, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MAPS_API_KEY, DEFAULT_MAP_OPTIONS } from '@/config/maps-config';
 
-// Since we're not actually integrating with Google Maps API in this demo,
-// we'll create a simulated map component that shows shelter positions
+// Note: This is still a simulation. To use the actual Google Maps API:
+// 1. Replace 'YOUR_GOOGLE_MAPS_API_KEY_HERE' in maps-config.ts with your actual API key
+// 2. Add the Google Maps script to index.html or load it dynamically
 
 interface AdoptMapProps {
   userLocation: { lat: number; lng: number };
@@ -19,17 +21,89 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
   ({ userLocation, shelters, selectedShelterId, onMarkerClick }, ref) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const mapRef = useRef<HTMLDivElement>(null);
+    const googleMapRef = useRef<google.maps.Map | null>(null);
+    const markersRef = useRef<Record<string, google.maps.Marker>>({});
 
-    // Simulate map loading
+    // Initialize map (simulation for now)
     useEffect(() => {
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 1000);
 
       return () => clearTimeout(timer);
-    }, []);
+      
+      // For real Google Maps implementation, this would be:
+      /*
+      if (!MAPS_API_KEY || MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+        setError('Google Maps API key not configured');
+        setIsLoading(false);
+        return;
+      }
 
-    // Calculate position on the map (simplified for demo)
+      // This assumes Google Maps script is already loaded
+      if (window.google && mapRef.current && userLocation) {
+        try {
+          const map = new window.google.maps.Map(mapRef.current, {
+            ...DEFAULT_MAP_OPTIONS,
+            center: userLocation,
+          });
+          
+          googleMapRef.current = map;
+          
+          // Add user marker
+          new window.google.maps.Marker({
+            position: userLocation,
+            map,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: '#4285F4',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+            },
+            title: 'Your Location'
+          });
+          
+          setIsLoading(false);
+        } catch (err) {
+          console.error('Error initializing map:', err);
+          setError('Failed to initialize Google Maps');
+          setIsLoading(false);
+        }
+      }
+      */
+    }, [userLocation]);
+
+    // Update shelter markers (simulation for now)
+    useEffect(() => {
+      // For real Google Maps implementation, this would update the markers
+      /*
+      if (googleMapRef.current && shelters.length > 0) {
+        // Clear existing markers
+        Object.values(markersRef.current).forEach(marker => marker.setMap(null));
+        markersRef.current = {};
+        
+        // Add new markers
+        shelters.forEach(shelter => {
+          const marker = new window.google.maps.Marker({
+            position: shelter.location,
+            map: googleMapRef.current,
+            title: shelter.name,
+            animation: selectedShelterId === shelter.id 
+              ? window.google.maps.Animation.BOUNCE 
+              : undefined
+          });
+          
+          marker.addListener('click', () => onMarkerClick(shelter.id));
+          markersRef.current[shelter.id] = marker;
+        });
+      }
+      */
+    }, [shelters, selectedShelterId, onMarkerClick]);
+
+    // Calculate position on the map (for simulation only)
     const calculatePosition = (lat: number, lng: number) => {
       // Normalize to our view area
       const mapWidth = 1000;
@@ -87,11 +161,12 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
       );
     }
 
+    // For real Google Maps, this would just be a div with ref={mapRef}
     return (
       <div className="w-full h-full relative bg-amber-50 overflow-hidden">
-        {/* Map simulation - in a real app this would be the Google Maps component */}
-        <div className="absolute inset-0 bg-amber-50">
-          {/* Mock Map Grid Lines */}
+        {/* This div would be the actual Google Map container in the real implementation */}
+        <div ref={mapRef} className="absolute inset-0">
+          {/* Simulation content - would be replaced by actual Google Maps */}
           <div className="w-full h-full grid grid-cols-8 grid-rows-4">
             {Array.from({ length: 32 }).map((_, i) => (
               <div key={i} className="border border-amber-100/50" />
@@ -142,9 +217,10 @@ const AdoptMap = forwardRef<any, AdoptMapProps>(
           })}
         </div>
         
-        {/* Map attribution (would be required in a real Google Maps integration) */}
         <div className="absolute bottom-1 right-1 text-xs text-gray-500 bg-white/70 px-1 rounded">
           Map Simulation
+          {!MAPS_API_KEY || MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE' ? 
+            " (API key needed)" : ""}
         </div>
       </div>
     );
