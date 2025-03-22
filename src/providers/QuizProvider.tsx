@@ -1,12 +1,10 @@
 
-import { createContext, ReactNode, useContext } from "react";
+import { ReactNode } from "react";
+import { QuizContext } from '@/hooks/useQuiz';
 import { useQuizState } from '@/hooks/useQuizState';
 import { useQuizResults } from '@/hooks/useQuizResults';
 import { useBreeds } from '@/hooks/useBreeds';
 import { QuizModal } from "@/components/quiz/QuizModal";
-
-// Create the context with the full type from useQuiz hook
-export const QuizContext = createContext<ReturnType<typeof useQuizImplementation> | undefined>(undefined);
 
 // Internal implementation of the quiz logic
 function useQuizImplementation() {
@@ -90,14 +88,3 @@ export function QuizProvider({ children }: QuizProviderProps) {
     </QuizContext.Provider>
   );
 }
-
-// Hook for consuming the quiz context
-export const useQuiz = () => {
-  const context = useContext(QuizContext);
-  
-  if (context === undefined) {
-    throw new Error("useQuiz must be used within a QuizProvider");
-  }
-  
-  return context;
-};
