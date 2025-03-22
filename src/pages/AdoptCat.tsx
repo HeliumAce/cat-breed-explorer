@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
@@ -7,24 +6,23 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingInline } from "@/components/Loading";
 import { Input } from "@/components/ui/input";
-import AdoptMap, { AdoptMapRef } from "@/components/AdoptMap";
+import AdoptMap from "@/components/AdoptMap";
+import { ApiKeyManager } from "@/components/ApiKeyManager";
 import ShelterList from "@/components/ShelterList";
 import {
   MapPin,
   Search,
+  X,
   AlertCircle,
   ChevronUp,
   ChevronDown,
-  Navigation,
-  Locate,
 } from "lucide-react";
 import { useShelters } from "@/hooks/useShelters";
-import { useAddressAutocomplete } from "@/hooks/useAddressAutocomplete";
 import { cn } from "@/lib/utils";
 import { FilterOptions, SortOption } from "@/types/shelters";
-import { toast } from "sonner";
 
 const AdoptCat = () => {
+  const [manualLocation, setManualLocation] = useState("");
   const [userCoordinates, setUserCoordinates] = useState<{
     lat: number;
     lng: number;
@@ -36,10 +34,9 @@ const AdoptCat = () => {
   const [sortBy, setSortBy] = useState<SortOption>("distance");
   const [filters, setFilters] = useState<FilterOptions>({
     openNow: false,
-    acceptsCats: true, // Set this to true by default
+    acceptsCats: false,
     noKill: false,
   });
-  const [hasRequestedLocation, setHasRequestedLocation] = useState(false);
 
   const { 
     shelters, 
@@ -48,26 +45,11 @@ const AdoptCat = () => {
     fetchShelters 
   } = useShelters();
 
-  const mapRef = useRef<AdoptMapRef>(null);
+  const mapRef = useRef(null);
 
-  // Use the address autocomplete hook
-  const { inputRef, inputValue, setInputValue, isLoaded: isAutocompleteLoaded } = 
-    useAddressAutocomplete({
-      onPlaceSelect: (address, location) => {
-        setUserCoordinates(location);
-        fetchShelters(location);
-        toast.success(`Found location: ${address}`);
-      }
-    });
-
-  // Request location on initial load
   useEffect(() => {
-    // Only request once
-    if (!hasRequestedLocation) {
-      requestUserLocation();
-      setHasRequestedLocation(true);
-    }
-  }, [hasRequestedLocation]);
+    requestUserLocation();
+  }, []);
 
   const requestUserLocation = () => {
     setIsLocating(true);
@@ -81,30 +63,31 @@ const AdoptCat = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const newLocation = {
+        setUserCoordinates({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        };
-        setUserCoordinates(newLocation);
+        });
         setIsLocating(false);
-        fetchShelters(newLocation);
-        toast.success("Using your current location");
+        fetchShelters({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
       },
       (error) => {
         console.error("Error getting location:", error);
         let errorMessage;
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = "Location access was denied. You can search for a location manually.";
+            errorMessage = "Location permission was denied";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable. Please try searching manually.";
+            errorMessage = "Location information is unavailable";
             break;
           case error.TIMEOUT:
-            errorMessage = "The request to get location timed out. Please try again.";
+            errorMessage = "The request to get location timed out";
             break;
           default:
-            errorMessage = "An unknown error occurred. Please try searching manually.";
+            errorMessage = "An unknown error occurred";
             break;
         }
         setLocationError(errorMessage);
@@ -114,19 +97,23 @@ const AdoptCat = () => {
     );
   };
 
-  const handleSearchButtonClick = () => {
-    if (inputRef.current && inputRef.current.value && !isAutocompleteLoaded) {
-      // Fallback if Google Autocomplete isn't loaded
-      toast.info("Please select a location from the dropdown as you type");
+  const handleManualLocationSearch = () => {
+    if (manualLocation.trim()) {
+      setIsLocating(true);
+      setTimeout(() => {
+        const simulatedCoords = {
+          lat: 37.7749,
+          lng: -122.4194,
+        };
+        setUserCoordinates(simulatedCoords);
+        fetchShelters(simulatedCoords);
+        setIsLocating(false);
+      }, 1000);
     }
   };
 
   const handleShelterSelect = (shelterId: string) => {
     setSelectedShelterId(shelterId);
-    // Pan the map to the selected shelter
-    if (mapRef.current) {
-      mapRef.current.panToMarker(shelterId);
-    }
   };
 
   const handleMarkerClick = (shelterId: string) => {
@@ -145,12 +132,6 @@ const AdoptCat = () => {
 
   const toggleListView = () => {
     setExpandedListView(!expandedListView);
-  };
-
-  const centerOnUserLocation = () => {
-    if (mapRef.current) {
-      mapRef.current.panToUserLocation();
-    }
   };
 
   return (
@@ -181,31 +162,24 @@ const AdoptCat = () => {
               <div className="w-full sm:w-auto flex-1">
                 <div className="flex space-x-2">
                   <Input
-                    ref={inputRef}
                     placeholder="Enter city or address..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    value={manualLocation}
+                    onChange={(e) => setManualLocation(e.target.value)}
                     disabled={isLocating}
                     className="flex-1"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleSearchButtonClick();
+                        handleManualLocationSearch();
                       }
                     }}
                   />
                   <Button
-                    onClick={handleSearchButtonClick}
-                    disabled={!inputValue.trim() || isLocating}
+                    onClick={handleManualLocationSearch}
+                    disabled={!manualLocation.trim() || isLocating}
                   >
                     <Search size={16} className="mr-2" /> Search
                   </Button>
                 </div>
-                {locationError && (
-                  <Alert variant="default" className="mt-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{locationError}</AlertDescription>
-                  </Alert>
-                )}
               </div>
 
               <div className="flex space-x-2">
@@ -214,7 +188,7 @@ const AdoptCat = () => {
                   onClick={requestUserLocation}
                   disabled={isLocating}
                 >
-                  <Locate size={16} className="mr-2" /> Use My Location
+                  <MapPin size={16} className="mr-2" /> Use My Location
                 </Button>
               </div>
             </div>
@@ -224,9 +198,16 @@ const AdoptCat = () => {
                 <LoadingInline text="Locating..." />
               </div>
             )}
+
+            {locationError && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{locationError}</AlertDescription>
+              </Alert>
+            )}
           </Card>
 
-          <div className="mb-6 rounded-lg overflow-hidden shadow-md relative">
+          <div className="mb-6 rounded-lg overflow-hidden shadow-md">
             <div className="h-[300px] sm:h-[400px]">
               {!userCoordinates ? (
                 <div className="flex h-full items-center justify-center bg-muted/20">
@@ -247,17 +228,6 @@ const AdoptCat = () => {
                 />
               )}
             </div>
-            
-            {userCoordinates && (
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={centerOnUserLocation}
-                className="absolute bottom-3 right-3 bg-white shadow-md hover:bg-gray-100"
-              >
-                <Navigation size={16} className="mr-2" /> Center on Me
-              </Button>
-            )}
           </div>
 
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -282,6 +252,9 @@ const AdoptCat = () => {
             )}
           </div>
         </div>
+
+        {/* Add the API key manager component */}
+        <ApiKeyManager />
       </div>
     </PageTransition>
   );

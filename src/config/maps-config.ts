@@ -1,18 +1,14 @@
 
-// Google Maps configuration
-
-// Your API key should be here after the git integration
-export const MAPS_API_KEY = 'AIzaSyBgvftUaflViUzJlLD9s5dquYo_8V2jWms';
+// Get API key from localStorage or use the fallback value
+export const MAPS_API_KEY = 
+  typeof window !== 'undefined' && localStorage.getItem('GOOGLE_MAPS_API_KEY') || 
+  'YOUR_GOOGLE_MAPS_API_KEY_HERE';
 
 // Default map options
 export const DEFAULT_MAP_OPTIONS = {
-  zoom: 10,
-  disableDefaultUI: false,
+  zoom: 11,
+  disableDefaultUI: true,
   zoomControl: true,
-  mapTypeControl: true,
-  scaleControl: true,
-  streetViewControl: true,
-  rotateControl: true,
   fullscreenControl: true,
   styles: [
     {
@@ -23,5 +19,5 @@ export const DEFAULT_MAP_OPTIONS = {
   ]
 };
 
-// Map loading options - make sure to include 'places' for address autocompletion
+// Map loading options
 export const MAPS_LIBRARIES = ['places'];
