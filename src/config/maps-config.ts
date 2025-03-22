@@ -1,4 +1,3 @@
-
 // Google Maps configuration
 
 export const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -6,9 +5,6 @@ export const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 if (!MAPS_API_KEY) {
   console.error('Google Maps API key is missing. Please check your .env file.');
 }
-
-// Map libraries to load
-export const MAPS_LIBRARIES = ['places', 'geometry', 'visualization'];
 
 // Default map options
 export const DEFAULT_MAP_OPTIONS = {
@@ -28,3 +24,6 @@ export const DEFAULT_MAP_OPTIONS = {
     }
   ]
 };
+
+// Map loading options - make sure to include 'places' for address autocompletion
+export const MAPS_LIBRARIES = ['places'];
