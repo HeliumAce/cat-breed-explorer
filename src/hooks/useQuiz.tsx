@@ -232,4 +232,3 @@ function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]):
   // Sort by match percentage (descending)
   return breedScores.sort((a, b) => b.matchPercentage - a.matchPercentage);
 }
-

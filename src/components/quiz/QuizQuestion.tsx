@@ -26,7 +26,7 @@ export function QuizQuestion({
   onBack,
   isFinalQuestion,
 }: QuizQuestionProps) {
-  const { saveAnswer, getAnswerForQuestion } = useQuiz();
+  const { saveAnswer, getAnswerForQuestion, currentQuestionIndex } = useQuiz();
   const [selectedOption, setSelectedOption] = useState<
     string | number | string[] | number[]
   >(getAnswerForQuestion(question.id) || "");
@@ -61,13 +61,14 @@ export function QuizQuestion({
       ? [...selectedOption]
       : [];
       
+    // Make sure we're dealing with string arrays for checkbox values
     const updatedValue = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
       
-    setSelectedOption(updatedValue);
+    setSelectedOption(updatedValue as string[]);
     setHasAnswered(updatedValue.length > 0);
-    saveAnswer(question.id, updatedValue);
+    saveAnswer(question.id, updatedValue as string[]);
   };
 
   const handleSliderChange = (value: number[]) => {
@@ -144,7 +145,7 @@ export function QuizQuestion({
           <div className="grid gap-3">
             {question.options.map((option) => {
               const isChecked = Array.isArray(selectedOption) && 
-                selectedOption.includes(option.value as string);
+                selectedOption.includes(option.value.toString());
                 
               return (
                 <motion.div
@@ -157,7 +158,7 @@ export function QuizQuestion({
                     id={option.id}
                     checked={isChecked}
                     onCheckedChange={(checked) =>
-                      handleCheckboxChange(option.value as string, checked === true)
+                      handleCheckboxChange(option.value.toString(), checked === true)
                     }
                     className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
                   />
