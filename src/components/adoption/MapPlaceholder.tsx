@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
+import { GOOGLE_MAPS_API_KEY } from "@/config/maps-config";
 
 interface MapPlaceholderProps {
   locations: AdoptionLocation[];
@@ -23,7 +24,8 @@ const defaultCenter = {
   lng: -118.243683
 };
 
-const libraries: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ["places"];
+// Define libraries correctly as Libraries type
+const libraries = ["places"] as ("places" | "drawing" | "geometry" | "visualization")[];
 
 export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps) {
   const isMobile = useIsMobile();
@@ -32,7 +34,7 @@ export function MapPlaceholder({ locations, userLocation }: MapPlaceholderProps)
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: "YOUR_GOOGLE_MAPS_API_KEY", // Replace with your actual API key
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
   });
 
