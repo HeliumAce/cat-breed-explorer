@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import BreedDetail from "./pages/BreedDetail";
+import AdoptCat from "./pages/AdoptCat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/breed/:breedId" element={<BreedDetail />} />
+            <Route path="/adopt" element={<AdoptCat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
