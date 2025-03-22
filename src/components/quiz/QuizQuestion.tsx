@@ -27,9 +27,10 @@ export function QuizQuestion({
   isFinalQuestion,
 }: QuizQuestionProps) {
   const { saveAnswer, getAnswerForQuestion, currentQuestionIndex } = useQuiz();
+  // Properly type the state to handle all possible answer types
   const [selectedOption, setSelectedOption] = useState<
     string | number | string[] | number[]
-  >(getAnswerForQuestion(question.id) || "");
+  >(getAnswerForQuestion(question.id) || (question.type === "checkbox" || question.isMultiSelect ? [] : ""));
   const [hasAnswered, setHasAnswered] = useState(false);
 
   // Reset selected option when question changes
@@ -56,33 +57,33 @@ export function QuizQuestion({
   };
 
   const handleMultiSelectChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with an array
+    // Ensure we're working with an array and properly type it
     const currentValue = Array.isArray(selectedOption)
       ? [...selectedOption]
       : [];
       
-    // Make sure we're dealing with string arrays for checkbox values
+    // Fix the type issue - explicitly cast to string[]
     const updatedValue = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
       
-    setSelectedOption(updatedValue as string[]);
+    setSelectedOption(updatedValue);
     setHasAnswered(updatedValue.length > 0);
-    saveAnswer(question.id, updatedValue as string[]);
+    saveAnswer(question.id, updatedValue);
   };
 
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
-    // Ensure we're working with an array
+    // Ensure we're working with an array and properly type it
     const currentValue = Array.isArray(selectedOption)
-      ? [...selectedOption]
-      : [];
+      ? [...selectedOption as string[]]  // Explicitly cast to string[]
+      : [] as string[];  // Explicitly initialize as string[]
       
-    // Make sure we're dealing with string arrays for checkbox values
+    // Now TypeScript knows we're working with string[]
     const updatedValue = checked
       ? [...currentValue, optionValue]
       : currentValue.filter((value) => value !== optionValue);
       
-    setSelectedOption(updatedValue as string[]);
+    setSelectedOption(updatedValue);
     
     // Question 7 doesn't require a selection to see results
     if (question.id !== 7) {
@@ -92,7 +93,7 @@ export function QuizQuestion({
       setHasAnswered(true);
     }
     
-    saveAnswer(question.id, updatedValue as string[]);
+    saveAnswer(question.id, updatedValue);
   };
 
   const handleSliderChange = (value: number[]) => {
