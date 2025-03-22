@@ -18,3 +18,8 @@ export const mapConfig = {
     zoomControl: true,
   }
 };
+
+// Logging function to help with debugging
+export const logMapStatus = (message: string, data?: any) => {
+  console.log(`[GoogleMaps] ${message}`, data || '');
+};

@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdoptionLocation } from "@/data/adoptionLocations";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
-import { GOOGLE_MAPS_API_KEY, mapConfig } from "@/config/maps-config";
+import { GOOGLE_MAPS_API_KEY, mapConfig, logMapStatus } from "@/config/maps-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface MapPlaceholderProps {
   locations: AdoptionLocation[];
@@ -40,12 +41,35 @@ export function MapPlaceholder({
   const [isCollapsed, setIsCollapsed] = useState(isMobile && !isMainFocus);
   const [selectedLocation, setSelectedLocation] = useState<AdoptionLocation | null>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  const [mapLoadError, setMapLoadError] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+
+  // Log API key presence (not the actual key)
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      logMapStatus("No Google Maps API key found in environment variables");
+      toast.error("Google Maps API key is missing. Please check your configuration.");
+    } else {
+      logMapStatus("Google Maps API key is present");
+    }
+  }, []);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
   });
+
+  // Log when the API loads or fails
+  useEffect(() => {
+    if (isLoaded) {
+      logMapStatus("Google Maps JS API loaded successfully");
+    }
+    if (loadError) {
+      logMapStatus("Google Maps JS API failed to load", loadError);
+      setMapLoadError("Failed to load Google Maps. Please check your API key.");
+      toast.error("Error loading Google Maps. Please try again later.");
+    }
+  }, [isLoaded, loadError]);
 
   useEffect(() => {
     // If this is the main focus, never collapse on mobile
@@ -55,49 +79,78 @@ export function MapPlaceholder({
   }, [isMainFocus]);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
-    console.log("Map loaded successfully");
+    logMapStatus("Map instance loaded successfully");
     mapRef.current = map;
     setMapInstance(map);
     
     // If we have locations, fit bounds to show all markers
     if (locations.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      
-      // Add user location to bounds if available
-      if (userLocation) {
-        bounds.extend(new google.maps.LatLng(userLocation.lat, userLocation.lng));
+      try {
+        const bounds = new google.maps.LatLngBounds();
+        
+        // Add user location to bounds if available
+        if (userLocation) {
+          bounds.extend(new google.maps.LatLng(userLocation.lat, userLocation.lng));
+          logMapStatus("Added user location to bounds", userLocation);
+        }
+        
+        // Add all location markers to bounds
+        locations.forEach(location => {
+          bounds.extend(new google.maps.LatLng(location.latitude, location.longitude));
+        });
+        
+        logMapStatus("Setting map bounds with locations", locations.length);
+        
+        // Fit the map to the bounds
+        map.fitBounds(bounds);
+        
+        // Don't zoom in too far
+        if (map.getZoom() && map.getZoom()! > 15) {
+          map.setZoom(15);
+          logMapStatus("Adjusted zoom level to 15");
+        }
+      } catch (error) {
+        logMapStatus("Error setting map bounds", error);
       }
-      
-      // Add all location markers to bounds
-      locations.forEach(location => {
-        bounds.extend(new google.maps.LatLng(location.latitude, location.longitude));
-      });
-      
-      // Fit the map to the bounds
-      map.fitBounds(bounds);
-      
-      // Don't zoom in too far
-      if (map.getZoom() && map.getZoom()! > 15) {
-        map.setZoom(15);
-      }
+    } else {
+      logMapStatus("No locations to display on map");
     }
   }, [locations, userLocation]);
+
+  // Handle errors during map rendering
+  const onMapError = useCallback((error: google.maps.MapError) => {
+    logMapStatus("Error occurred while rendering map", error);
+    setMapLoadError(`Map error: ${error.message}`);
+    toast.error("Error displaying map. Please try again later.");
+  }, []);
 
   // Handle map resize when collapsed state changes
   useEffect(() => {
     if (mapInstance && !isCollapsed) {
-      window.google?.maps.event.trigger(mapInstance, 'resize');
-      
-      // Re-center the map if needed
-      if (userLocation) {
-        mapInstance.setCenter(userLocation);
-      } else if (locations.length > 0) {
-        mapInstance.setCenter({
-          lat: locations[0].latitude, 
-          lng: locations[0].longitude
-        });
+      if (window.google?.maps) {
+        try {
+          window.google.maps.event.trigger(mapInstance, 'resize');
+          logMapStatus("Triggered map resize event");
+          
+          // Re-center the map if needed
+          if (userLocation) {
+            mapInstance.setCenter(userLocation);
+            logMapStatus("Recentered map to user location");
+          } else if (locations.length > 0) {
+            mapInstance.setCenter({
+              lat: locations[0].latitude, 
+              lng: locations[0].longitude
+            });
+            logMapStatus("Recentered map to first location");
+          } else {
+            mapInstance.setCenter(mapConfig.defaultCenter);
+            logMapStatus("Recentered map to default center");
+          }
+        } catch (error) {
+          logMapStatus("Error handling map resize", error);
+        }
       } else {
-        mapInstance.setCenter(mapConfig.defaultCenter);
+        logMapStatus("Google Maps API not available for resize event");
       }
     }
   }, [isCollapsed, mapInstance, locations, userLocation]);
@@ -129,16 +182,19 @@ export function MapPlaceholder({
   };
 
   const renderMap = () => {
-    if (loadError) {
+    if (loadError || mapLoadError) {
       return (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
           <AlertCircle className="w-8 h-8 mb-4 text-red-500" />
           <div className="flex flex-col items-center text-center">
             <span className="font-semibold text-lg mb-2">Error loading Google Maps</span>
             <span className="text-sm max-w-md">
-              {GOOGLE_MAPS_API_KEY 
-                ? "Check your API key configuration or network connection." 
-                : "No Google Maps API key provided. Set the VITE_GOOGLE_MAPS_API_KEY environment variable."}
+              {!GOOGLE_MAPS_API_KEY 
+                ? "No Google Maps API key provided. Set the VITE_GOOGLE_MAPS_API_KEY environment variable." 
+                : "There was a problem loading the map. Check your API key configuration or network connection."}
+            </span>
+            <span className="text-xs mt-2 text-red-500">
+              {mapLoadError || loadError?.message || "Unknown error"}
             </span>
             {onRetry && (
               <Button onClick={onRetry} variant="secondary" className="mt-4">
@@ -155,6 +211,7 @@ export function MapPlaceholder({
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-amber-50 p-4 rounded-lg">
           <Loader2 className="w-8 h-8 mb-4 animate-spin text-amber-500" />
           <span className="font-medium">Loading map...</span>
+          <span className="text-xs mt-2">Please wait while we initialize Google Maps</span>
         </div>
       );
     }
@@ -179,10 +236,11 @@ export function MapPlaceholder({
         center={userLocation || mapConfig.defaultCenter}
         zoom={mapConfig.defaultZoom}
         onLoad={onMapLoad}
+        onError={onMapError}
         options={mapConfig.options}
       >
         {/* User location marker */}
-        {userLocation && (
+        {userLocation && window.google && (
           <Marker
             position={userLocation}
             icon={{
@@ -200,7 +258,7 @@ export function MapPlaceholder({
             position={{ lat: location.latitude, lng: location.longitude }}
             icon={{
               url: getMarkerIcon(location.type),
-              scaledSize: new window.google.maps.Size(30, 30),
+              scaledSize: window.google ? new window.google.maps.Size(30, 30) : undefined,
             }}
             onClick={() => setSelectedLocation(location)}
             title={location.name}
