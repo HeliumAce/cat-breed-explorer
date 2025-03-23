@@ -46,6 +46,7 @@ export function useMapMarkers(
       
       // Create markers for locations
       const newMarkers = locations.map(location => {
+        // Create marker with custom icon based on type
         const marker = new window.google.maps.Marker({
           position: { lat: location.location.lat, lng: location.location.lng },
           map,
@@ -53,9 +54,11 @@ export function useMapMarkers(
           icon: {
             url: getMarkerIconByType(location.type),
             scaledSize: new window.google.maps.Size(32, 32)
-          }
+          },
+          animation: window.google.maps.Animation.DROP
         });
         
+        // Add click event listener to marker
         marker.addListener("click", () => {
           onLocationSelect(location);
           infoWindow.setContent(
@@ -73,17 +76,22 @@ export function useMapMarkers(
       
       setMarkers(newMarkers);
       
-      // Fit bounds to include all markers
+      // Fit bounds to include all markers and user location
       if (newMarkers.length > 0) {
         const bounds = new window.google.maps.LatLngBounds();
+        // Add user location to bounds
         bounds.extend({ lat: userLocation.lat, lng: userLocation.lng });
+        // Add all location markers to bounds
         locations.forEach(location => {
           bounds.extend({
             lat: location.location.lat,
             lng: location.location.lng
           });
         });
+        // Fit the map to show all markers
         map.fitBounds(bounds);
+        // Add some padding to avoid markers at the very edge
+        map.panBy(0, -50);
       }
     } catch (error) {
       console.error("Error adding location markers:", error);

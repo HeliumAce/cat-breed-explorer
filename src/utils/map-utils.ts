@@ -24,6 +24,7 @@ export const createUserLocationMarker = (map: google.maps.Map, position: google.
       strokeColor: "#FFFFFF",
       strokeWeight: 2
     },
-    title: "Your Location"
+    title: "Your Location",
+    zIndex: 999 // Ensure user marker is on top
   });
 };
