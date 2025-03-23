@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTransition } from "@/components/PageTransition";
-import { ArrowLeft, MapPin, AlertCircle, Paw } from "lucide-react";
+import { ArrowLeft, MapPin, AlertCircle, Cat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAdoptionLocations } from "@/hooks/useAdoptionLocations";
 import { MapComponent } from "@/components/adoption/MapComponent";
@@ -154,7 +153,7 @@ const AdoptionLocations = () => {
                 
                 {!isLoading && !isError && locations.length === 0 && (
                   <div className="text-center py-8">
-                    <Paw className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+                    <Cat className="h-10 w-10 text-amber-500 mx-auto mb-2" />
                     <h3 className="font-medium text-lg mb-1">No Locations Found</h3>
                     <p className="text-muted-foreground">
                       {typeFilter !== 'all' 
