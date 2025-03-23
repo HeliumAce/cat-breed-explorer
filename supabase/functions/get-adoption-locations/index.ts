@@ -136,8 +136,8 @@ serve(async (req) => {
     // Sort by distance
     locations = locations.sort((a, b) => a.distance - b.distance);
     
-    // Return only the 5 nearest locations
-    const nearestLocations = locations.slice(0, 5);
+    // Return only the first 20 locations (increased from 5 to ensure more markers)
+    const nearestLocations = locations.slice(0, 20);
 
     return new Response(
       JSON.stringify({ locations: nearestLocations }),
