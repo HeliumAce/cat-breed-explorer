@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,9 +13,9 @@ interface UseAdoptionLocationsProps {
 
 export function useAdoptionLocations({
   defaultLocation,
-  radius = 8000, // Increased radius to find more locations
+  radius = 8000,
   locationTypeFilter = 'all',
-  minLocations = 5 // Ensure at least 5 locations
+  minLocations = 5
 }: UseAdoptionLocationsProps = {}) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(defaultLocation || null);
   const [locationPermissionStatus, setLocationPermissionStatus] = useState<'loading' | 'granted' | 'denied' | 'prompt'>('loading');
@@ -67,10 +66,8 @@ export function useAdoptionLocations({
           console.error("Error getting user location:", error);
           setLocationPermissionStatus(error.code === 1 ? 'denied' : 'prompt');
           
-          // Set a default location if user denies permission (New York City)
           if (error.code === 1) {
-            setUserLocation({ lat: 40.7128, lng: -74.0060 });
-            toast.error("Location access denied. Using default location.");
+            toast.error("Location access denied. Please enter your location manually.");
           } else {
             toast.error("Unable to access your location. Please enter your location manually.");
           }
@@ -78,9 +75,7 @@ export function useAdoptionLocations({
       );
     } else {
       setLocationPermissionStatus('denied');
-      // Set a default location if geolocation is not supported (New York City)
-      setUserLocation({ lat: 40.7128, lng: -74.0060 });
-      toast.error("Geolocation is not supported by your browser. Using default location.");
+      toast.error("Geolocation is not supported by your browser. Please enter your location manually.");
     }
   };
 
@@ -107,14 +102,13 @@ export function useAdoptionLocations({
     error,
     refetch
   } = useQuery({
-    queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter, minLocations],
+    queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter],
     queryFn: async () => {
       console.log("Fetching adoption locations with params:", {
         lat: userLocation?.lat,
         lng: userLocation?.lng,
         radius,
         type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined,
-        minLocations
       });
 
       if (!userLocation) {
@@ -127,8 +121,7 @@ export function useAdoptionLocations({
             lat: userLocation.lat,
             lng: userLocation.lng,
             radius,
-            type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined,
-            minLocations
+            type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
           }
         });
 
@@ -149,7 +142,7 @@ export function useAdoptionLocations({
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Filter locations by type if a filter is applied
+  // Filter locations by type if a filter is applied (this shouldn't be necessary now, but keeping for safety)
   const locations = data?.locations || [];
   const filteredLocations = locationTypeFilter === 'all'
     ? locations
