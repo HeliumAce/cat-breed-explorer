@@ -20,8 +20,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    // Replace %VITE_GOOGLE_MAPS_API_KEY% with actual env var in the HTML template
-    '%VITE_GOOGLE_MAPS_API_KEY%': JSON.stringify(process.env.VITE_GOOGLE_MAPS_API_KEY),
-  },
 }));

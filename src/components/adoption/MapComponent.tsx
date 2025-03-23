@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { Coordinates, AdoptionLocation } from "@/types/adoption";
 import { LoadingInline } from "@/components/Loading";
 import { AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the Google Maps types
 declare global {
   interface Window {
     google: any;
+    initMap: () => void;
   }
 }
 
@@ -31,21 +33,77 @@ export function MapComponent({
   const [markers, setMarkers] = useState<any[]>([]);
   const [infoWindow, setInfoWindow] = useState<any>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [googleMapsLoading, setGoogleMapsLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
   
-  // Check if Google Maps API is loaded
+  // Load Google Maps API dynamically
   useEffect(() => {
-    const checkGoogleMapsLoaded = () => {
-      if (window.google && window.google.maps) {
-        console.log("Google Maps API is loaded");
-        setMapLoaded(true);
-      } else {
-        console.log("Google Maps API is not loaded yet");
-        setTimeout(checkGoogleMapsLoaded, 500);
+    async function loadGoogleMapsAPI() {
+      try {
+        setGoogleMapsLoading(true);
+        
+        // Check if Google Maps is already loaded
+        if (window.google && window.google.maps) {
+          console.log("Google Maps API is already loaded");
+          setMapLoaded(true);
+          setGoogleMapsLoading(false);
+          return;
+        }
+        
+        // Fetch API key from our Supabase Edge Function
+        const { data, error } = await supabase.functions.invoke<{ apiKey: string }>('get-google-maps-key');
+        
+        if (error) {
+          console.error("Error fetching Google Maps API key:", error);
+          setMapError("Failed to load Google Maps API key. Please try again later.");
+          setGoogleMapsLoading(false);
+          return;
+        }
+        
+        if (!data || !data.apiKey) {
+          throw new Error("No API key returned from server");
+        }
+        
+        // Define a callback function that will be called when the API is loaded
+        window.initMap = () => {
+          console.log("Google Maps API loaded successfully");
+          setMapLoaded(true);
+          setGoogleMapsLoading(false);
+        };
+        
+        // Create and append the script element
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&libraries=places&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+          console.error("Failed to load Google Maps API");
+          setMapError("Failed to load Google Maps API. Please try again later.");
+          setGoogleMapsLoading(false);
+        };
+        
+        document.head.appendChild(script);
+        
+        // Clean up function
+        return () => {
+          if (window.initMap) {
+            // @ts-ignore
+            window.initMap = undefined;
+          }
+          
+          // Only remove the script if it's still in the document
+          if (script.parentNode) {
+            document.head.removeChild(script);
+          }
+        };
+      } catch (error) {
+        console.error("Error loading Google Maps API:", error);
+        setMapError("Failed to load Google Maps API. Please try again later.");
+        setGoogleMapsLoading(false);
       }
-    };
+    }
     
-    checkGoogleMapsLoaded();
+    loadGoogleMapsAPI();
   }, []);
   
   // Initialize Google Maps
@@ -218,7 +276,7 @@ export function MapComponent({
         </div>
       )}
       
-      {!mapLoaded && !isLoading && (
+      {googleMapsLoading && !mapLoaded && !isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div className="text-center p-4">
             <LoadingInline />
