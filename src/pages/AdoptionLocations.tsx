@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTransition } from "@/components/PageTransition";
@@ -8,6 +9,7 @@ import { MapComponent } from "@/components/adoption/MapComponent";
 import { LocationList } from "@/components/adoption/LocationList";
 import { LocationTypeFilter } from "@/components/adoption/LocationTypeFilter";
 import { LocationPermissionRequest } from "@/components/adoption/LocationPermissionRequest";
+import { AddressSearch } from "@/components/adoption/AddressSearch";
 import { AdoptionLocation, LocationType } from "@/types/adoption";
 import { LoadingInline } from "@/components/Loading";
 import { motion } from "framer-motion";
@@ -25,6 +27,7 @@ const AdoptionLocations = () => {
     locationPermissionStatus,
     requestUserLocation,
     setLocationByAddress,
+    setUserLocationCoordinates,
     manualAddress,
     setManualAddress
   } = useAdoptionLocations({
@@ -33,6 +36,11 @@ const AdoptionLocations = () => {
 
   const toggleMapCollapse = () => {
     setIsMapCollapsed(!isMapCollapsed);
+  };
+
+  const handleAddressSelect = (address: string, location: { lat: number; lng: number }) => {
+    setManualAddress(address);
+    setUserLocationCoordinates(location);
   };
 
   return (
@@ -56,13 +64,15 @@ const AdoptionLocations = () => {
         </header>
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <LocationPermissionRequest
-            status={locationPermissionStatus}
-            onRequestLocation={requestUserLocation}
-            onManualLocation={setLocationByAddress}
-            manualAddress={manualAddress}
-            setManualAddress={setManualAddress}
-          />
+          {locationPermissionStatus !== 'granted' && (
+            <LocationPermissionRequest
+              status={locationPermissionStatus}
+              onRequestLocation={requestUserLocation}
+              onManualLocation={setLocationByAddress}
+              manualAddress={manualAddress}
+              setManualAddress={setManualAddress}
+            />
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className={`lg:col-span-${isMapCollapsed ? '0' : '2'} transition-all duration-300 ${
@@ -70,19 +80,26 @@ const AdoptionLocations = () => {
             }`}>
               <div className="sticky top-20">
                 <div className="bg-white rounded-lg border border-amber-100 shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-amber-100 flex justify-between items-center">
-                    <h2 className="font-semibold flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-amber-500" />
-                      Nearby Locations
-                    </h2>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={toggleMapCollapse}
-                      className="lg:hidden"
-                    >
-                      {isMapCollapsed ? 'Show Map' : 'Hide Map'}
-                    </Button>
+                  <div className="p-4 border-b border-amber-100">
+                    <div className="flex justify-between items-center mb-3">
+                      <h2 className="font-semibold flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-amber-500" />
+                        Nearby Locations
+                      </h2>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={toggleMapCollapse}
+                        className="lg:hidden"
+                      >
+                        {isMapCollapsed ? 'Show Map' : 'Hide Map'}
+                      </Button>
+                    </div>
+                    
+                    <AddressSearch 
+                      onAddressSelect={handleAddressSelect}
+                      placeholder="Search for an address or location..."
+                    />
                   </div>
                   
                   <div className="h-[400px]">
