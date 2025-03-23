@@ -30,10 +30,10 @@ export function useMapMarkers(
     
     try {
       // Get the appropriate icon based on location type
-      const iconUrl = getMarkerIconByType(location.type);
-      console.log(`Using icon: ${iconUrl} for location type: ${location.type}`);
+      const markerIcon = getMarkerIconByType(location.type);
+      console.log(`Using marker symbol for location type: ${location.type}`, markerIcon);
       
-      // Create the marker
+      // Create the marker with standard Google Maps styling
       const marker = new window.google.maps.Marker({
         position: { 
           lat: location.location.lat, 
@@ -41,10 +41,7 @@ export function useMapMarkers(
         },
         map,
         title: location.name,
-        icon: {
-          url: iconUrl,
-          scaledSize: new window.google.maps.Size(32, 32)
-        },
+        icon: markerIcon,
         animation: window.google.maps.Animation.DROP
       });
       
