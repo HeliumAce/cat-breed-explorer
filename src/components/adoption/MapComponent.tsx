@@ -70,16 +70,15 @@ export function MapComponent({
       });
       
       return () => {
-        if (markers.length) {
-          markers.forEach(marker => marker.setMap(null));
+        if (userMarker) {
+          userMarker.setMap(null);
         }
-        userMarker.setMap(null);
       };
     } catch (error) {
       console.error("Error initializing Google Maps:", error);
       setMapError("Failed to load the map. Please try refreshing the page.");
     }
-  }, [userLocation, mapLoaded, map, markers]);
+  }, [userLocation, mapLoaded, map]);
   
   // Update selected location
   useEffect(() => {

@@ -31,7 +31,8 @@ const AdoptionLocations = () => {
     manualAddress,
     setManualAddress
   } = useAdoptionLocations({
-    locationTypeFilter: typeFilter
+    locationTypeFilter: typeFilter,
+    minLocations: 5 // Ensure at least 5 locations are returned
   });
 
   const toggleMapCollapse = () => {
