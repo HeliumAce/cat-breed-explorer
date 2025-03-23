@@ -31,10 +31,26 @@ export function MapComponent({
   const [markers, setMarkers] = useState<any[]>([]);
   const [infoWindow, setInfoWindow] = useState<any>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  
+  // Check if Google Maps API is loaded
+  useEffect(() => {
+    const checkGoogleMapsLoaded = () => {
+      if (window.google && window.google.maps) {
+        console.log("Google Maps API is loaded");
+        setMapLoaded(true);
+      } else {
+        console.log("Google Maps API is not loaded yet");
+        setTimeout(checkGoogleMapsLoaded, 500);
+      }
+    };
+    
+    checkGoogleMapsLoaded();
+  }, []);
   
   // Initialize Google Maps
   useEffect(() => {
-    if (!mapRef.current || !window.google || map) return;
+    if (!mapRef.current || !mapLoaded || map) return;
     
     try {
       console.log("Initializing Google Maps with user location:", userLocation);
@@ -87,11 +103,11 @@ export function MapComponent({
       console.error("Error initializing Google Maps:", error);
       setMapError("Failed to load the map. Please try refreshing the page.");
     }
-  }, [userLocation, map]);
+  }, [userLocation, mapLoaded, map]);
   
   // Add location markers when locations change
   useEffect(() => {
-    if (!map || !window.google) return;
+    if (!map || !mapLoaded) return;
     
     try {
       console.log("Adding markers for locations:", locations);
@@ -154,7 +170,7 @@ export function MapComponent({
       console.error("Error adding location markers:", error);
       setMapError("Failed to display locations on the map.");
     }
-  }, [locations, map, userLocation, infoWindow, onLocationSelect]);
+  }, [locations, map, userLocation, infoWindow, onLocationSelect, mapLoaded]);
   
   // Update selected location
   useEffect(() => {
@@ -199,6 +215,15 @@ export function MapComponent({
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-10">
           <LoadingInline />
+        </div>
+      )}
+      
+      {!mapLoaded && !isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+          <div className="text-center p-4">
+            <LoadingInline />
+            <p className="mt-2">Loading Google Maps...</p>
+          </div>
         </div>
       )}
       
