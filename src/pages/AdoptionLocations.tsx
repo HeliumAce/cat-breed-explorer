@@ -75,10 +75,9 @@ const AdoptionLocations = () => {
             />
           )}
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className={`lg:col-span-${isMapCollapsed ? '0' : '2'} transition-all duration-300 ${
-              isMapCollapsed ? 'hidden lg:hidden' : 'block'
-            }`}>
+          <div className="flex flex-col gap-8">
+            {/* Map Section */}
+            <div className={`transition-all duration-300 ${isMapCollapsed ? 'hidden' : 'block'}`}>
               <div className="sticky top-20">
                 <div className="bg-white rounded-lg border border-amber-100 shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-amber-100">
@@ -91,7 +90,6 @@ const AdoptionLocations = () => {
                         variant="ghost" 
                         size="sm" 
                         onClick={toggleMapCollapse}
-                        className="lg:hidden"
                       >
                         {isMapCollapsed ? 'Show Map' : 'Hide Map'}
                       </Button>
@@ -127,7 +125,8 @@ const AdoptionLocations = () => {
               </div>
             </div>
             
-            <div className={`lg:col-span-${isMapCollapsed ? '3' : '1'} transition-all duration-300`}>
+            {/* Locations List Section */}
+            <div className="transition-all duration-300">
               <div className="bg-white rounded-lg border border-amber-100 shadow-sm p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="font-semibold">Adoption Locations</h2>
@@ -135,7 +134,6 @@ const AdoptionLocations = () => {
                     variant="ghost" 
                     size="sm" 
                     onClick={toggleMapCollapse}
-                    className="hidden lg:block"
                   >
                     {isMapCollapsed ? 'Show Map' : 'Hide Map'}
                   </Button>
