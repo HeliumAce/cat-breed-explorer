@@ -6,6 +6,7 @@ declare namespace google.maps {
     setZoom(zoom: number): void;
     panTo(latLng: LatLng | LatLngLiteral): void;
     fitBounds(bounds: LatLngBounds): void;
+    panBy(x: number, y: number): void;
   }
 
   class Marker {
@@ -13,7 +14,14 @@ declare namespace google.maps {
     setMap(map: Map | null): void;
     getPosition(): LatLng | null;
     getTitle(): string | undefined;
+    setPosition(latLng: LatLng | LatLngLiteral): void;
+    setAnimation(animation: Animation | null): void;
     addListener(eventName: string, handler: Function): MapsEventListener;
+  }
+
+  enum Animation {
+    BOUNCE,
+    DROP
   }
 
   class InfoWindow {
@@ -55,6 +63,7 @@ declare namespace google.maps {
     title?: string;
     icon?: string | Icon | Symbol;
     label?: string | MarkerLabel;
+    animation?: Animation;
   }
 
   interface Icon {
