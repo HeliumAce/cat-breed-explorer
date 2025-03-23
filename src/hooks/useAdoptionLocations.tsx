@@ -64,12 +64,21 @@ export function useAdoptionLocations({
         (error) => {
           console.error("Error getting user location:", error);
           setLocationPermissionStatus(error.code === 1 ? 'denied' : 'prompt');
-          toast.error("Unable to access your location. Please enter your location manually.");
+          
+          // Set a default location if user denies permission (New York City)
+          if (error.code === 1) {
+            setUserLocation({ lat: 40.7128, lng: -74.0060 });
+            toast.error("Location access denied. Using default location.");
+          } else {
+            toast.error("Unable to access your location. Please enter your location manually.");
+          }
         }
       );
     } else {
       setLocationPermissionStatus('denied');
-      toast.error("Geolocation is not supported by your browser. Please enter your location manually.");
+      // Set a default location if geolocation is not supported (New York City)
+      setUserLocation({ lat: 40.7128, lng: -74.0060 });
+      toast.error("Geolocation is not supported by your browser. Using default location.");
     }
   };
 
