@@ -79,6 +79,13 @@ export function useAdoptionLocations({
     toast.success(`Location set to ${address}`);
   };
 
+  // New function to directly set user location coordinates
+  const setUserLocationCoordinates = (coordinates: { lat: number; lng: number }) => {
+    setUserLocation(coordinates);
+    setLocationPermissionStatus('granted');
+    toast.success(`Location updated successfully`);
+  };
+
   // Query to fetch adoption locations
   const { 
     data, 
@@ -126,6 +133,7 @@ export function useAdoptionLocations({
     locationPermissionStatus,
     requestUserLocation: getUserLocation,
     setLocationByAddress,
+    setUserLocationCoordinates,
     manualAddress,
     setManualAddress,
     refetch
