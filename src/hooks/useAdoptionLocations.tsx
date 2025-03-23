@@ -53,11 +53,13 @@ export function useAdoptionLocations({
       setLocationPermissionStatus('loading');
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          const newLocation = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setUserLocation(newLocation);
           setLocationPermissionStatus('granted');
+          toast.success("Location access granted");
         },
         (error) => {
           console.error("Error getting user location:", error);
@@ -72,14 +74,14 @@ export function useAdoptionLocations({
   };
 
   const setLocationByAddress = async (address: string) => {
-    // In a real implementation, we would geocode the address here
-    // For now, we'll use a mock coordinate (downtown San Francisco)
+    // This would typically use a geocoding service
+    // For now, we'll set a mock location (San Francisco)
     setUserLocation({ lat: 37.7749, lng: -122.4194 });
     setManualAddress(address);
     toast.success(`Location set to ${address}`);
   };
 
-  // New function to directly set user location coordinates
+  // Direct function to set user location coordinates
   const setUserLocationCoordinates = (coordinates: { lat: number; lng: number }) => {
     setUserLocation(coordinates);
     setLocationPermissionStatus('granted');
@@ -96,26 +98,42 @@ export function useAdoptionLocations({
   } = useQuery({
     queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter],
     queryFn: async () => {
+      console.log("Fetching adoption locations with params:", {
+        lat: userLocation?.lat,
+        lng: userLocation?.lng,
+        radius,
+        type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
+      });
+
       if (!userLocation) {
         throw new Error("User location is required to fetch adoption locations");
       }
 
-      const { data, error } = await supabase.functions.invoke<AdoptionLocationsResponse>('get-adoption-locations', {
-        body: {
-          lat: userLocation.lat,
-          lng: userLocation.lng,
-          radius,
-          type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
+      try {
+        const { data, error } = await supabase.functions.invoke<AdoptionLocationsResponse>('get-adoption-locations', {
+          body: {
+            lat: userLocation.lat,
+            lng: userLocation.lng,
+            radius,
+            type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
+          }
+        });
+
+        if (error) {
+          console.error("Supabase function error:", error);
+          throw new Error(error.message);
         }
-      });
 
-      if (error) {
-        throw new Error(error.message);
+        console.log("Received adoption locations:", data);
+        return data || { locations: [] };
+      } catch (err) {
+        console.error("Error in useAdoptionLocations:", err);
+        throw err;
       }
-
-      return data;
     },
     enabled: !!userLocation, // Only run query if user location is available
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Filter locations by type if a filter is applied
@@ -123,6 +141,8 @@ export function useAdoptionLocations({
   const filteredLocations = locationTypeFilter === 'all'
     ? locations
     : locations.filter(location => location.type === locationTypeFilter);
+
+  console.log("Filtered locations:", filteredLocations);
 
   return {
     locations: filteredLocations,
