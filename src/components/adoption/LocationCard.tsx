@@ -18,6 +18,19 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
     }
   };
 
+  const handleCall = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (location.phone) {
+      window.open(`tel:${location.phone}`);
+    }
+  };
+
+  const handleDirections = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { lat, lng } = location.location;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${location.id}`);
+  };
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -47,9 +60,9 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-amber-600">{location.distance} km</span> away
           </div>
-          {location.phone && (
+          {location.rating && (
             <div className="text-sm text-muted-foreground mt-1">
-              {location.phone}
+              Rating: <span className="font-medium">{location.rating.toFixed(1)}</span>
             </div>
           )}
         </div>
@@ -59,6 +72,8 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
             variant="outline" 
             size="sm" 
             className="text-amber-600"
+            onClick={handleCall}
+            disabled={!location.phone}
           >
             <Phone className="h-4 w-4 mr-1" />
             Call
@@ -67,6 +82,7 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
             variant="outline" 
             size="sm"
             className="text-amber-600"
+            onClick={handleDirections}
           >
             <Navigation className="h-4 w-4 mr-1" />
             Directions

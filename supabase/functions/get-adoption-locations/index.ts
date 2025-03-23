@@ -25,6 +25,9 @@ serve(async (req) => {
       );
     }
 
+    // Log the request parameters for debugging
+    console.log(`Fetching adoption locations near ${lat},${lng} with radius ${radius}m and type ${type || 'all'}`);
+
     // Build the Places API URL based on location type
     let placesUrl = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
     placesUrl.searchParams.append('location', `${lat},${lng}`);
@@ -33,23 +36,32 @@ serve(async (req) => {
     
     // Add specific keywords based on the requested type
     if (type === 'shelter') {
-      placesUrl.searchParams.append('keyword', 'animal shelter');
+      placesUrl.searchParams.append('keyword', 'animal shelter cat');
     } else if (type === 'humane') {
-      placesUrl.searchParams.append('keyword', 'humane society');
+      placesUrl.searchParams.append('keyword', 'humane society cat');
     } else if (type === 'store') {
-      placesUrl.searchParams.append('keyword', 'pet store');
+      placesUrl.searchParams.append('keyword', 'pet store cat');
     } else {
       // If no specific type, search for all related places
-      placesUrl.searchParams.append('keyword', 'animal shelter humane society pet store');
+      placesUrl.searchParams.append('keyword', 'animal shelter humane society pet store cat adoption');
     }
 
-    console.log(`Fetching places near ${lat},${lng} with radius ${radius}m`);
+    console.log(`Requesting: ${placesUrl.toString().replace(GOOGLE_MAPS_API_KEY, 'API_KEY_REDACTED')}`);
     
     const response = await fetch(placesUrl.toString());
+    if (!response.ok) {
+      throw new Error(`Google Places API responded with status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log(`Found ${data.results?.length || 0} places, status: ${data.status}`);
+    
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      throw new Error(`Google Places API returned status: ${data.status}`);
+    }
     
     // Transform the Google Places results to our AdoptionLocation format
-    const locations = data.results.map(place => {
+    const locations = (data.results || []).map(place => {
       // Determine the location type based on name and types
       let locationType = 'store';
       const name = place.name.toLowerCase();
@@ -72,7 +84,7 @@ serve(async (req) => {
         distance: calculateDistance(lat, lng, place.geometry.location.lat, place.geometry.location.lng),
         open: place.opening_hours?.open_now,
         phone: place.formatted_phone_number || null,
-        rating: place.rating,
+        rating: place.rating || null,
         photos: place.photos?.map(photo => ({
           reference: photo.photo_reference,
           width: photo.width,
@@ -88,7 +100,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error fetching adoption locations:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, locations: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
