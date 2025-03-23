@@ -1,5 +1,4 @@
 
-
 export const getMarkerIconByType = (type: string): google.maps.Symbol => {
   console.log(`Getting icon for location type: ${type}`);
   
@@ -46,4 +45,3 @@ export const createUserLocationMarker = (map: google.maps.Map, position: google.
     zIndex: 999 // Ensure user marker is on top
   });
 };
-
