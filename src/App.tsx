@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import BreedDetail from "@/pages/BreedDetail";
+import AdoptionLocations from "@/pages/AdoptionLocations";
 import NotFound from "@/pages/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import { QuizProvider } from "@/providers/QuizProvider";
@@ -19,6 +20,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/breeds/:breedId" element={<BreedDetail />} />
+              <Route path="/adopt" element={<AdoptionLocations />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
