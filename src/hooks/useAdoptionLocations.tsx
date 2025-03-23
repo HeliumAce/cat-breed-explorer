@@ -9,12 +9,14 @@ interface UseAdoptionLocationsProps {
   defaultLocation?: { lat: number; lng: number };
   radius?: number;
   locationTypeFilter?: LocationType | 'all';
+  minLocations?: number;
 }
 
 export function useAdoptionLocations({
   defaultLocation,
-  radius = 5000,
-  locationTypeFilter = 'all'
+  radius = 8000, // Increased radius to find more locations
+  locationTypeFilter = 'all',
+  minLocations = 5 // Ensure at least 5 locations
 }: UseAdoptionLocationsProps = {}) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(defaultLocation || null);
   const [locationPermissionStatus, setLocationPermissionStatus] = useState<'loading' | 'granted' | 'denied' | 'prompt'>('loading');
@@ -105,13 +107,14 @@ export function useAdoptionLocations({
     error,
     refetch
   } = useQuery({
-    queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter],
+    queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter, minLocations],
     queryFn: async () => {
       console.log("Fetching adoption locations with params:", {
         lat: userLocation?.lat,
         lng: userLocation?.lng,
         radius,
-        type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
+        type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined,
+        minLocations
       });
 
       if (!userLocation) {
@@ -124,7 +127,8 @@ export function useAdoptionLocations({
             lat: userLocation.lat,
             lng: userLocation.lng,
             radius,
-            type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
+            type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined,
+            minLocations
           }
         });
 
