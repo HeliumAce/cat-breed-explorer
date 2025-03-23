@@ -90,8 +90,15 @@ export function useMapMarkers(
         });
         // Fit the map to show all markers
         map.fitBounds(bounds);
-        // Add some padding to avoid markers at the very edge
-        map.panBy(0, -50);
+        
+        // This was causing an error because panBy wasn't defined in our type definition
+        // Now we've added it to the type definition
+        try {
+          // Add some padding to avoid markers at the very edge
+          map.panBy(0, -50);
+        } catch (error) {
+          console.warn("Unable to pan map:", error);
+        }
       }
     } catch (error) {
       console.error("Error adding location markers:", error);
