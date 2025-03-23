@@ -39,6 +39,11 @@ export function MapComponent({
   const { isLoading: googleMapsLoading, isLoaded: mapLoaded, error: apiError } = useGoogleMapsAPI();
   const { markers, infoWindow } = useMapMarkers(map, locations, userLocation, onLocationSelect);
   
+  // Log when locations change to help with debugging
+  useEffect(() => {
+    console.log("MapComponent: Locations updated", locations);
+  }, [locations]);
+  
   // Initialize Google Maps
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || map) return;
@@ -133,6 +138,10 @@ export function MapComponent({
             <h3 class="font-medium text-base">${selectedLocation.name}</h3>
             <p class="text-sm text-muted-foreground">${selectedLocation.address}</p>
             <p class="text-sm text-muted-foreground">${selectedLocation.distance.toFixed(1)} km away</p>
+            ${selectedLocation.open !== undefined ? 
+              `<p class="text-sm ${selectedLocation.open ? 'text-green-600' : 'text-gray-500'}">
+                ${selectedLocation.open ? 'Open now' : 'Closed'}
+              </p>` : ''}
           </div>`
         );
         
@@ -151,6 +160,11 @@ export function MapComponent({
       console.error("Error updating selected location:", error);
     }
   }, [selectedLocation, map, infoWindow, markers]);
+  
+  // Log the rendered markers for debugging
+  useEffect(() => {
+    console.log(`MapComponent: Rendered ${markers.length} markers`);
+  }, [markers]);
   
   // No locations placeholder
   const NoLocationsPlaceholder = () => (

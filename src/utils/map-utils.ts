@@ -1,5 +1,7 @@
 
 export const getMarkerIconByType = (type: string): string => {
+  console.log(`Getting icon for location type: ${type}`);
+  
   switch (type) {
     case "shelter":
       return "/marker-shelter.png";
