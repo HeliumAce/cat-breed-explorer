@@ -16,7 +16,10 @@ serve(async (req) => {
   }
 
   try {
-    const { lat, lng, radius = 8000, type } = await req.json();
+    const requestBody = await req.json();
+    const { lat, lng, radius = 8000, type } = requestBody;
+    
+    console.log("Request body:", requestBody);
     
     if (!lat || !lng) {
       return new Response(
@@ -41,19 +44,19 @@ serve(async (req) => {
     try {
       // Define search keywords for different location types
       const locationTypes = [];
-      if (type === 'shelter' || type === 'all') {
+      if (type === 'shelter' || type === undefined) {
         locationTypes.push({
           type: 'shelter',
           keywords: 'animal shelter cat rescue'
         });
       }
-      if (type === 'humane' || type === 'all') {
+      if (type === 'humane' || type === undefined) {
         locationTypes.push({
           type: 'humane',
           keywords: 'humane society spca aspca cat'
         });
       }
-      if (type === 'store' || type === 'all') {
+      if (type === 'store' || type === undefined) {
         locationTypes.push({
           type: 'store',
           keywords: 'pet store cat adoption'
