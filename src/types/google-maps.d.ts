@@ -132,6 +132,28 @@ declare namespace google.maps {
       getPlace(): google.maps.places.PlaceResult;
     }
 
+    class PlacesService {
+      constructor(attrContainer: HTMLElement | Map);
+      findPlaceFromQuery(
+        request: FindPlaceFromQueryRequest,
+        callback: (results: PlaceResult[] | null, status: PlacesServiceStatus) => void
+      ): void;
+    }
+
+    enum PlacesServiceStatus {
+      OK,
+      ZERO_RESULTS,
+      OVER_QUERY_LIMIT,
+      REQUEST_DENIED,
+      INVALID_REQUEST,
+      UNKNOWN_ERROR
+    }
+
+    interface FindPlaceFromQueryRequest {
+      query: string;
+      fields: string[];
+    }
+
     interface AutocompleteOptions {
       bounds?: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral;
       componentRestrictions?: google.maps.places.ComponentRestrictions;

@@ -110,15 +110,16 @@ export function AddressSearch({ onAddressSelect, placeholder = "Enter an address
     
     // If we have a place from autocomplete, it will be handled by the place_changed event listener
     // This is for when user types but doesn't select from dropdown
-    if (autocompleteRef.current) {
-      // Trigger the place_changed event by programmatically requesting place details
-      // This is a manual fallback for direct form submission
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
+    if (window.google && window.google.maps && window.google.maps.places) {
+      // Create a PlacesService instance
+      const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+      
+      // Use findPlaceFromQuery to get place details
       service.findPlaceFromQuery({
         query: address,
         fields: ['formatted_address', 'geometry', 'name']
       }, (results, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
           const place = results[0];
           if (place.geometry && place.geometry.location) {
             const addressText = place.formatted_address || place.name || address;
