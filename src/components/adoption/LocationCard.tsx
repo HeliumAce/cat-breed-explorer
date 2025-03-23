@@ -37,7 +37,7 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
             <p className="text-sm text-muted-foreground">{location.address}</p>
           </div>
         </div>
-        <Badge variant={location.open ? "success" : "secondary"}>
+        <Badge variant={location.open ? "default" : "secondary"} className={location.open ? "bg-green-500 hover:bg-green-600" : ""}>
           {location.open ? "Open" : "Closed"}
         </Badge>
       </div>
