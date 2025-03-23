@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { lat, lng, radius = 8000, type, minLocations = 5 } = await req.json();
+    const { lat, lng, radius = 8000, type } = await req.json();
     
     if (!lat || !lng) {
       return new Response(
@@ -25,125 +25,16 @@ serve(async (req) => {
       );
     }
 
-    // Log the request parameters for debugging
-    console.log(`Fetching adoption locations near ${lat},${lng} with radius ${radius}m, type ${type || 'all'}, minLocations ${minLocations}`);
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('No Google Maps API key found in environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Google Maps API key is not configured', locations: [] }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Generate location type-specific fallback data with more diverse options
-    const fallbackLocations = [
-      // Shelters - more of them
-      {
-        id: "fallback-shelter-1",
-        name: "Happy Paws Animal Shelter",
-        type: "shelter",
-        address: "123 Main Street, Anytown",
-        location: { lat: lat + 0.01, lng: lng + 0.01 },
-        distance: 1.2,
-        open: true,
-        phone: "555-123-4567",
-        rating: 4.8
-      },
-      {
-        id: "fallback-shelter-2",
-        name: "Second Chance Cat Rescue",
-        type: "shelter",
-        address: "321 Oak Avenue, Parkside",
-        location: { lat: lat - 0.02, lng: lng + 0.02 },
-        distance: 2.8,
-        open: true,
-        phone: "555-456-7890",
-        rating: 4.9
-      },
-      {
-        id: "fallback-shelter-3",
-        name: "Feline Friends Rescue",
-        type: "shelter",
-        address: "159 Cedar Lane, Northend",
-        location: { lat: lat + 0.015, lng: lng - 0.025 },
-        distance: 2.5,
-        open: true,
-        phone: "555-789-0123",
-        rating: 4.5
-      },
-      {
-        id: "fallback-shelter-4",
-        name: "Whiskers Rescue Center",
-        type: "shelter",
-        address: "567 Pine Street, Eastside",
-        location: { lat: lat - 0.03, lng: lng + 0.035 },
-        distance: 3.3,
-        open: true,
-        phone: "555-234-5678",
-        rating: 4.7
-      },
-      // Humane societies - more of them
-      {
-        id: "fallback-humane-1",
-        name: "Coastal Humane Society",
-        type: "humane",
-        address: "456 Ocean Drive, Seaside",
-        location: { lat: lat - 0.01, lng: lng - 0.02 },
-        distance: 2.3,
-        open: true,
-        phone: "555-234-5678",
-        rating: 4.6
-      },
-      {
-        id: "fallback-humane-2",
-        name: "Valley Humane Society",
-        type: "humane",
-        address: "654 Mountain Road, Hillcrest",
-        location: { lat: lat + 0.03, lng: lng + 0.03 },
-        distance: 3.4,
-        open: true,
-        phone: "555-567-8901",
-        rating: 4.7
-      },
-      {
-        id: "fallback-humane-3",
-        name: "Metropolitan SPCA",
-        type: "humane",
-        address: "789 Broadway, Downtown",
-        location: { lat: lat + 0.02, lng: lng - 0.03 },
-        distance: 2.7,
-        open: true,
-        phone: "555-111-2222",
-        rating: 4.8
-      },
-      // Pet stores
-      {
-        id: "fallback-store-1",
-        name: "Pawsome Pet Supplies",
-        type: "store",
-        address: "789 Market Street, Downtown",
-        location: { lat: lat + 0.02, lng: lng - 0.01 },
-        distance: 1.9,
-        open: false,
-        phone: "555-345-6789",
-        rating: 4.2
-      },
-      {
-        id: "fallback-store-2",
-        name: "Cat Corner Pet Shop",
-        type: "store",
-        address: "987 Pine Street, Westside",
-        location: { lat: lat - 0.03, lng: lng - 0.03 },
-        distance: 3.8,
-        open: false,
-        phone: "555-678-9012",
-        rating: 4.0
-      },
-      {
-        id: "fallback-store-3",
-        name: "Meow & More Supplies",
-        type: "store",
-        address: "753 Elm Street, Eastside",
-        location: { lat: lat - 0.025, lng: lng + 0.015 },
-        distance: 2.9,
-        open: true,
-        phone: "555-890-1234",
-        rating: 4.1
-      }
-    ];
+    // Log the request parameters for debugging
+    console.log(`Fetching adoption locations near ${lat},${lng} with radius ${radius}m, type ${type || 'all'}`);
 
     // Try to get locations from Google Places API for different types
     let locations = [];
@@ -219,53 +110,43 @@ serve(async (req) => {
       }
     } catch (error) {
       console.error('Error fetching from Google Places API:', error);
-      console.log('Using fallback locations data');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to fetch adoption locations from Google Places API. ' + error.message,
+          locations: [] 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // If we don't have enough locations from the API, use fallback data to supplement
-    if (locations.length < minLocations) {
-      console.log(`API returned only ${locations.length} locations, less than required ${minLocations}. Adding fallback data.`);
-      
-      // Start with the existing API results
-      const finalLocations = [...locations];
-      
-      // Filter fallback locations by type if required
-      let filteredFallbacks = fallbackLocations;
-      if (type !== 'all' && type !== undefined) {
-        filteredFallbacks = fallbackLocations.filter(location => location.type === type);
-      }
-      
-      // Remove any fallbacks that have the same name as an API result to avoid duplicates
-      const existingNames = new Set(locations.map(location => location.name.toLowerCase()));
-      filteredFallbacks = filteredFallbacks.filter(
-        location => !existingNames.has(location.name.toLowerCase())
+    // If no locations were found
+    if (locations.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          message: 'No adoption locations found in your area. Try expanding your search radius or changing filters.',
+          locations: [] 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-      
-      // Add fallbacks until we reach the minimum or run out of fallbacks
-      let i = 0;
-      while (finalLocations.length < minLocations && i < filteredFallbacks.length) {
-        finalLocations.push(filteredFallbacks[i]);
-        i++;
-      }
-      
-      // Use these as our final location set
-      locations = finalLocations;
     }
 
     // Sort by distance
     locations = locations.sort((a, b) => a.distance - b.distance);
     
-    // Return at least minLocations, but no more than 10 to avoid overwhelming the UI
-    const limitedLocations = locations.slice(0, Math.max(minLocations, 10));
+    // Return only the 5 nearest locations
+    const nearestLocations = locations.slice(0, 5);
 
     return new Response(
-      JSON.stringify({ locations: limitedLocations }),
+      JSON.stringify({ locations: nearestLocations }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error fetching adoption locations:', error);
+    console.error('Error in get-adoption-locations edge function:', error);
     return new Response(
-      JSON.stringify({ error: error.message, locations: [] }),
+      JSON.stringify({ 
+        error: 'An unexpected error occurred while fetching adoption locations: ' + error.message, 
+        locations: [] 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
