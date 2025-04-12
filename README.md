@@ -1,7 +1,7 @@
 
-# 😺 Cat Breed Matcher
+# 😺 Cat Breed Explorer
 
-![Cat Breed Matcher Banner](https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800)
+![Cat Breed Explorer Banner](https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800)
 
 An interactive web application that helps users discover cat breeds that match their lifestyle and preferences through a personalized quiz.
 
