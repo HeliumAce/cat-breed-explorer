@@ -134,7 +134,7 @@ export function useMapMarkers(
     } catch (error) {
       console.error("Error adding location markers:", error);
     }
-  }, [locations, map, userLocation, infoWindow, createMarker, markers]);
+  }, [locations, map, userLocation, infoWindow, createMarker]);
 
   return {
     markers,
