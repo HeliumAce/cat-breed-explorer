@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { AdoptionLocation, LocationType, AdoptionLocationsResponse } from "@/types/adoption";
 import { toast } from "sonner";
 
@@ -116,20 +115,24 @@ export function useAdoptionLocations({
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke<AdoptionLocationsResponse>('get-adoption-locations', {
-          body: {
+        const response = await fetch('/api/adoption-locations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             lat: userLocation.lat,
             lng: userLocation.lng,
             radius,
             type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
-          }
+          })
         });
 
-        if (error) {
-          console.error("Supabase function error:", error);
-          throw new Error(error.message);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        const data = await response.json();
         console.log("Received adoption locations:", data);
         return data || { locations: [] };
       } catch (err) {
