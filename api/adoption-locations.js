@@ -4,8 +4,14 @@
  * 
  * Functionality: Multi-category search for pet adoption locations using Google Places API
  * Security: API key proxy with input validation and sanitized logging
+ * Rate Limiting: 20 requests per minute per IP address (conservative due to external API calls)
  * Response Format: Maintains identical format for frontend compatibility
  */
+
+import { RateLimiter, getClientIP, createRateLimitResponse } from './rate-limiter.js';
+
+// Create rate limiter instance: 20 requests per minute for resource-intensive endpoint
+const rateLimiter = new RateLimiter(20);
 
 export default async function handler(request, response) {
   // CORS headers - identical to Supabase function
@@ -21,6 +27,23 @@ export default async function handler(request, response) {
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .end();
+  }
+
+  // Rate limiting check
+  const clientIP = getClientIP(request);
+  const rateLimitResult = rateLimiter.checkLimit(clientIP);
+  
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(response, rateLimitResult)
+      .status(429)
+      .setHeader('Access-Control-Allow-Origin', '*')
+      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
+      .setHeader('Content-Type', 'application/json')
+      .json({ 
+        error: 'Rate limit exceeded. Please try again later.',
+        retryAfter: 60,
+        locations: []
+      });
   }
 
   // Only allow POST requests for this endpoint
@@ -180,7 +203,8 @@ export default async function handler(request, response) {
     // Return only the first 20 locations (increased from 5 to ensure more markers)
     const nearestLocations = locations.slice(0, 20);
 
-    return response.status(200)
+    return createRateLimitResponse(response, rateLimitResult)
+                   .status(200)
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .setHeader('Content-Type', 'application/json')

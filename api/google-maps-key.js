@@ -3,8 +3,14 @@
  * Replaces Supabase Edge Function: get-google-maps-key
  * 
  * Security: Returns Google Maps API key securely without exposing it in client-side code
+ * Rate Limiting: 60 requests per minute per IP address
  * Response Format: Maintains identical format for frontend compatibility
  */
+
+import { RateLimiter, getClientIP, createRateLimitResponse } from './rate-limiter.js';
+
+// Create rate limiter instance: 60 requests per minute for API key endpoint
+const rateLimiter = new RateLimiter(60);
 
 export default function handler(request, response) {
   // CORS headers - identical to Supabase function
@@ -21,6 +27,22 @@ export default function handler(request, response) {
                               .end();
   }
 
+  // Rate limiting check
+  const clientIP = getClientIP(request);
+  const rateLimitResult = rateLimiter.checkLimit(clientIP);
+  
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(response, rateLimitResult)
+      .status(429)
+      .setHeader('Access-Control-Allow-Origin', '*')
+      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
+      .setHeader('Content-Type', 'application/json')
+      .json({ 
+        error: 'Rate limit exceeded. Please try again later.',
+        retryAfter: 60
+      });
+  }
+
   try {
     // Get API key from environment variables
     const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
@@ -31,8 +53,9 @@ export default function handler(request, response) {
       throw new Error("API key not configured");
     }
 
-    // Return success response - identical format to Supabase function
-    return response.status(200)
+    // Return success response - identical format to Supabase function with rate limit headers
+    return createRateLimitResponse(response, rateLimitResult)
+                   .status(200)
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .setHeader('Content-Type', 'application/json')
