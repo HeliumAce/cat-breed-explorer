@@ -1,7 +1,5 @@
 
 export const getMarkerIconByType = (type: string): google.maps.Symbol => {
-  console.log(`Getting icon for location type: ${type}`);
-  
   // Create a standard symbol with color based on location type
   const symbol: google.maps.Symbol = {
     path: window.google.maps.SymbolPath.CIRCLE,

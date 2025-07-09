@@ -39,18 +39,13 @@ export function MapComponent({
   const { isLoading: googleMapsLoading, isLoaded: mapLoaded, error: apiError } = useGoogleMapsAPI();
   const { markers, infoWindow } = useMapMarkers(map, locations, userLocation, onLocationSelect);
   
-  // Log when locations change to help with debugging
-  useEffect(() => {
-    console.log("MapComponent: Locations updated", locations);
-  }, [locations]);
+
   
   // Initialize Google Maps
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || map) return;
     
     try {
-      console.log("Initializing Google Maps with user location:", userLocation);
-      
       const mapOptions = {
         center: { lat: userLocation.lat, lng: userLocation.lng },
         zoom: 11,
@@ -161,10 +156,7 @@ export function MapComponent({
     }
   }, [selectedLocation, map, infoWindow, markers]);
   
-  // Log the rendered markers for debugging
-  useEffect(() => {
-    console.log(`MapComponent: Rendered ${markers.length} markers`);
-  }, [markers]);
+
   
   // No locations placeholder
   const NoLocationsPlaceholder = () => (

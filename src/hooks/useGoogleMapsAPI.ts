@@ -13,7 +13,6 @@ export function useGoogleMapsAPI() {
         
         // Check if Google Maps is already loaded
         if (window.google && window.google.maps) {
-          console.log("Google Maps API is already loaded");
           setIsLoaded(true);
           setIsLoading(false);
           return;
@@ -34,14 +33,13 @@ export function useGoogleMapsAPI() {
         
         // Define a callback function that will be called when the API is loaded
         window.initMap = () => {
-          console.log("Google Maps API loaded successfully");
           setIsLoaded(true);
           setIsLoading(false);
         };
         
         // Create and append the script element
         const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&libraries=places&callback=initMap`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&libraries=places&callback=initMap&loading=async`;
         script.async = true;
         script.defer = true;
         script.onerror = () => {
