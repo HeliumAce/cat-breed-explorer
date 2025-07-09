@@ -47,7 +47,7 @@ Based on PRD: `prd-supabase-to-vercel-migration.md`
 - [x] 3.0 Implement Security Best Practices and Environment Configuration
   - [x] 3.1 Create `.env` file with Google Maps API key for local development (used .env due to vercel dev behavior)
   - [x] 3.2 Create `.env.example` file documenting required environment variables
-  - [ ] 3.3 Add rate limiting to API routes to prevent abuse
+  - [x] 3.3 Add rate limiting to API routes to prevent abuse
   - [x] 3.4 Implement proper input validation and sanitization in API routes
   - [x] 3.5 Add security headers (CORS, CSP, etc.) to API responses
   - [x] 3.6 Verify no sensitive data is exposed in client-side code or error messages
