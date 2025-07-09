@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 
 export function useGoogleMapsAPI() {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,15 +19,14 @@ export function useGoogleMapsAPI() {
           return;
         }
         
-        // Fetch API key from our Supabase Edge Function
-        const { data, error } = await supabase.functions.invoke<{ apiKey: string }>('get-google-maps-key');
+        // Fetch API key from our Vercel API route
+        const response = await fetch('/api/google-maps-key');
         
-        if (error) {
-          console.error("Error fetching Google Maps API key:", error);
-          setError("Failed to load Google Maps API key. Please try again later.");
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
         
         if (!data || !data.apiKey) {
           throw new Error("No API key returned from server");
