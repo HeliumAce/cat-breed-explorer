@@ -47,8 +47,6 @@ export default async function handler(request, response) {
 
     const { lat, lng, radius = 8000, type } = requestBody;
     
-    console.log("Request body:", requestBody);
-    
     // Input validation
     if (!lat || !lng) {
       return response.status(400)
@@ -68,9 +66,6 @@ export default async function handler(request, response) {
                      .setHeader('Content-Type', 'application/json')
                      .json({ error: 'Google Maps API key is not configured', locations: [] });
     }
-
-    // Log the request parameters for debugging
-    console.log(`Fetching adoption locations near ${lat},${lng} with radius ${radius}m, type ${type || 'all'}`);
 
     // Search for adoption locations
     let locations = [];
@@ -103,8 +98,6 @@ export default async function handler(request, response) {
         placesUrl.searchParams.append('radius', radius.toString());
         placesUrl.searchParams.append('key', GOOGLE_MAPS_API_KEY);
         placesUrl.searchParams.append('keyword', locationType.keywords);
-
-        console.log(`Requesting ${locationType.type} locations: ${placesUrl.toString().replace(GOOGLE_MAPS_API_KEY, 'API_KEY_REDACTED')}`);
         
         const apiResponse = await fetch(placesUrl.toString());
         if (!apiResponse.ok) {
@@ -112,7 +105,6 @@ export default async function handler(request, response) {
         }
         
         const data = await apiResponse.json();
-        console.log(`Found ${data.results?.length || 0} ${locationType.type} places, status: ${data.status}`);
         
         if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
           console.warn(`Google Places API returned status: ${data.status} for ${locationType.type}`);
@@ -144,6 +136,20 @@ export default async function handler(request, response) {
         
         locations = [...locations, ...typeResults];
       }
+
+      // Deduplicate locations by place_id, keeping the most relevant type
+      const typePreference = { 'shelter': 1, 'humane': 2, 'store': 3 };
+      const locationMap = new Map();
+      
+      for (const location of locations) {
+        const existingLocation = locationMap.get(location.id);
+        if (!existingLocation || typePreference[location.type] < typePreference[existingLocation.type]) {
+          locationMap.set(location.id, location);
+        }
+      }
+      
+      locations = Array.from(locationMap.values());
+      
     } catch (error) {
       console.error('Error fetching from Google Places API:', error);
       return response.status(500)
