@@ -1,5 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Index from "@/pages/Index";
 import BreedDetail from "@/pages/BreedDetail";
 import AdoptionLocations from "@/pages/AdoptionLocations";
@@ -27,6 +29,8 @@ function App() {
           <Toaster />
         </QuizProvider>
       </Router>
+      <Analytics />
+      <SpeedInsights />
     </QueryClientProvider>
   );
 }
