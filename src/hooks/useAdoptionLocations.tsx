@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { AdoptionLocation, LocationType, AdoptionLocationsResponse } from "@/types/adoption";
 import { toast } from "sonner";
 
@@ -104,33 +103,29 @@ export function useAdoptionLocations({
   } = useQuery({
     queryKey: ['adoptionLocations', userLocation?.lat, userLocation?.lng, radius, locationTypeFilter],
     queryFn: async () => {
-      console.log("Fetching adoption locations with params:", {
-        lat: userLocation?.lat,
-        lng: userLocation?.lng,
-        radius,
-        type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined,
-      });
-
       if (!userLocation) {
         throw new Error("User location is required to fetch adoption locations");
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke<AdoptionLocationsResponse>('get-adoption-locations', {
-          body: {
+        const response = await fetch('/api/adoption-locations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             lat: userLocation.lat,
             lng: userLocation.lng,
             radius,
             type: locationTypeFilter !== 'all' ? locationTypeFilter : undefined
-          }
+          })
         });
 
-        if (error) {
-          console.error("Supabase function error:", error);
-          throw new Error(error.message);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        console.log("Received adoption locations:", data);
+        const data = await response.json();
         return data || { locations: [] };
       } catch (err) {
         console.error("Error in useAdoptionLocations:", err);
@@ -147,8 +142,6 @@ export function useAdoptionLocations({
   const filteredLocations = locationTypeFilter === 'all'
     ? locations
     : locations.filter(location => location.type === locationTypeFilter);
-
-  console.log("Filtered locations:", filteredLocations);
 
   return {
     locations: filteredLocations,

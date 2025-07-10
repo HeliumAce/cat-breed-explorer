@@ -4,8 +4,14 @@
  * 
  * Functionality: Multi-category search for pet adoption locations using Google Places API
  * Security: API key proxy with input validation and sanitized logging
+ * Rate Limiting: 20 requests per minute per IP address (conservative due to external API calls)
  * Response Format: Maintains identical format for frontend compatibility
  */
+
+import { RateLimiter, getClientIP, createRateLimitResponse } from './rate-limiter.js';
+
+// Create rate limiter instance: 20 requests per minute for resource-intensive endpoint
+const rateLimiter = new RateLimiter(20);
 
 export default async function handler(request, response) {
   // CORS headers - identical to Supabase function
@@ -21,6 +27,23 @@ export default async function handler(request, response) {
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .end();
+  }
+
+  // Rate limiting check
+  const clientIP = getClientIP(request);
+  const rateLimitResult = rateLimiter.checkLimit(clientIP);
+  
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(response, rateLimitResult)
+      .status(429)
+      .setHeader('Access-Control-Allow-Origin', '*')
+      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
+      .setHeader('Content-Type', 'application/json')
+      .json({ 
+        error: 'Rate limit exceeded. Please try again later.',
+        retryAfter: 60,
+        locations: []
+      });
   }
 
   // Only allow POST requests for this endpoint
@@ -47,8 +70,6 @@ export default async function handler(request, response) {
 
     const { lat, lng, radius = 8000, type } = requestBody;
     
-    console.log("Request body:", requestBody);
-    
     // Input validation
     if (!lat || !lng) {
       return response.status(400)
@@ -68,9 +89,6 @@ export default async function handler(request, response) {
                      .setHeader('Content-Type', 'application/json')
                      .json({ error: 'Google Maps API key is not configured', locations: [] });
     }
-
-    // Log the request parameters for debugging
-    console.log(`Fetching adoption locations near ${lat},${lng} with radius ${radius}m, type ${type || 'all'}`);
 
     // Search for adoption locations
     let locations = [];
@@ -103,8 +121,6 @@ export default async function handler(request, response) {
         placesUrl.searchParams.append('radius', radius.toString());
         placesUrl.searchParams.append('key', GOOGLE_MAPS_API_KEY);
         placesUrl.searchParams.append('keyword', locationType.keywords);
-
-        console.log(`Requesting ${locationType.type} locations: ${placesUrl.toString().replace(GOOGLE_MAPS_API_KEY, 'API_KEY_REDACTED')}`);
         
         const apiResponse = await fetch(placesUrl.toString());
         if (!apiResponse.ok) {
@@ -112,7 +128,6 @@ export default async function handler(request, response) {
         }
         
         const data = await apiResponse.json();
-        console.log(`Found ${data.results?.length || 0} ${locationType.type} places, status: ${data.status}`);
         
         if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
           console.warn(`Google Places API returned status: ${data.status} for ${locationType.type}`);
@@ -144,6 +159,20 @@ export default async function handler(request, response) {
         
         locations = [...locations, ...typeResults];
       }
+
+      // Deduplicate locations by place_id, keeping the most relevant type
+      const typePreference = { 'shelter': 1, 'humane': 2, 'store': 3 };
+      const locationMap = new Map();
+      
+      for (const location of locations) {
+        const existingLocation = locationMap.get(location.id);
+        if (!existingLocation || typePreference[location.type] < typePreference[existingLocation.type]) {
+          locationMap.set(location.id, location);
+        }
+      }
+      
+      locations = Array.from(locationMap.values());
+      
     } catch (error) {
       console.error('Error fetching from Google Places API:', error);
       return response.status(500)
@@ -174,7 +203,8 @@ export default async function handler(request, response) {
     // Return only the first 20 locations (increased from 5 to ensure more markers)
     const nearestLocations = locations.slice(0, 20);
 
-    return response.status(200)
+    return createRateLimitResponse(response, rateLimitResult)
+                   .status(200)
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .setHeader('Content-Type', 'application/json')

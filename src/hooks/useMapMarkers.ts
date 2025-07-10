@@ -26,12 +26,9 @@ export function useMapMarkers(
 
   // Create marker with location info
   const createMarker = useCallback((location: AdoptionLocation, map: google.maps.Map) => {
-    console.log(`Creating marker for ${location.name} at ${location.location.lat},${location.location.lng}`);
-    
     try {
       // Get the appropriate icon based on location type
       const markerIcon = getMarkerIconByType(location.type);
-      console.log(`Using marker symbol for location type: ${location.type}`, markerIcon);
       
       // Create the marker with standard Google Maps styling
       const marker = new window.google.maps.Marker({
@@ -75,22 +72,17 @@ export function useMapMarkers(
   // Add location markers when locations change
   useEffect(() => {
     if (!map || !window.google || !infoWindow) {
-      console.log("Map, Google Maps API, or InfoWindow not available yet");
       return;
     }
     
     try {
-      console.log("Adding markers for locations:", locations);
-      
       // Clear existing markers
       if (markers.length) {
-        console.log(`Clearing ${markers.length} existing markers`);
         markers.forEach(marker => marker.setMap(null));
       }
       
       if (locations.length === 0) {
         // If no locations, just center on user location
-        console.log("No locations to display, centering on user location");
         map.setCenter({ lat: userLocation.lat, lng: userLocation.lng });
         map.setZoom(11);
         setMarkers([]);
@@ -102,7 +94,6 @@ export function useMapMarkers(
         .map(location => createMarker(location, map))
         .filter((marker): marker is google.maps.Marker => marker !== null);
       
-      console.log(`Created ${newMarkers.length} markers out of ${locations.length} locations`);
       setMarkers(newMarkers);
       
       // Fit bounds to include all markers and user location
@@ -121,7 +112,6 @@ export function useMapMarkers(
         });
         
         // Fit the map to show all markers
-        console.log("Fitting map to bounds to show all markers");
         map.fitBounds(bounds);
         
         // Add some padding to avoid markers at the very edge
