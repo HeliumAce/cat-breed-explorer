@@ -130,7 +130,7 @@ const Index = () => {
         <footer className="bg-white border-t border-amber-100 py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-muted-foreground">
-              Data provided by <a href="https://thecatapi.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">TheCatAPI</a>
+              Made with 🧡 by Joni and her Dad | Data provided by <a href="https://thecatapi.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">TheCatAPI</a>
             </p>
           </div>
         </footer>

@@ -59,7 +59,7 @@ const BreedDetail = () => {
             className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-amber-700 focus-ring rounded-full px-3 py-1 -ml-3"
           >
             <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to All Breeds
+            Back to all breeds
           </motion.button>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
