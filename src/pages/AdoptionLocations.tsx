@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageTransition } from "@/components/PageTransition";
 import { ArrowLeft, MapPin, AlertCircle, Cat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { LoadingInline } from "@/components/Loading";
 import { motion } from "framer-motion";
 
 const AdoptionLocations = () => {
+  const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState<AdoptionLocation | null>(null);
   const [typeFilter, setTypeFilter] = useState<LocationType | 'all'>('all');
   const [isMapCollapsed, setIsMapCollapsed] = useState(false);
@@ -47,24 +48,19 @@ const AdoptionLocations = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white cat-paw-grid">
-        <header className="bg-white border-b border-amber-100 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to All Breeds
-              </Link>
-            </Button>
-            
-            <h1 className="text-xl font-semibold text-foreground">Adopt a Cat</h1>
-            
-            <div className="w-[100px]">
-              {/* Spacer div for centering the title */}
-            </div>
-          </div>
-        </header>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.button
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={() => navigate("/")}
+            className="mb-6 inline-flex items-center text-sm font-medium text-muted-foreground hover:text-amber-700 focus-ring rounded-full px-3 py-1 -ml-3"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            Back to all breeds
+          </motion.button>
         
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main>
           {locationPermissionStatus !== 'granted' && (
             <LocationPermissionRequest
               status={locationPermissionStatus}
@@ -193,6 +189,7 @@ const AdoptionLocations = () => {
             </div>
           </div>
         </main>
+        </div>
       </div>
     </PageTransition>
   );
