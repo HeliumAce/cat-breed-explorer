@@ -24,7 +24,7 @@ export function SliderQuestion({
         defaultValue={[
           typeof selectedOption === "number"
             ? selectedOption
-            : sliderConfig.min,
+            : Math.round((sliderConfig.min + sliderConfig.max) / 2),
         ]}
         max={sliderConfig.max}
         min={sliderConfig.min}
