@@ -43,12 +43,19 @@ export function QuizQuestion({
       // Initialize with empty array for checkbox or multi-select questions
       if (question.type === "checkbox" || question.isMultiSelect) {
         setSelectedOption([]);
+        setHasAnswered(false);
+      } else if (question.type === "slider" && question.sliderConfig) {
+        // For slider questions, start with midpoint and consider it answered
+        const midpoint = Math.round((question.sliderConfig.min + question.sliderConfig.max) / 2);
+        setSelectedOption(midpoint);
+        setHasAnswered(true);
+        saveAnswer(question.id, midpoint);
       } else {
         setSelectedOption("");
+        setHasAnswered(false);
       }
-      setHasAnswered(false);
     }
-  }, [question.id, getAnswerForQuestion]);
+  }, [question.id, getAnswerForQuestion, saveAnswer, question.type, question.sliderConfig, question.isMultiSelect]);
 
   const handleOptionSelect = (optionValue: string | number) => {
     setSelectedOption(optionValue);
