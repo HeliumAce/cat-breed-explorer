@@ -65,7 +65,9 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithIm
           break;
 
         case 3: // Chatty companions/vocalization
-          const talkValue = typeof answer.answer === 'number' ? answer.answer : 3;
+          // Convert 0-100 slider value to 1-5 scale for matching algorithm
+          const rawTalkValue = typeof answer.answer === 'number' ? answer.answer : 50;
+          const talkValue = Math.round((rawTalkValue / 100) * 4) + 1; // Maps 0-100 to 1-5
           
           if ((talkValue >= 4 && breed.vocalisation >= 4) ||
               (talkValue === 3 && breed.vocalisation === 3) ||

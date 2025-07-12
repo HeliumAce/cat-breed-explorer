@@ -13,7 +13,7 @@ export function useQuizState() {
 
   const totalQuestions = quizQuestions.length;
   const currentQuestion = quizQuestions[currentQuestionIndex];
-  const progress = Math.round(((currentQuestionIndex) / totalQuestions) * 100);
+  const progress = Math.round((Math.max(0, currentQuestionIndex - 1) / totalQuestions) * 100);
 
   const openQuiz = useCallback(() => {
     setIsOpen(true);

@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { CheckSquare, Square } from "lucide-react";
 import { QuizOption } from "@/types/quiz";
 
 interface MultiSelectQuestionProps {
@@ -26,22 +27,26 @@ export function MultiSelectQuestion({
             key={option.id}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center space-x-2"
           >
-            <Checkbox
-              id={option.id}
-              checked={isChecked}
-              onCheckedChange={(checked) =>
-                onMultiSelectChange(option.value.toString(), checked === true)
-              }
-              className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-            />
-            <label
-              htmlFor={option.id}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            <Button
+              type="button"
+              variant="outline"
+              className={`w-full justify-start text-left h-auto py-3 px-4 ${
+                isChecked
+                  ? "bg-amber-100 border-amber-300"
+                  : ""
+              }`}
+              onClick={() => onMultiSelectChange(option.value.toString(), !isChecked)}
             >
+              <span className="mr-2">
+                {isChecked ? (
+                  <CheckSquare className="h-5 w-5 text-amber-500" />
+                ) : (
+                  <Square className="h-5 w-5 text-muted-foreground" />
+                )}
+              </span>
               {option.text}
-            </label>
+            </Button>
           </motion.div>
         );
       })}

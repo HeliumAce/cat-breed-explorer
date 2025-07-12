@@ -31,9 +31,9 @@ export const quizQuestions: QuizQuestion[] = [
     type: "slider",
     question: "Your tolerance for chatty companions is...",
     sliderConfig: {
-      min: 1,
-      max: 5,
-      step: 1,
+      min: 0,
+      max: 100,
+      step: 0.1,
       minLabel: "Blessed silence please",
       maxLabel: "Tell me EVERYTHING"
     },
