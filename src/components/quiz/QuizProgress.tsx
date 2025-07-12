@@ -15,9 +15,6 @@ export function QuizProgress({ progress, currentStep, totalSteps }: QuizProgress
         <span className="text-sm font-medium text-muted-foreground">
           Question {currentStep} of {totalSteps}
         </span>
-        <span className="text-sm font-medium text-amber-600">
-          {progress}% Complete
-        </span>
       </div>
       
       <div className="relative h-2 w-full bg-amber-100 rounded-full overflow-hidden">
@@ -34,7 +31,6 @@ export function QuizProgress({ progress, currentStep, totalSteps }: QuizProgress
           animate={{ left: `${progress}%` }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
-          <PawPrint className="h-4 w-4 text-amber-800 -ml-2" />
         </motion.div>
       </div>
     </div>
