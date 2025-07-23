@@ -45,12 +45,16 @@ export default function handler(request, response) {
 
   try {
     // Get API key from environment variables
-    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+    const CLIENT_GOOGLE_MAPS_API_KEY = process.env.CLIENT_GOOGLE_MAPS_API_KEY;
     
     // Validate API key exists
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error("GOOGLE_MAPS_API_KEY is not set in environment variables");
-      throw new Error("API key not configured");
+    if (!CLIENT_GOOGLE_MAPS_API_KEY) {
+      console.error("CLIENT_GOOGLE_MAPS_API_KEY is not set in environment variables");
+      return response.status(500)
+        .setHeader('Access-Control-Allow-Origin', '*')
+        .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
+        .setHeader('Content-Type', 'application/json')
+        .json({ error: 'Google Maps client API key is not configured. Please set CLIENT_GOOGLE_MAPS_API_KEY in your environment.' });
     }
 
     // Return success response - identical format to Supabase function with rate limit headers
@@ -59,7 +63,7 @@ export default function handler(request, response) {
                    .setHeader('Access-Control-Allow-Origin', '*')
                    .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                    .setHeader('Content-Type', 'application/json')
-                   .json({ apiKey: GOOGLE_MAPS_API_KEY });
+                   .json({ apiKey: CLIENT_GOOGLE_MAPS_API_KEY });
 
   } catch (error) {
     // Log error securely (no sensitive data)

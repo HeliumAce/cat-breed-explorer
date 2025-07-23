@@ -80,14 +80,14 @@ export default async function handler(request, response) {
     }
 
     // Validate API key
-    const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error('No Google Maps API key found in environment variables');
+    const SERVER_GOOGLE_MAPS_API_KEY = process.env.SERVER_GOOGLE_MAPS_API_KEY;
+    if (!SERVER_GOOGLE_MAPS_API_KEY) {
+      console.error('SERVER_GOOGLE_MAPS_API_KEY is not set in environment variables');
       return response.status(500)
                      .setHeader('Access-Control-Allow-Origin', '*')
                      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
                      .setHeader('Content-Type', 'application/json')
-                     .json({ error: 'Google Maps API key is not configured', locations: [] });
+                     .json({ error: 'Google Maps server API key is not configured. Please set SERVER_GOOGLE_MAPS_API_KEY in your environment.', locations: [] });
     }
 
     // Search for adoption locations
@@ -119,7 +119,7 @@ export default async function handler(request, response) {
         const placesUrl = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
         placesUrl.searchParams.append('location', `${lat},${lng}`);
         placesUrl.searchParams.append('radius', radius.toString());
-        placesUrl.searchParams.append('key', GOOGLE_MAPS_API_KEY);
+        placesUrl.searchParams.append('key', SERVER_GOOGLE_MAPS_API_KEY);
         placesUrl.searchParams.append('keyword', locationType.keywords);
         
         const apiResponse = await fetch(placesUrl.toString());
