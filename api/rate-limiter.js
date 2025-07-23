@@ -103,8 +103,119 @@ function createRateLimitResponse(response, limitInfo) {
     .setHeader('Retry-After', '60'); // Try again in 60 seconds
 }
 
+/**
+ * Secure CORS Configuration for Enterprise Compliance
+ * Restricts access to authorized domains only
+ * Automatically handles Vercel preview deployments
+ * @param {Object} request - Vercel request object
+ * @returns {Object} Secure CORS headers
+ */
+function getSecureCorsHeaders(request) {
+  // Production domains (always allowed)
+  const allowedOrigins = [
+    'https://www.catbreedexplorer.com',
+    'https://catbreedexplorer.com'
+  ];
+
+  // Automatically add Vercel deployment URLs based on environment
+  if (process.env.VERCEL_URL) {
+    // Current deployment URL (works for all Vercel deployments)
+    allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  // Add project-specific Vercel domains
+  const vercelProjectDomains = [
+    'https://cat-breed-explorer.vercel.app', // Production Vercel domain
+    'https://cat-breed-explorer-liams-projects-bf976fe6.vercel.app' // Your specific domain from screenshot
+  ];
+  allowedOrigins.push(...vercelProjectDomains);
+
+  // Development and preview environments
+  if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview') {
+    // Local development
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173'
+    );
+  }
+
+  // For preview deployments, also allow any Vercel preview URL pattern
+  if (process.env.VERCEL_ENV === 'preview') {
+    const origin = request.headers.origin;
+    // Allow any cat-breed-explorer Vercel domain (preview deployments)
+    if (origin && origin.includes('cat-breed-explorer') && origin.includes('vercel.app')) {
+      allowedOrigins.push(origin);
+    }
+  }
+
+  const origin = request.headers.origin;
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+  
+  // Special handling for Vercel preview deployments
+  const isVercelPreview = origin && 
+    origin.includes('cat-breed-explorer') && 
+    origin.includes('vercel.app') && 
+    (process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development');
+  
+  // Use the requesting origin if allowed or if it's a valid Vercel preview
+  const allowedOrigin = (isAllowedOrigin || isVercelPreview) ? origin : allowedOrigins[0];
+
+  // Debug CORS in development/preview environments
+  debugCors(origin, allowedOrigin, allowedOrigins);
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Max-Age': '86400', // 24 hours cache for preflight
+    'Vary': 'Origin', // Important for caching
+    // Additional security headers for enterprise compliance
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin'
+  };
+}
+
+/**
+ * Debug CORS configuration (only in development/preview)
+ * @param {string} origin - Request origin
+ * @param {string} allowedOrigin - Resolved allowed origin
+ * @param {Array} allowedOrigins - All allowed origins
+ */
+function debugCors(origin, allowedOrigin, allowedOrigins) {
+  if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview') {
+    console.log('🔍 CORS Debug:', {
+      requestOrigin: origin,
+      resolvedOrigin: allowedOrigin,
+      vercelEnv: process.env.VERCEL_ENV,
+      vercelUrl: process.env.VERCEL_URL,
+      allowedOrigins: allowedOrigins.slice(0, 5) // Show first 5 to avoid log spam
+    });
+  }
+}
+
+/**
+ * Apply secure CORS headers to response
+ * @param {Object} response - Vercel response object
+ * @param {Object} corsHeaders - CORS headers object
+ * @returns {Object} Response with headers applied
+ */
+function applyCorsHeaders(response, corsHeaders) {
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    response.setHeader(key, value);
+  });
+  return response;
+}
+
 export {
   RateLimiter,
   getClientIP,
-  createRateLimitResponse
+  createRateLimitResponse,
+  getSecureCorsHeaders,
+  applyCorsHeaders,
+  debugCors
 }; 

@@ -5,26 +5,32 @@
  * Security: Returns Google Maps API key securely without exposing it in client-side code
  * Rate Limiting: 60 requests per minute per IP address
  * Response Format: Maintains identical format for frontend compatibility
+ * CORS Security: Enterprise-grade origin restrictions and security headers
  */
 
-import { RateLimiter, getClientIP, createRateLimitResponse } from './rate-limiter.js';
+import { RateLimiter, getClientIP, createRateLimitResponse, getSecureCorsHeaders, applyCorsHeaders } from './rate-limiter.js';
 
 // Create rate limiter instance: 60 requests per minute for API key endpoint
 const rateLimiter = new RateLimiter(60);
 
 export default function handler(request, response) {
-  // CORS headers - identical to Supabase function
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json'
-  };
+  // ✅ SECURE CORS CONFIGURATION - Enterprise compliant
+  const corsHeaders = getSecureCorsHeaders(request);
+  
+  // Apply CORS headers to response
+  applyCorsHeaders(response, corsHeaders);
 
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
-    return response.status(200).setHeader('Access-Control-Allow-Origin', '*')
-                              .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                              .end();
+    return response.status(200).end();
+  }
+
+  // Only allow GET requests for this endpoint (enhanced security)
+  if (request.method !== 'GET') {
+    return response.status(405).json({ 
+      error: 'Method not allowed. Use GET.',
+      allowedMethods: ['GET', 'OPTIONS']
+    });
   }
 
   // Rate limiting check
@@ -34,9 +40,6 @@ export default function handler(request, response) {
   if (!rateLimitResult.allowed) {
     return createRateLimitResponse(response, rateLimitResult)
       .status(429)
-      .setHeader('Access-Control-Allow-Origin', '*')
-      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-      .setHeader('Content-Type', 'application/json')
       .json({ 
         error: 'Rate limit exceeded. Please try again later.',
         retryAfter: 60
@@ -50,30 +53,23 @@ export default function handler(request, response) {
     // Validate API key exists
     if (!CLIENT_GOOGLE_MAPS_API_KEY) {
       console.error("CLIENT_GOOGLE_MAPS_API_KEY is not set in environment variables");
-      return response.status(500)
-        .setHeader('Access-Control-Allow-Origin', '*')
-        .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-        .setHeader('Content-Type', 'application/json')
-        .json({ error: 'Google Maps client API key is not configured. Please set CLIENT_GOOGLE_MAPS_API_KEY in your environment.' });
+      return response.status(500).json({ 
+        error: 'Google Maps client API key is not configured. Please set CLIENT_GOOGLE_MAPS_API_KEY in your environment.' 
+      });
     }
 
-    // Return success response - identical format to Supabase function with rate limit headers
+    // Return success response with rate limit headers
     return createRateLimitResponse(response, rateLimitResult)
                    .status(200)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .setHeader('Content-Type', 'application/json')
                    .json({ apiKey: CLIENT_GOOGLE_MAPS_API_KEY });
 
   } catch (error) {
     // Log error securely (no sensitive data)
     console.error("Error returning Google Maps API key:", error.message);
     
-    // Return error response - identical format to Supabase function
-    return response.status(500)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .setHeader('Content-Type', 'application/json')
-                   .json({ error: error.message });
+    // Return sanitized error response
+    return response.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
   }
 } 

@@ -3,27 +3,24 @@
  * Security: API key proxy with input validation and sanitized logging
  * Rate Limiting: 20 requests per minute per IP address (conservative due to external API calls)
  * Response Format: Maintains identical format for frontend compatibility
+ * CORS Security: Enterprise-grade origin restrictions and security headers
  */
 
-import { RateLimiter, getClientIP, createRateLimitResponse } from './rate-limiter.js';
+import { RateLimiter, getClientIP, createRateLimitResponse, getSecureCorsHeaders, applyCorsHeaders } from './rate-limiter.js';
 
 // Create rate limiter instance: 20 requests per minute for resource-intensive endpoint
 const rateLimiter = new RateLimiter(20);
 
 export default async function handler(request, response) {
-  // CORS headers - identical to Supabase function
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json'
-  };
+  // ✅ SECURE CORS CONFIGURATION - Enterprise compliant
+  const corsHeaders = getSecureCorsHeaders(request);
+  
+  // Apply CORS headers to response
+  applyCorsHeaders(response, corsHeaders);
 
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
-    return response.status(200)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .end();
+    return response.status(200).end();
   }
 
   // Rate limiting check
@@ -33,9 +30,6 @@ export default async function handler(request, response) {
   if (!rateLimitResult.allowed) {
     return createRateLimitResponse(response, rateLimitResult)
       .status(429)
-      .setHeader('Access-Control-Allow-Origin', '*')
-      .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-      .setHeader('Content-Type', 'application/json')
       .json({ 
         error: 'Rate limit exceeded. Please try again later.',
         retryAfter: 60,
@@ -45,11 +39,11 @@ export default async function handler(request, response) {
 
   // Only allow POST requests for this endpoint
   if (request.method !== 'POST') {
-    return response.status(405)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .setHeader('Content-Type', 'application/json')
-                   .json({ error: 'Method not allowed. Use POST.', locations: [] });
+    return response.status(405).json({ 
+      error: 'Method not allowed. Use POST.',
+      allowedMethods: ['POST', 'OPTIONS'],
+      locations: [] 
+    });
   }
 
   try {
@@ -58,33 +52,55 @@ export default async function handler(request, response) {
     try {
       requestBody = request.body;
     } catch (error) {
-      return response.status(400)
-                     .setHeader('Access-Control-Allow-Origin', '*')
-                     .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                     .setHeader('Content-Type', 'application/json')
-                     .json({ error: 'Invalid JSON in request body', locations: [] });
+      return response.status(400).json({ 
+        error: 'Invalid JSON in request body', 
+        locations: [] 
+      });
     }
 
     const { lat, lng, radius = 8000, type } = requestBody;
     
-    // Input validation
-    if (!lat || !lng) {
-      return response.status(400)
-                     .setHeader('Access-Control-Allow-Origin', '*')
-                     .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                     .setHeader('Content-Type', 'application/json')
-                     .json({ error: 'Latitude and longitude are required', locations: [] });
+    // Enhanced input validation with security checks
+    if (!lat || !lng || typeof lat !== 'number' || typeof lng !== 'number') {
+      return response.status(400).json({ 
+        error: 'Valid latitude and longitude numbers are required', 
+        locations: [] 
+      });
+    }
+
+    // Validate coordinate ranges to prevent injection attacks
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return response.status(400).json({ 
+        error: 'Coordinates out of valid range', 
+        locations: [] 
+      });
+    }
+
+    // Validate radius to prevent abuse
+    if (typeof radius !== 'number' || radius < 100 || radius > 50000) {
+      return response.status(400).json({ 
+        error: 'Radius must be a number between 100 and 50000 meters', 
+        locations: [] 
+      });
+    }
+
+    // Validate type parameter if provided
+    const validTypes = ['shelter', 'humane', 'store'];
+    if (type && !validTypes.includes(type)) {
+      return response.status(400).json({ 
+        error: 'Invalid location type. Must be one of: shelter, humane, store', 
+        locations: [] 
+      });
     }
 
     // Validate API key
     const SERVER_GOOGLE_MAPS_API_KEY = process.env.SERVER_GOOGLE_MAPS_API_KEY;
     if (!SERVER_GOOGLE_MAPS_API_KEY) {
       console.error('SERVER_GOOGLE_MAPS_API_KEY is not set in environment variables');
-      return response.status(500)
-                     .setHeader('Access-Control-Allow-Origin', '*')
-                     .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                     .setHeader('Content-Type', 'application/json')
-                     .json({ error: 'Google Maps server API key is not configured. Please set SERVER_GOOGLE_MAPS_API_KEY in your environment.', locations: [] });
+      return response.status(500).json({ 
+        error: 'Google Maps server API key is not configured. Please set SERVER_GOOGLE_MAPS_API_KEY in your environment.', 
+        locations: [] 
+      });
     }
 
     // Search for adoption locations
@@ -172,26 +188,18 @@ export default async function handler(request, response) {
       
     } catch (error) {
       console.error('Error fetching from Google Places API:', error);
-      return response.status(500)
-                     .setHeader('Access-Control-Allow-Origin', '*')
-                     .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                     .setHeader('Content-Type', 'application/json')
-                     .json({ 
-                       error: 'Failed to fetch adoption locations from Google Places API. ' + error.message,
-                       locations: [] 
-                     });
+      return response.status(500).json({ 
+        error: 'Failed to fetch adoption locations. Please try again later.',
+        locations: [] 
+      });
     }
 
     // If no locations were found
     if (locations.length === 0) {
-      return response.status(200)
-                     .setHeader('Access-Control-Allow-Origin', '*')
-                     .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                     .setHeader('Content-Type', 'application/json')
-                     .json({ 
-                       message: 'No adoption locations found in your area. Try expanding your search radius or changing filters.',
-                       locations: [] 
-                     });
+      return response.status(200).json({ 
+        message: 'No adoption locations found in your area. Try expanding your search radius or changing filters.',
+        locations: [] 
+      });
     }
 
     // Sort by distance
@@ -202,21 +210,14 @@ export default async function handler(request, response) {
 
     return createRateLimitResponse(response, rateLimitResult)
                    .status(200)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .setHeader('Content-Type', 'application/json')
                    .json({ locations: nearestLocations });
 
   } catch (error) {
     console.error('Error in get-adoption-locations edge function:', error);
-    return response.status(500)
-                   .setHeader('Access-Control-Allow-Origin', '*')
-                   .setHeader('Access-Control-Allow-Headers', 'authorization, x-client-info, apikey, content-type')
-                   .setHeader('Content-Type', 'application/json')
-                   .json({ 
-                     error: 'An unexpected error occurred while fetching adoption locations: ' + error.message, 
-                     locations: [] 
-                   });
+    return response.status(500).json({ 
+      error: 'An unexpected error occurred while fetching adoption locations.', 
+      locations: [] 
+    });
   }
 }
 

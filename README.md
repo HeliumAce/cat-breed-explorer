@@ -87,9 +87,13 @@ cat-breed-explorer/
 
 3. **Configure environment variables**
    ```bash
-   # Create .env file (not .env.local - vercel dev reads .env)
-   echo "GOOGLE_MAPS_API_KEY=your_api_key_here" > .env
+   # Create .env file for local development
+   echo "CLIENT_GOOGLE_MAPS_API_KEY=your_client_key_here" > .env
+   echo "SERVER_GOOGLE_MAPS_API_KEY=your_server_key_here" >> .env
+   echo "VITE_CAT_API_KEY=your_cat_api_key_here" >> .env
    ```
+   
+   **Note:** The CORS configuration automatically handles Vercel preview deployments using built-in environment variables. No manual domain updates needed for preview branches!
 
 4. **Start the development server**
    ```bash
@@ -202,6 +206,8 @@ The application is fully responsive and optimized for:
 - **Environment Variables**: Store sensitive data in Vercel dashboard
 - **Error Handling**: Implement proper CORS and error responses
 - **Security**: Never expose API keys in client-side code
+- **CORS Security**: Automatic preview deployment handling - no manual domain updates needed
+- **Enterprise Compliance**: All endpoints include security headers for corporate environments
 
 ## 📝 License
 
