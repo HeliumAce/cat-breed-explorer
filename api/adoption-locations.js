@@ -1,7 +1,4 @@
 /**
- * Vercel API Route: Adoption Locations Search
- * Replaces Supabase Edge Function: get-adoption-locations
- * 
  * Functionality: Multi-category search for pet adoption locations using Google Places API
  * Security: API key proxy with input validation and sanitized logging
  * Rate Limiting: 20 requests per minute per IP address (conservative due to external API calls)
