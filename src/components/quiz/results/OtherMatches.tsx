@@ -3,6 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BreedMatch } from "@/types/quiz";
+import { MatchImage } from "./MatchImage";
 
 interface OtherMatchesProps {
   matches: BreedMatch[];
@@ -23,17 +24,12 @@ export function OtherMatches({ matches, onClose }: OtherMatchesProps) {
           <div className="flex justify-between items-start">
             <div className="flex gap-3 items-center">
               <div className="w-12 h-12 rounded-md overflow-hidden bg-amber-100 flex-shrink-0">
-                {match.imageUrl ? (
-                  <img 
-                    src={match.imageUrl} 
-                    alt={match.name} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-amber-500 text-2xl">🐱</span>
-                  </div>
-                )}
+                <MatchImage
+                  name={match.name}
+                  imageUrl={match.imageUrl}
+                  referenceImageId={match.referenceImageId}
+                  emojiSize="text-2xl"
+                />
               </div>
               
               <div>

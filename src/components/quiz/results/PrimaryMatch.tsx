@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BreedMatch } from "@/types/quiz";
+import { MatchImage } from "./MatchImage";
 
 interface PrimaryMatchProps {
   match: BreedMatch;
@@ -25,17 +26,11 @@ export function PrimaryMatch({ match, onClose }: PrimaryMatchProps) {
       
       <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
         <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-amber-100 flex-shrink-0">
-          {match.imageUrl ? (
-            <img 
-              src={match.imageUrl} 
-              alt={match.name} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-amber-100">
-              <span className="text-amber-500 text-4xl">🐱</span>
-            </div>
-          )}
+          <MatchImage
+            name={match.name}
+            imageUrl={match.imageUrl}
+            referenceImageId={match.referenceImageId}
+          />
         </div>
         
         <div className="flex-1 text-center sm:text-left">
