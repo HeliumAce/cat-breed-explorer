@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { SearchBar } from "@/components/SearchBar";
 import { BreedCard } from "@/components/BreedCard";
-import { Loading, LoadingInline } from "@/components/Loading";
+import { LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
 import { Cat, PawPrint } from "lucide-react";
 import { QuizButton } from "@/components/quiz/QuizButton";
@@ -13,20 +13,6 @@ import { AdoptionButton } from "@/components/adoption/AdoptionButton";
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { breeds, isLoading, error } = useBreeds(searchTerm);
-  const [loadingInitial, setLoadingInitial] = useState(true);
-
-  // Simulate initial loading for better UX
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingInitial(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loadingInitial) {
-    return <Loading />;
-  }
 
   return (
     <PageTransition>

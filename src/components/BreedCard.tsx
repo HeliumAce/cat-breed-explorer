@@ -34,6 +34,11 @@ export function BreedCard({ breed, index }: BreedCardProps) {
             <motion.img
               src={breed.image?.url}
               alt={breed.name}
+              width={400}
+              height={400}
+              loading={index < 8 ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={index < 4 ? "high" : "auto"}
               onLoad={() => setIsLoaded(true)}
               className={`object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.05] ${
                 isLoaded ? "opacity-100" : "opacity-0"
