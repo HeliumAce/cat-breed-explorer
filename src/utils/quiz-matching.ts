@@ -211,6 +211,7 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
       name: breed.name,
       matchPercentage: matchPercentage,
       imageUrl: breed.image?.url,
+      referenceImageId: breed.reference_image_id,
       description: breed.description || `A ${breed.name} cat that matches your lifestyle preferences.`,
       matchReasons: matchReasons.slice(0, 3) // Limit to top 3 reasons
     };

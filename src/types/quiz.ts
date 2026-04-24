@@ -41,6 +41,7 @@ export interface BreedMatch {
   name: string;
   matchPercentage: number;
   imageUrl?: string;
+  referenceImageId?: string;
   description: string;
   matchReasons: string[];
 }
