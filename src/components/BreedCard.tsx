@@ -1,18 +1,30 @@
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { BreedWithImage } from "@/types/breeds";
+import { Breed } from "@/types/breeds";
+import { useBreedImage } from "@/hooks/useBreeds";
+import { getGenericFallbackImage } from "@/services/breed-service";
 
 interface BreedCardProps {
-  breed: BreedWithImage;
+  breed: Breed;
   index: number;
 }
 
 export function BreedCard({ breed, index }: BreedCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
+  const needsLazyFetch = !breed.image && !!breed.reference_image_id;
+  const { data: lazyImage } = useBreedImage(breed.reference_image_id, needsLazyFetch);
+
+  const imageUrl = useMemo(() => {
+    if (breed.image) return breed.image.url;
+    if (lazyImage) return lazyImage.url;
+    if (!breed.reference_image_id) return getGenericFallbackImage(breed.id).url;
+    return undefined;
+  }, [breed.image, breed.reference_image_id, breed.id, lazyImage]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,8 +32,8 @@ export function BreedCard({ breed, index }: BreedCardProps) {
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className="group"
     >
-      <Link 
-        to={`/breeds/${breed.id}`} 
+      <Link
+        to={`/breeds/${breed.id}`}
         className="block h-full focus-ring rounded-2xl"
       >
         <div className="relative overflow-hidden rounded-2xl bg-white border border-amber-100 shadow-sm hover-lift">
@@ -31,14 +43,21 @@ export function BreedCard({ breed, index }: BreedCardProps) {
                 <span className="sr-only">Loading</span>
               </div>
             )}
-            <motion.img
-              src={breed.image?.url}
-              alt={breed.name}
-              onLoad={() => setIsLoaded(true)}
-              className={`object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.05] ${
-                isLoaded ? "opacity-100" : "opacity-0"
-              }`}
-            />
+            {imageUrl && (
+              <motion.img
+                src={imageUrl}
+                alt={breed.name}
+                width={400}
+                height={400}
+                loading={index < 8 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={index < 4 ? "high" : "auto"}
+                onLoad={() => setIsLoaded(true)}
+                className={`object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.05] ${
+                  isLoaded ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
               <ArrowRight className="text-white h-5 w-5 ml-auto" />

@@ -1,10 +1,10 @@
 
 import { QuizAnswer, BreedMatch } from '@/types/quiz';
-import { BreedWithImage } from '@/types/breeds';
+import { Breed } from '@/types/breeds';
 import { quizQuestions, mockBreedMatches } from '@/data/quizData';
 
 // Helper function to calculate breed matches
-export function calculateBreedMatches(answers: QuizAnswer[], breeds: BreedWithImage[]): BreedMatch[] {
+export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): BreedMatch[] {
   if (!answers.length || !breeds.length) {
     console.log("No answers or breeds to match");
     return mockBreedMatches;

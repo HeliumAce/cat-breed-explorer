@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BreedWithImage } from '@/types/breeds';
-import { fetchBreeds, fetchBreedById } from '@/services/breed-service';
+import { fetchBreeds, fetchBreedById, fetchBreedImage } from '@/services/breed-service';
 import { generateFunFacts, generateBondingTips } from '@/utils/breed-utils';
 
 // Hook to fetch all breeds with optional search filtering
@@ -76,6 +75,16 @@ export function useBreedDetail(breedId: string) {
     error,
     refetch
   };
+}
+
+export function useBreedImage(referenceImageId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['breed-image', referenceImageId],
+    queryFn: () => fetchBreedImage(referenceImageId!),
+    enabled: enabled && !!referenceImageId,
+    staleTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+  });
 }
 
 // Re-export utility functions so they're available from the same import
