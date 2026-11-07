@@ -67,8 +67,8 @@ cat-breed-explorer/
 
 ### Prerequisites
 
-- **Node.js** (v18.0.0 or later)
-- **npm** or yarn package manager
+- **Node.js 24 LTS** (run `nvm use`; minimum supported version: 22.12.0)
+- **npm** package manager; use the committed `package-lock.json`
 - **Google Maps API Key** with Places API enabled
 - **Vercel CLI** (for local development): `npm i -g vercel`
 
@@ -82,7 +82,8 @@ cat-breed-explorer/
 
 2. **Install dependencies**
    ```bash
-   npm install
+   nvm use
+   npm ci
    ```
 
 3. **Configure environment variables**
@@ -161,10 +162,19 @@ The application is fully responsive and optimized for:
 
 ### Available Scripts
 
+- `npm test` - Verify the lint parser's project-service compatibility
+- `npm run typecheck` - Check TypeScript types
+- `npm audit` - Check production and development dependencies for known vulnerabilities
 - `vercel dev` - Start local development server with API routes (recommended)
 - `npm run dev` - Start frontend-only development server  
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
+
+### Dependency security
+
+Use Node 24 and `npm ci` locally and in deployments. npm's lockfile is the source of truth; the obsolete Bun lockfile has been removed.
+
+The minimatch override is limited to `@typescript-eslint/typescript-estree`. Its current release still requests minimatch 10, which is affected by [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Keep the override until typescript-eslint depends on minimatch 11.0.1 or later. The parser compatibility tests exercise its project-service glob matching.
 
 ### Development Workflow
 
