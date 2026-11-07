@@ -97,7 +97,7 @@ const Index = () => {
             <>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-medium text-foreground">
-                  {searchTerm ? `Results for "${searchTerm}"` : "All Breeds"}
+                  {searchTerm ? `Results for "${searchTerm}"` : "All breeds"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {breeds.length} {breeds.length === 1 ? "breed" : "breeds"}

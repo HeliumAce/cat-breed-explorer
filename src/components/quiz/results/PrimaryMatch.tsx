@@ -21,7 +21,7 @@ export function PrimaryMatch({ match, onClose }: PrimaryMatchProps) {
       className="bg-white rounded-xl p-5 shadow-md relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 bg-amber-500 text-white px-3 py-1 rounded-bl-lg font-bold text-sm">
-        Your Best Match
+        Your best match
       </div>
       
       <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">

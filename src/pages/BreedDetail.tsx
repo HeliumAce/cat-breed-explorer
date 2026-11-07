@@ -4,8 +4,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { Loading } from "@/components/Loading";
+import { BreedRating } from "@/components/BreedRating";
+import { ratingAttributes } from "@/data/breed-ratings";
 import { useBreedDetail, generateFunFacts, generateBondingTips } from "@/hooks/useBreeds";
-import { ArrowLeft, HeartIcon, InfoIcon, ZapIcon, Star, AlertCircle } from "lucide-react";
+import { ArrowLeft, Lightbulb, InfoIcon, AlertCircle } from "lucide-react";
 
 const BreedDetail = () => {
   const { breedId } = useParams<{ breedId: string }>();
@@ -31,7 +33,7 @@ const BreedDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-amber-50">
         <div className="text-center max-w-md mx-auto px-4">
           <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Breed Not Found</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Breed not found</h1>
           <p className="text-muted-foreground mb-6">
             We couldn't find the cat breed you're looking for.
           </p>
@@ -103,21 +105,7 @@ const BreedDetail = () => {
                     <div className="text-foreground font-semibold">{breed.weight.metric} kg</div>
                   </div>
                   
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <div className="text-amber-600 font-medium mb-1">Adaptability</div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < breed.adaptability 
-                              ? "text-amber-500 fill-amber-500" 
-                              : "text-muted"
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  <BreedRating label="Adaptability" value={breed.adaptability} />
                 </div>
                 
                 <motion.div
@@ -128,7 +116,7 @@ const BreedDetail = () => {
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <InfoIcon className="h-5 w-5 text-amber-600" />
-                    <h2 className="text-xl font-semibold text-foreground">Fun Facts</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Fun facts</h2>
                   </div>
                   
                   <ul className="space-y-3">
@@ -155,8 +143,8 @@ const BreedDetail = () => {
                   transition={{ duration: 0.5, delay: 0.5 }}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <HeartIcon className="h-5 w-5 text-amber-600" />
-                    <h2 className="text-xl font-semibold text-foreground">Bonding Tips</h2>
+                    <Lightbulb className="h-5 w-5 text-amber-600" />
+                    <h2 className="text-xl font-semibold text-foreground">Bonding tips</h2>
                   </div>
                   
                   <ul className="space-y-3">
@@ -169,7 +157,7 @@ const BreedDetail = () => {
                         className="flex gap-3"
                       >
                         <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
-                          <ZapIcon className="h-3 w-3 text-amber-800" />
+                          <Lightbulb className="h-3 w-3 text-amber-800" />
                         </div>
                         <p className="text-muted-foreground">{tip}</p>
                       </motion.li>
@@ -203,69 +191,9 @@ const BreedDetail = () => {
                 </div>
                 
                 <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <div className="text-amber-600 font-medium mb-1">Affection</div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < breed.affection_level 
-                              ? "text-amber-500 fill-amber-500" 
-                              : "text-muted"
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <div className="text-amber-600 font-medium mb-1">Energy</div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < breed.energy_level 
-                              ? "text-amber-500 fill-amber-500" 
-                              : "text-muted"
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <div className="text-amber-600 font-medium mb-1">Intelligence</div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < breed.intelligence 
-                              ? "text-amber-500 fill-amber-500" 
-                              : "text-muted"
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <div className="text-amber-600 font-medium mb-1">Child Friendly</div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < breed.child_friendly 
-                              ? "text-amber-500 fill-amber-500" 
-                              : "text-muted"
-                          }`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  {ratingAttributes.slice(1).map(({ key, label, display }) => (
+                    <BreedRating key={key} label={label} value={breed[key]} display={display} />
+                  ))}
                 </div>
                 
                 {breed.wikipedia_url && (
@@ -288,7 +216,7 @@ const BreedDetail = () => {
         <footer className="bg-white border-t border-amber-100 py-8 mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-muted-foreground">
-              Data provided by <a href="https://thecatapi.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">TheCatAPI</a>
+              Made with 🧡 by Joni and her Dad | Data provided by <a href="https://thecatapi.com" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 underline">TheCatAPI</a>
             </p>
           </div>
         </footer>

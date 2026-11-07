@@ -1,5 +1,6 @@
 
 import { BreedWithImage } from '@/types/breeds';
+import { breedRatings } from '@/data/breed-ratings';
 
 // Generate fun facts based on breed characteristics
 export function generateFunFacts(breed: BreedWithImage): string[] {
@@ -81,7 +82,10 @@ export function generateBondingTips(breed: BreedWithImage): string[] {
   }
   
   if (breed.grooming >= 4) {
-    tips.push(`Turn grooming into a bonding ritual - most ${breed.name}s learn to enjoy brushing when it's paired with treats and affection.`);
+    const needsSkinCare = breed.hairless === 1 || breedRatings[breed.id]?.groomingCare === 'skin';
+    tips.push(needsSkinCare
+      ? `Turn gentle skin and ear care into a bonding ritual for your ${breed.name}, using treats and affection to keep sessions positive.`
+      : `Turn grooming into a bonding ritual - most ${breed.name}s learn to enjoy brushing when it's paired with treats and affection.`);
   }
   
   if (breed.social_needs >= 4) {

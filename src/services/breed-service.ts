@@ -1,5 +1,6 @@
 
 import { Breed, BreedWithImage, Image } from '@/types/breeds';
+import { withLocalRatings } from '@/data/breed-ratings';
 import { API_KEY, API_URL, FALLBACK_IMAGES, FALLBACK_GENERIC_IMAGES } from '@/config/api-config';
 
 const USE_PROXY = !import.meta.env.DEV;
@@ -22,7 +23,7 @@ export const fetchBreeds = async (): Promise<Breed[]> => {
 
   const breeds: Breed[] = await response.json();
 
-  return breeds.map((breed) => {
+  return breeds.map(withLocalRatings).map((breed) => {
     if (breed.image) return breed;
     if (FALLBACK_IMAGES[breed.id]) {
       return {
@@ -73,7 +74,7 @@ export const fetchBreedById = async (breedId: string): Promise<BreedWithImage> =
     throw new Error('Failed to fetch cat breed');
   }
 
-  const breed: Breed = await response.json();
+  const breed: Breed = withLocalRatings(await response.json());
 
   if (FALLBACK_IMAGES[breed.id]) {
     return {
