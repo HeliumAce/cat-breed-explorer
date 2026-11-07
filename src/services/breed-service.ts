@@ -1,7 +1,8 @@
 
 import { Breed, BreedWithImage, Image } from '@/types/breeds';
 import { withLocalRatings } from '@/data/breed-ratings';
-import { API_KEY, API_URL, FALLBACK_IMAGES, FALLBACK_GENERIC_IMAGES } from '@/config/api-config';
+import { API_KEY, API_URL } from '@/config/api-config';
+import { hasBreedImage } from '@/utils/breed-images';
 
 const USE_PROXY = !import.meta.env.DEV;
 
@@ -14,7 +15,7 @@ const breedImageEndpoint = (id: string) =>
 const requestInit = (): RequestInit =>
   USE_PROXY ? {} : { headers: { 'x-api-key': API_KEY } };
 
-export const fetchBreeds = async (): Promise<Breed[]> => {
+export const fetchBreeds = async (): Promise<BreedWithImage[]> => {
   const response = await fetch(breedsListEndpoint(), requestInit());
 
   if (!response.ok) {
@@ -23,21 +24,8 @@ export const fetchBreeds = async (): Promise<Breed[]> => {
 
   const breeds: Breed[] = await response.json();
 
-  return breeds.map(withLocalRatings).map((breed) => {
-    if (breed.image) return breed;
-    if (FALLBACK_IMAGES[breed.id]) {
-      return {
-        ...breed,
-        image: {
-          id: `fallback-${breed.id}`,
-          url: FALLBACK_IMAGES[breed.id],
-          width: 800,
-          height: 600,
-        },
-      };
-    }
-    return breed;
-  });
+  const resolvedBreeds = await Promise.all(breeds.map(withLocalRatings).map(resolveBreedImage));
+  return resolvedBreeds.filter(hasBreedImage);
 };
 
 export const fetchBreedImage = async (imageId: string): Promise<Image> => {
@@ -48,6 +36,9 @@ export const fetchBreedImage = async (imageId: string): Promise<Image> => {
   }
 
   const data = await response.json();
+  if (typeof data.url !== 'string' || !data.url.trim()) {
+    throw new Error('Breed image has no URL');
+  }
   return {
     id: data.id,
     url: data.url,
@@ -56,50 +47,28 @@ export const fetchBreedImage = async (imageId: string): Promise<Image> => {
   };
 };
 
-export const getGenericFallbackImage = (breedId: string): Image => {
-  const index = breedId.charCodeAt(0) % FALLBACK_GENERIC_IMAGES.length;
-  return {
-    id: 'fallback-generic',
-    url: FALLBACK_GENERIC_IMAGES[index],
-    width: 800,
-    height: 600,
-  };
-};
+async function resolveBreedImage(breed: Breed): Promise<Breed> {
+  if (hasBreedImage(breed)) return breed;
+
+  if (breed.reference_image_id?.trim()) {
+    try {
+      const image = await fetchBreedImage(breed.reference_image_id);
+      return { ...breed, image };
+    } catch {
+      // A failed reference lookup leaves this breed out until a later API refresh.
+    }
+  }
+
+  return { ...breed, image: undefined };
+}
 
 // Function to fetch a single breed by ID
-export const fetchBreedById = async (breedId: string): Promise<BreedWithImage> => {
+export const fetchBreedById = async (breedId: string): Promise<Breed> => {
   const response = await fetch(breedByIdEndpoint(breedId), requestInit());
 
   if (!response.ok) {
     throw new Error('Failed to fetch cat breed');
   }
 
-  const breed: Breed = withLocalRatings(await response.json());
-
-  if (FALLBACK_IMAGES[breed.id]) {
-    return {
-      ...breed,
-      image: {
-        id: `fallback-${breed.id}`,
-        url: FALLBACK_IMAGES[breed.id],
-        width: 800,
-        height: 600
-      }
-    };
-  }
-
-  if (!breed.image && breed.reference_image_id) {
-    try {
-      const imageData = await fetchBreedImage(breed.reference_image_id);
-      return { ...breed, image: imageData };
-    } catch (error) {
-      console.error(`Failed to fetch image for breed ${breed.name}`, error);
-    }
-  }
-
-  if (!breed.image) {
-    return { ...breed, image: getGenericFallbackImage(breed.id) };
-  }
-
-  return breed as BreedWithImage;
+  return resolveBreedImage(withLocalRatings(await response.json()));
 };

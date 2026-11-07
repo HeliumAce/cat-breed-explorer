@@ -174,21 +174,23 @@ const BreedDetail = () => {
                 transition={{ duration: 0.5 }}
                 className="sticky top-8"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-white border border-amber-100 shadow-lg">
-                  {!imageLoaded && (
-                    <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
-                      <span className="sr-only">Loading</span>
-                    </div>
-                  )}
-                  <img
-                    src={breed.image?.url}
-                    alt={breed.name}
-                    onLoad={() => setImageLoaded(true)}
-                    className={`w-full aspect-square object-cover ${
-                      imageLoaded ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                </div>
+                {breed.image && (
+                  <div className="relative rounded-2xl overflow-hidden bg-white border border-amber-100 shadow-lg">
+                    {!imageLoaded && (
+                      <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+                        <span className="sr-only">Loading</span>
+                      </div>
+                    )}
+                    <img
+                      src={breed.image.url}
+                      alt={breed.name}
+                      onLoad={() => setImageLoaded(true)}
+                      className={`w-full aspect-square object-cover ${
+                        imageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                  </div>
+                )}
                 
                 <div className="mt-6 grid grid-cols-2 gap-4">
                   {ratingAttributes.slice(1).map(({ key, label, display }) => (
