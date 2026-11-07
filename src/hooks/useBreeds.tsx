@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fetchBreeds, fetchBreedById, fetchBreedImage } from '@/services/breed-service';
-import { generateFunFacts, generateBondingTips } from '@/utils/breed-utils';
 
 // Hook to fetch all breeds with optional search filtering
 export function useBreeds(searchTerm: string = '') {
@@ -86,6 +85,3 @@ export function useBreedImage(referenceImageId: string | undefined, enabled: boo
     refetchOnWindowFocus: false,
   });
 }
-
-// Re-export utility functions so they're available from the same import
-export { generateFunFacts, generateBondingTips };

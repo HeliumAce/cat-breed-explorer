@@ -15,7 +15,6 @@ const service = await server.ssrLoadModule('/src/services/breed-service.ts');
 const { calculateBreedMatches } = await server.ssrLoadModule('/src/utils/quiz-matching.ts');
 const { breedRatings, ratingAttributes, hasCompleteRatings, withLocalRatings, excludedBreedRatings, breedRatingAliases, isQuizEligible } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
 const { BreedRating } = await server.ssrLoadModule('/src/components/BreedRating.tsx');
-const { generateBondingTips } = await server.ssrLoadModule('/src/utils/breed-utils.ts');
 const catalogue = JSON.parse(await readFile(new URL('./fixtures/breed-catalogue.json', import.meta.url), 'utf8'));
 
 // Core-field response from the free API: no numerical trait ratings.
@@ -117,20 +116,6 @@ test('Chausie aliases agree on ratings and occupy a single recommendation slot',
     assert.deepEqual(calculateBreedMatches(answers, breeds).map(breed => breed.id), [canonicalId]);
     assert.deepEqual(calculateBreedMatches(answers, breeds.filter(breed => breed.id === alias)).map(breed => breed.id), [alias]);
   }
-});
-
-test('grooming tips use skin care for hairless breeds and retain brushing for coated breeds', () => {
-  const skinCareBreeds = ratedBreeds.filter(breed => breedRatings[breed.id].groomingCare === 'skin');
-  assert.equal(skinCareBreeds.length, 8);
-  for (const breed of skinCareBreeds) {
-    const tips = generateBondingTips(breed);
-    assert.equal(tips.some(tip => tip.includes('brushing')), false, breed.id);
-    if (breed.grooming >= 4) assert.ok(tips.some(tip => tip.includes('gentle skin and ear care')), breed.id);
-  }
-  const persian = ratedBreeds.find(breed => breed.id === 'pers');
-  assert.ok(generateBondingTips(persian).some(tip => tip.includes('brushing')));
-  const unknownHairless = { ...persian, id: 'new-breed', hairless: 1 };
-  assert.ok(generateBondingTips(unknownHairless).some(tip => tip.includes('gentle skin and ear care')));
 });
 
 test('the full catalogue produces distinct, repeatable recommendations for different preferences', () => {

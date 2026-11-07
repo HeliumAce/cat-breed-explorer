@@ -188,6 +188,16 @@ Catalogue visibility is driven by TheCatAPI image data. The shared breed service
 
 Quiz matching uses the same numerical values and compares image-available breeds with all ten ratings, retaining the Kellas exclusion and Chausie alias handling. Results disclose the current comparison count. Identical answers produce identical results; the match score is a weighted compatibility score, not a probability or a guarantee about an individual cat. New unknown API IDs remain unrated until researched and explicitly added. `tests/fixtures/breed-catalogue.json` records the checked ID/name inventory so tests can catch coverage gaps without network access; update that snapshot when reviewing catalogue changes.
 
+### Curated breed content
+
+`src/data/breed-content.ts` contains 97 authored profiles covering 98 catalogue IDs through the existing Chausie alias, reviewed on November 7, 2026. Aim for five authored fun facts and five bonding tips per breed, assessing the two sections independently. Select four or three when the sources do not support five distinct, useful items, and record the reason internally in `coverageNotes`. Do not split claims or repeat activities to meet the target. Each item has sources, and a review date covers the entry. Facts paraphrase the cited profiles; bonding tips are editorial activities informed by those profiles, rather than instructions endorsed by the sources. Source-section references support manual verification. The `relatedTraits` fields identify attributes for a later consistency review; no numerical ratings generate this copy.
+
+Eight researched IDs remain in `breedContentReviewGaps`: Burmoir, Caracat, Cyprus, Genetta, Malayan, Ojos Azules, Pantherette and Safari. Their internal review records explain identity ambiguity, insufficient independent evidence or specialist husbandry needs, with research links. Kellas retains its existing exclusion. These decisions account for the full 107-entry catalogue snapshot without treating every API label as a distinct, documented pet breed. Related-breed and mixed-population evidence is recorded explicitly; coat colour, hair length and extra toes do not establish separate personalities.
+
+Detail pages display the available curated items with source links. Evidence gaps and unreviewed IDs, including new API breeds, retain their API overview and ratings but omit these sections. Partial entries show only their available content. Fixed sentence generators and generic padding have been removed. Ratings remain in their existing file and are unchanged by this content work.
+
+When extending coverage, research each API ID, add its sources and authored items or an explicit evidence-gap record, record the review date, and review the associated ratings and any aliases together. Automated tests check complete snapshot review coverage, catalogue identity, source references, editorial metadata, every curated detail page and alias, and missing or partial content. They do not establish factual accuracy. Live catalogue-change detection and the full content-versus-ratings audit remain follow-up work.
+
 ### Development Workflow
 
 1. **Feature Development**:

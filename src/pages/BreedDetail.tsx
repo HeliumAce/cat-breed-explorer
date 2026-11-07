@@ -1,28 +1,21 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/PageTransition";
 import { Loading } from "@/components/Loading";
 import { BreedRating } from "@/components/BreedRating";
+import { BreedEditorialContent } from "@/components/BreedEditorialContent";
 import { ratingAttributes } from "@/data/breed-ratings";
-import { useBreedDetail, generateFunFacts, generateBondingTips } from "@/hooks/useBreeds";
-import { ArrowLeft, Lightbulb, InfoIcon, AlertCircle } from "lucide-react";
+import { getBreedContent } from "@/data/breed-content";
+import { useBreedDetail } from "@/hooks/useBreeds";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 
 const BreedDetail = () => {
   const { breedId } = useParams<{ breedId: string }>();
   const navigate = useNavigate();
   const { breed, isLoading, error } = useBreedDetail(breedId || "");
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [funFacts, setFunFacts] = useState<string[]>([]);
-  const [bondingTips, setBondingTips] = useState<string[]>([]);
-  
-  useEffect(() => {
-    if (breed) {
-      setFunFacts(generateFunFacts(breed));
-      setBondingTips(generateBondingTips(breed));
-    }
-  }, [breed]);
   
   if (isLoading) {
     return <Loading />;
@@ -108,62 +101,7 @@ const BreedDetail = () => {
                   <BreedRating label="Adaptability" value={breed.adaptability} />
                 </div>
                 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className="mb-8"
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <InfoIcon className="h-5 w-5 text-amber-600" />
-                    <h2 className="text-xl font-semibold text-foreground">Fun facts</h2>
-                  </div>
-                  
-                  <ul className="space-y-3">
-                    {funFacts.map((fact, index) => (
-                      <motion.li
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.4 + (index * 0.1) }}
-                        className="flex gap-3"
-                      >
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
-                          <span className="text-amber-800 text-xs font-medium">{index + 1}</span>
-                        </div>
-                        <p className="text-muted-foreground">{fact}</p>
-                      </motion.li>
-                    ))}
-                  </ul>
-                </motion.div>
-                
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <Lightbulb className="h-5 w-5 text-amber-600" />
-                    <h2 className="text-xl font-semibold text-foreground">Bonding tips</h2>
-                  </div>
-                  
-                  <ul className="space-y-3">
-                    {bondingTips.map((tip, index) => (
-                      <motion.li
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.6 + (index * 0.1) }}
-                        className="flex gap-3"
-                      >
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
-                          <Lightbulb className="h-3 w-3 text-amber-800" />
-                        </div>
-                        <p className="text-muted-foreground">{tip}</p>
-                      </motion.li>
-                    ))}
-                  </ul>
-                </motion.div>
+                <BreedEditorialContent content={getBreedContent(breed.id)} />
               </motion.div>
             </div>
             
