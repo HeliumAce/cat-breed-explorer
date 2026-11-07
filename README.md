@@ -162,7 +162,7 @@ The application is fully responsive and optimized for:
 
 ### Available Scripts
 
-- `npm test` - Run breed-data, rating-display, quiz-matching, and lint-parser regression tests
+- `npm test` - Run breed-data, image-availability, rating-display, quiz-matching, and lint-parser regression tests
 - `npm run typecheck` - Check TypeScript types
 - `npm audit` - Check production and development dependencies for known vulnerabilities
 - `vercel dev` - Start local development server with API routes (recommended)
@@ -180,11 +180,13 @@ The minimatch override is limited to `@typescript-eslint/typescript-estree`. Its
 
 TheCatAPI continues to supply breed information and images. `src/data/breed-ratings.ts` supplies explicit local editorial estimates for 106 entries in the 107-entry catalogue checked on November 7, 2026. The original five-breed pilot scores are preserved. Each entry records source links, the rationale behind its ten 1–5 values, and whether its evidence comes from breed profiles, related breeds, mixed populations, or limited documentation. These are our assessments, not scores published or endorsed by the linked organisations. No additional data service is called at runtime.
 
-Kellas Cat (`kell`) remains browseable but has no pet ratings and is excluded from quiz recommendations, as agreed: the API identifies it as a wild-domestic hybrid rather than a domestic breed. The two Chausie IDs (`chau`, `chas`) share ratings and occupy one quiz recommendation slot. Coat or colour variants share behavioural estimates where appropriate; differences in coat upkeep affect grooming and shedding. Domestic coat-length categories and polydactyl cats receive neutral behavioural estimates because these population labels do not establish one temperament. Rare and experimental entries explicitly record provisional inferences rather than implying equally strong evidence.
+Kellas Cat (`kell`) has no pet ratings and is excluded from quiz recommendations, as agreed: the API identifies it as a wild-domestic hybrid rather than a domestic breed. Its catalogue visibility follows the same API-image rule as every other entry. The two Chausie IDs (`chau`, `chas`) share ratings and occupy one quiz recommendation slot. Coat or colour variants share behavioural estimates where appropriate; differences in coat upkeep affect grooming and shedding. Domestic coat-length categories and polydactyl cats receive neutral behavioural estimates because these population labels do not establish one temperament. Rare and experimental entries explicitly record provisional inferences rather than implying equally strong evidence.
 
 The list and detail service calls merge the same ratings by breed ID. Seven traits use stars. Grooming needs, Shedding, and Social needs use a Low–High bar: larger values mean more coat maintenance, more shedding, and a greater need for company. Unknown ratings remain unavailable.
 
-Quiz matching uses the same numerical values and compares eligible breeds with all ten ratings, currently 105 distinct catalogue choices after the Kellas exclusion and Chausie alias handling. Results disclose that comparison count. Identical answers produce identical results; the match score is a weighted compatibility score, not a probability or a guarantee about an individual cat. New unknown API IDs remain unrated until researched and explicitly added. `tests/fixtures/breed-catalogue.json` records the checked ID/name inventory so tests can catch coverage gaps without network access; update that snapshot when reviewing catalogue changes.
+Catalogue visibility is driven by TheCatAPI image data. The shared breed service uses an embedded image URL or resolves `reference_image_id`; entries without a resolved image URL are excluded from the list and quiz. Failed reference lookups exclude only the affected entry until a later data refresh. There are no stock-photo substitutions or breed-specific image exclusions. Breeds automatically appear or disappear as their API image data changes on subsequent fetches, subject to the existing browser and server caches. Direct detail links still show breed information when no image is supplied, with the photo area omitted.
+
+Quiz matching uses the same numerical values and compares image-available breeds with all ten ratings, retaining the Kellas exclusion and Chausie alias handling. Results disclose the current comparison count. Identical answers produce identical results; the match score is a weighted compatibility score, not a probability or a guarantee about an individual cat. New unknown API IDs remain unrated until researched and explicitly added. `tests/fixtures/breed-catalogue.json` records the checked ID/name inventory so tests can catch coverage gaps without network access; update that snapshot when reviewing catalogue changes.
 
 ### Development Workflow
 

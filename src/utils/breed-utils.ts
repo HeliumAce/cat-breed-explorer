@@ -1,9 +1,9 @@
 
-import { BreedWithImage } from '@/types/breeds';
+import { Breed } from '@/types/breeds';
 import { breedRatings } from '@/data/breed-ratings';
 
 // Generate fun facts based on breed characteristics
-export function generateFunFacts(breed: BreedWithImage): string[] {
+export function generateFunFacts(breed: Breed): string[] {
   const facts: string[] = [];
   
   if (breed.intelligence >= 4) {
@@ -64,7 +64,7 @@ export function generateFunFacts(breed: BreedWithImage): string[] {
 }
 
 // Generate bonding tips based on breed characteristics
-export function generateBondingTips(breed: BreedWithImage): string[] {
+export function generateBondingTips(breed: Breed): string[] {
   const tips: string[] = [];
   
   if (breed.intelligence >= 4) {

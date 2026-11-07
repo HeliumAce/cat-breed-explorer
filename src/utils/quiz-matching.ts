@@ -3,6 +3,7 @@ import { QuizAnswer, BreedMatch } from '@/types/quiz';
 import { Breed } from '@/types/breeds';
 import { quizQuestions } from '@/data/quizData';
 import { breedRatingAliases, isQuizEligible } from '@/data/breed-ratings';
+import { hasBreedImage } from '@/utils/breed-images';
 
 // Helper function to calculate breed matches
 export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): BreedMatch[] {
@@ -11,7 +12,7 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
   }
 
   // A catalogue alias must not occupy two recommendation slots.
-  const eligibleBreeds = breeds.filter(isQuizEligible);
+  const eligibleBreeds = breeds.filter(hasBreedImage).filter(isQuizEligible);
   const eligibleIds = new Set(eligibleBreeds.map(breed => breed.id));
   const uniqueBreeds = eligibleBreeds.filter(breed => {
     const canonicalId = breedRatingAliases[breed.id];
