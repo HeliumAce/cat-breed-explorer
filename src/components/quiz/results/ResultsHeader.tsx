@@ -19,7 +19,7 @@ export function ResultsHeader() {
         transition={{ delay: 0.2 }}
         className="text-2xl font-bold mb-2"
       >
-        Your Purr-fect Match!
+        Your purr-fect match!
       </motion.h2>
       <motion.p
         initial={{ opacity: 0 }}

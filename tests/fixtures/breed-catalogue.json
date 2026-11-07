@@ -1,0 +1,434 @@
+{
+  "checkedOn": "2026-11-07",
+  "source": "https://www.catbreedexplorer.com/api/breeds",
+  "breeds": [
+    {
+      "id": "abys",
+      "name": "Abyssinian"
+    },
+    {
+      "id": "aege",
+      "name": "Aegean"
+    },
+    {
+      "id": "abob",
+      "name": "American Bobtail"
+    },
+    {
+      "id": "acur",
+      "name": "American Curl"
+    },
+    {
+      "id": "amer",
+      "name": "American Ringtail"
+    },
+    {
+      "id": "asho",
+      "name": "American Shorthair"
+    },
+    {
+      "id": "awir",
+      "name": "American Wirehair"
+    },
+    {
+      "id": "aphr",
+      "name": "Aphrodite Giant"
+    },
+    {
+      "id": "amau",
+      "name": "Arabian Mau"
+    },
+    {
+      "id": "asia",
+      "name": "Asian Semi-longhair"
+    },
+    {
+      "id": "amis",
+      "name": "Australian Mist"
+    },
+    {
+      "id": "bali",
+      "name": "Balinese"
+    },
+    {
+      "id": "bamb",
+      "name": "Bambino"
+    },
+    {
+      "id": "beng",
+      "name": "Bengal"
+    },
+    {
+      "id": "birm",
+      "name": "Birman"
+    },
+    {
+      "id": "bomb",
+      "name": "Bombay"
+    },
+    {
+      "id": "braz",
+      "name": "Brazilian Shorthair"
+    },
+    {
+      "id": "bslo",
+      "name": "British Longhair"
+    },
+    {
+      "id": "bsho",
+      "name": "British Shorthair"
+    },
+    {
+      "id": "brit",
+      "name": "British Tipped"
+    },
+    {
+      "id": "bure",
+      "name": "Burmese"
+    },
+    {
+      "id": "buri",
+      "name": "Burmilla"
+    },
+    {
+      "id": "burm",
+      "name": "Burmoir"
+    },
+    {
+      "id": "cspa",
+      "name": "California Spangled"
+    },
+    {
+      "id": "cara",
+      "name": "Caracat"
+    },
+    {
+      "id": "ctif",
+      "name": "Chantilly-Tiffany"
+    },
+    {
+      "id": "char",
+      "name": "Chartreux"
+    },
+    {
+      "id": "chau",
+      "name": "Chausie"
+    },
+    {
+      "id": "chas",
+      "name": "Chausie"
+    },
+    {
+      "id": "chee",
+      "name": "Cheetoh"
+    },
+    {
+      "id": "csho",
+      "name": "Colorpoint Shorthair"
+    },
+    {
+      "id": "crex",
+      "name": "Cornish Rex"
+    },
+    {
+      "id": "cymr",
+      "name": "Cymric"
+    },
+    {
+      "id": "cypr",
+      "name": "Cyprus"
+    },
+    {
+      "id": "drex",
+      "name": "Devon Rex"
+    },
+    {
+      "id": "doml",
+      "name": "Domestic Longhair"
+    },
+    {
+      "id": "domm",
+      "name": "Domestic Mediumhair"
+    },
+    {
+      "id": "doms",
+      "name": "Domestic Shorthair"
+    },
+    {
+      "id": "dons",
+      "name": "Donskoy"
+    },
+    {
+      "id": "lihu",
+      "name": "Dragon Li"
+    },
+    {
+      "id": "dwel",
+      "name": "Dwelf"
+    },
+    {
+      "id": "emau",
+      "name": "Egyptian Mau"
+    },
+    {
+      "id": "elfc",
+      "name": "Elf Cat"
+    },
+    {
+      "id": "ebur",
+      "name": "European Burmese"
+    },
+    {
+      "id": "eshr",
+      "name": "European Shorthair"
+    },
+    {
+      "id": "exlh",
+      "name": "Exotic Longhair"
+    },
+    {
+      "id": "esho",
+      "name": "Exotic Shorthair"
+    },
+    {
+      "id": "fold",
+      "name": "Foldex"
+    },
+    {
+      "id": "gene",
+      "name": "Genetta"
+    },
+    {
+      "id": "germ",
+      "name": "German Rex"
+    },
+    {
+      "id": "hbro",
+      "name": "Havana Brown"
+    },
+    {
+      "id": "high",
+      "name": "Highlander"
+    },
+    {
+      "id": "hima",
+      "name": "Himalayan"
+    },
+    {
+      "id": "jbob",
+      "name": "Japanese Bobtail"
+    },
+    {
+      "id": "java",
+      "name": "Javanese"
+    },
+    {
+      "id": "kana",
+      "name": "Kanaani"
+    },
+    {
+      "id": "kell",
+      "name": "Kellas Cat"
+    },
+    {
+      "id": "khao",
+      "name": "Khao Manee"
+    },
+    {
+      "id": "kora",
+      "name": "Korat"
+    },
+    {
+      "id": "kuri",
+      "name": "Kurilian Bobtail"
+    },
+    {
+      "id": "lape",
+      "name": "LaPerm"
+    },
+    {
+      "id": "lyko",
+      "name": "Lykoi"
+    },
+    {
+      "id": "mcoo",
+      "name": "Maine Coon"
+    },
+    {
+      "id": "mala",
+      "name": "Malayan"
+    },
+    {
+      "id": "manx",
+      "name": "Manx"
+    },
+    {
+      "id": "mins",
+      "name": "Minskin"
+    },
+    {
+      "id": "minu",
+      "name": "Minuet"
+    },
+    {
+      "id": "munc",
+      "name": "Munchkin"
+    },
+    {
+      "id": "napo",
+      "name": "Napoleon Longhair"
+    },
+    {
+      "id": "nebe",
+      "name": "Nebelung"
+    },
+    {
+      "id": "norw",
+      "name": "Norwegian Forest Cat"
+    },
+    {
+      "id": "ocic",
+      "name": "Ocicat"
+    },
+    {
+      "id": "ojos",
+      "name": "Ojos Azules"
+    },
+    {
+      "id": "ori1",
+      "name": "Oriental Longhair"
+    },
+    {
+      "id": "orie",
+      "name": "Oriental Shorthair"
+    },
+    {
+      "id": "pant",
+      "name": "Pantherette"
+    },
+    {
+      "id": "pers",
+      "name": "Persian"
+    },
+    {
+      "id": "pete",
+      "name": "Peterbald"
+    },
+    {
+      "id": "pixi",
+      "name": "Pixie-bob"
+    },
+    {
+      "id": "poly",
+      "name": "Polydactyl"
+    },
+    {
+      "id": "raas",
+      "name": "Raas"
+    },
+    {
+      "id": "raga",
+      "name": "Ragamuffin"
+    },
+    {
+      "id": "ragd",
+      "name": "Ragdoll"
+    },
+    {
+      "id": "rblu",
+      "name": "Russian Blue"
+    },
+    {
+      "id": "safa",
+      "name": "Safari"
+    },
+    {
+      "id": "sava",
+      "name": "Savannah"
+    },
+    {
+      "id": "sfol",
+      "name": "Scottish Fold"
+    },
+    {
+      "id": "srex",
+      "name": "Selkirk Rex"
+    },
+    {
+      "id": "sere",
+      "name": "Serengeti"
+    },
+    {
+      "id": "siam",
+      "name": "Siamese"
+    },
+    {
+      "id": "sibe",
+      "name": "Siberian"
+    },
+    {
+      "id": "sing",
+      "name": "Singapura"
+    },
+    {
+      "id": "sinp",
+      "name": "Singapura Tabby"
+    },
+    {
+      "id": "skoo",
+      "name": "Skookum"
+    },
+    {
+      "id": "snow",
+      "name": "Snowshoe"
+    },
+    {
+      "id": "soko",
+      "name": "Sokoke"
+    },
+    {
+      "id": "soma",
+      "name": "Somali"
+    },
+    {
+      "id": "sphy",
+      "name": "Sphynx"
+    },
+    {
+      "id": "suph",
+      "name": "Suphalak"
+    },
+    {
+      "id": "thai",
+      "name": "Thai"
+    },
+    {
+      "id": "tonk",
+      "name": "Tonkinese"
+    },
+    {
+      "id": "toyb",
+      "name": "Toybob"
+    },
+    {
+      "id": "toyg",
+      "name": "Toyger"
+    },
+    {
+      "id": "tang",
+      "name": "Turkish Angora"
+    },
+    {
+      "id": "tvan",
+      "name": "Turkish Van"
+    },
+    {
+      "id": "ukra",
+      "name": "Ukrainian Levkoy"
+    },
+    {
+      "id": "ycho",
+      "name": "York Chocolate"
+    }
+  ]
+}

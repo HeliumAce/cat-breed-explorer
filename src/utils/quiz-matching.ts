@@ -1,19 +1,25 @@
 
 import { QuizAnswer, BreedMatch } from '@/types/quiz';
 import { Breed } from '@/types/breeds';
-import { quizQuestions, mockBreedMatches } from '@/data/quizData';
+import { quizQuestions } from '@/data/quizData';
+import { breedRatingAliases, isQuizEligible } from '@/data/breed-ratings';
 
 // Helper function to calculate breed matches
 export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): BreedMatch[] {
   if (!answers.length || !breeds.length) {
-    console.log("No answers or breeds to match");
-    return mockBreedMatches;
+    return [];
   }
 
-  console.log("Calculating matches with:", { answersCount: answers.length, breedsCount: breeds.length });
-  
+  // A catalogue alias must not occupy two recommendation slots.
+  const eligibleBreeds = breeds.filter(isQuizEligible);
+  const eligibleIds = new Set(eligibleBreeds.map(breed => breed.id));
+  const uniqueBreeds = eligibleBreeds.filter(breed => {
+    const canonicalId = breedRatingAliases[breed.id];
+    return !canonicalId || !eligibleIds.has(canonicalId);
+  });
+
   // Create a scoring map for each breed
-  const breedScores = breeds.map(breed => {
+  const breedScores = uniqueBreeds.map(breed => {
     let score = 0;
     let maxScore = 0;
     const matchReasons: string[] = [];
@@ -24,7 +30,8 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
       if (!question) return;
       
       const questionWeight = question.weight;
-      maxScore += 5 * questionWeight; // Maximum score of 5 per question
+      // Dealbreakers apply a penalty, rather than contributing positive points.
+      if (answer.questionId !== 7) maxScore += 5 * questionWeight;
       
       // Scoring logic for different questions
       switch (answer.questionId) {
@@ -64,7 +71,7 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
           }
           break;
 
-        case 3: // Chatty companions/vocalization
+        case 3: { // Chatty companions/vocalization
           // Convert 0-100 slider value to 1-5 scale for matching algorithm
           const rawTalkValue = typeof answer.answer === 'number' ? answer.answer : 50;
           const talkValue = Math.round((rawTalkValue / 100) * 4) + 1; // Maps 0-100 to 1-5
@@ -83,6 +90,7 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
             score += 1 * questionWeight;
           }
           break;
+        }
 
         case 4: // Cuddle buddy/Affection
           if ((answer.answer === "low" && breed.affection_level <= 2) ||
@@ -117,28 +125,35 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
           }
           break;
 
-        case 6: // Other pets/children
+        case 6: { // Other pets/children
           const homeMembers = Array.isArray(answer.answer) ? answer.answer : [answer.answer];
+          const householdScores: number[] = [];
           
-          if (homeMembers.includes("dogs") && breed.dog_friendly >= 4) {
-            score += 4 * questionWeight;
-            matchReasons.push(`Great with dogs`);
+          if (homeMembers.includes("dogs")) {
+            householdScores.push(breed.dog_friendly);
+            if (breed.dog_friendly >= 4) matchReasons.push(`Gets along well with carefully introduced, cat-friendly dogs`);
           }
           
-          if (homeMembers.includes("small-pets") && breed.energy_level <= 3) {
-            score += 3 * questionWeight;
-            matchReasons.push(`Generally good with small pets`);
+          if (homeMembers.includes("small-pets")) {
+            // Energy does not establish whether a cat is safe around small animals.
+            matchReasons.push(`Small pets need secure separation from cats`);
           }
           
-          if (homeMembers.includes("children") && breed.child_friendly >= 4) {
-            score += 4 * questionWeight;
-            matchReasons.push(`Excellent with children`);
+          if (homeMembers.includes("children")) {
+            householdScores.push(breed.child_friendly);
+            if (breed.child_friendly >= 4) matchReasons.push(`Suited to children who handle cats gently`);
           }
           
-          if (homeMembers.includes("none")) {
-            score += 3 * questionWeight; // All cats can do well as the only pet
+          if (homeMembers.includes("none") && homeMembers.length === 1) {
+            householdScores.push(5);
+          }
+          if (householdScores.length) {
+            score += (householdScores.reduce((sum, value) => sum + value, 0) / householdScores.length) * questionWeight;
+          } else {
+            maxScore -= 5 * questionWeight;
           }
           break;
+        }
 
         case 7: // Deal breakers
           // No adjustment to score here, we'll handle dealbreakers separately
@@ -199,11 +214,8 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
     }
 
     // Calculate match percentage (0-100)
-    let matchPercentage = Math.round((score / maxScore) * 100);
-    
-    // Add a small random factor for variety (±5%)
-    const randomFactor = Math.floor(Math.random() * 11) - 5;
-    matchPercentage = Math.min(100, Math.max(30, matchPercentage + randomFactor));
+    if (maxScore === 0) return null;
+    const matchPercentage = Math.min(100, Math.max(0, Math.round((score / maxScore) * 100)));
     
     // Create a valid BreedMatch object
     return {
@@ -217,20 +229,8 @@ export function calculateBreedMatches(answers: QuizAnswer[], breeds: Breed[]): B
     };
   });
 
-  // Ensure we never return an empty array
-  if (breedScores.length === 0) {
-    console.log("No breed scores generated, using mock data");
-    return mockBreedMatches.map(match => ({
-      ...match,
-      description: match.description || `The ${match.name} is a wonderful breed.`,
-    }));
-  }
-
-  // Sort by match percentage (descending)
-  const sortedMatches = breedScores.sort((a, b) => b.matchPercentage - a.matchPercentage);
-  
-  // Log match results for debugging
-  console.log(`Generated ${sortedMatches.length} matches. Top match: ${sortedMatches[0]?.name} (${sortedMatches[0]?.matchPercentage}%)`);
-  
-  return sortedMatches;
+  // Stable ordering makes the same answers repeatable and keeps missing data out.
+  return breedScores.filter(match => match !== null).sort(
+    (a, b) => b.matchPercentage - a.matchPercentage || a.name.localeCompare(b.name),
+  );
 }

@@ -37,7 +37,7 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
   if (!breedMatches || !Array.isArray(breedMatches) || breedMatches.length === 0) {
     return (
       <div className="text-center py-8">
-        <p>No matches found. Please try again with different preferences.</p>
+        <p>We couldn’t find a match with the available breed ratings. Please try again later.</p>
         <button onClick={onReset} className="mt-4">Restart Quiz</button>
       </div>
     );
@@ -50,9 +50,9 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Your Purr-fect Match!</h2>
+        <h2 className="text-2xl font-bold mb-2">Your purr-fect match!</h2>
         <p className="text-muted-foreground mb-6">
-          Based on your personality & preferences
+          Based on your preferences, comparing {breedMatches.length} breeds with complete ratings.
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
         
         {otherMatches.length > 0 && (
           <h3 className="text-lg font-medium mt-6 mb-2">
-            Other Possible Pals
+            Other possible pals
           </h3>
         )}
         

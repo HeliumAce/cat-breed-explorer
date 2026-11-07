@@ -41,7 +41,7 @@ export function QuizModal() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeQuiz()}>
       <DialogContent className="sm:max-w-xl md:max-w-2xl p-0 bg-amber-50 border-amber-200 overflow-hidden">
         {/* Adding DialogTitle for accessibility - visually hidden */}
-        <DialogTitle className="sr-only">Cat Breed Quiz</DialogTitle>
+        <DialogTitle className="sr-only">Cat breed quiz</DialogTitle>
         
         {/* Add explicit close button since the default one isn't working */}
         <DialogClose 

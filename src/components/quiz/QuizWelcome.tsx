@@ -30,7 +30,7 @@ export function QuizWelcome({ onStart }: QuizWelcomeProps) {
         transition={{ delay: 0.3 }}
         className="text-3xl sm:text-4xl font-bold text-center mb-3"
       >
-        The Great Cat-aptibility Quiz
+        The great cat-aptibility quiz
       </motion.h1>
       
       <motion.p
