@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { BreedWithImage } from "@/types/breeds";
 
@@ -14,24 +13,19 @@ export function BreedCard({ breed, index }: BreedCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="group"
-    >
+    <div className="group">
       <Link
         to={`/breeds/${breed.id}`}
         className="block h-full focus-ring rounded-2xl"
       >
-        <div className="relative overflow-hidden rounded-2xl bg-white border border-amber-100 shadow-sm hover-lift">
+        <div className="relative overflow-hidden rounded-2xl bg-white border border-amber-100 shadow-sm hover:shadow-lg transition-shadow duration-200">
           <div className="relative aspect-square overflow-hidden">
             {!isLoaded && (
               <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
                 <span className="sr-only">Loading</span>
               </div>
             )}
-            <motion.img
+            <img
               src={breed.image.url}
               alt={breed.name}
               width={400}
@@ -40,7 +34,7 @@ export function BreedCard({ breed, index }: BreedCardProps) {
               decoding="async"
               fetchPriority={index < 4 ? "high" : "auto"}
               onLoad={() => setIsLoaded(true)}
-              className={`object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.05] ${
+              className={`object-cover w-full h-full ${
                 isLoaded ? "opacity-100" : "opacity-0"
               }`}
             />
@@ -64,6 +58,6 @@ export function BreedCard({ breed, index }: BreedCardProps) {
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }
