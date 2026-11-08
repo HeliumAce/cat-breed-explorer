@@ -1,22 +1,25 @@
 
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, useContext } from "react";
+import { BreedMatch, QuizAnswer, QuizQuestion } from '@/types/quiz';
 
 // Create the context with proper typing for the context value
 type QuizContextType = {
   isOpen: boolean;
+  isWelcome: boolean;
+  startQuiz: () => void;
   openQuiz: () => void;
   closeQuiz: () => void;
-  currentQuestion: any;
+  currentQuestion: QuizQuestion;
   currentQuestionIndex: number;
   totalQuestions: number;
   progress: number;
   goToNextQuestion: () => void;
   goToPreviousQuestion: () => void;
-  saveAnswer: (questionId: number, answer: string | number | string[] | number[]) => void;
-  getAnswerForQuestion: (questionId: number) => string | number | string[] | number[] | undefined;
+  saveAnswer: (questionId: number, answer: QuizAnswer['answer']) => void;
+  getAnswerForQuestion: (questionId: number) => QuizAnswer['answer'] | undefined;
   isCalculating: boolean;
   showResults: boolean;
-  breedMatches: any[];
+  breedMatches: BreedMatch[];
   resetQuiz: () => void;
 } | undefined;
 

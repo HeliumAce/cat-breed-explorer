@@ -1,5 +1,4 @@
-
-import { useCallback } from 'react';
+import { useEffect } from 'react';
 import { QuizAnswer, BreedMatch } from '@/types/quiz';
 import { Breed } from '@/types/breeds';
 import { calculateBreedMatches } from '@/utils/quiz-matching';
@@ -7,38 +6,39 @@ import { toast } from 'sonner';
 
 interface UseQuizResultsProps {
   answers: QuizAnswer[];
-  breeds: Breed[] | undefined;
-  setBreedMatches: (matches: BreedMatch[]) => void;
-  setShowResults: (show: boolean) => void;
-  setIsCalculating: (calculating: boolean) => void;
+  breeds: Breed[];
+  isCalculating: boolean;
+  runId: number;
+  completeCalculation: (runId: number, matches: BreedMatch[]) => void;
+  failCalculation: (runId: number) => void;
 }
 
 export function useQuizResults({
   answers,
   breeds,
-  setBreedMatches,
-  setShowResults,
-  setIsCalculating
+  isCalculating,
+  runId,
+  completeCalculation,
+  failCalculation,
 }: UseQuizResultsProps) {
-  
-  const calculateResults = useCallback(() => {
-    setIsCalculating(true);
-    
-    // Simulate calculation time for UX
-    setTimeout(() => {
+  useEffect(() => {
+    if (!isCalculating) return;
+    let cancelled = false;
+    // Keep the existing loading animation; calculate from the committed final answers.
+    const timer = setTimeout(() => {
+      if (cancelled) return;
       try {
-        const calculatedMatches = calculateBreedMatches(answers, breeds || []);
-        
-        setBreedMatches(calculatedMatches);
-        setShowResults(true);
-        setIsCalculating(false);
+        completeCalculation(runId, calculateBreedMatches(answers, breeds));
       } catch (error) {
-        console.error("Error calculating matches:", error);
-        toast.error("Something went wrong calculating your matches. Please try again.");
-        setIsCalculating(false);
+        console.error('Error calculating matches:', error);
+        toast.error('Something went wrong calculating your matches. Please try again.');
+        failCalculation(runId);
       }
-    }, 2000); // 2 second delay for the loading animation
-  }, [answers, breeds, setBreedMatches, setIsCalculating, setShowResults]);
+    }, 2000);
 
-  return { calculateResults };
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [answers, breeds, isCalculating, runId, completeCalculation, failCalculation]);
 }

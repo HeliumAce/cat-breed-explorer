@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { useQuiz } from "@/hooks/useQuiz";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { QuizWelcome } from "./QuizWelcome";
 import { QuizQuestion } from "./QuizQuestion";
@@ -13,6 +12,8 @@ import { AnimatePresence, motion } from "framer-motion";
 export function QuizModal() {
   const { 
     isOpen, 
+    isWelcome,
+    startQuiz,
     closeQuiz, 
     currentQuestion,
     currentQuestionIndex,
@@ -39,7 +40,7 @@ export function QuizModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeQuiz()}>
-      <DialogContent className="sm:max-w-xl md:max-w-2xl p-0 bg-amber-50 border-amber-200 overflow-hidden">
+      <DialogContent className="sm:max-w-xl md:max-w-2xl p-0 bg-amber-50 border-amber-200 overflow-clip">
         {/* Adding DialogTitle for accessibility - visually hidden */}
         <DialogTitle className="sr-only">Cat breed quiz</DialogTitle>
         
@@ -52,18 +53,19 @@ export function QuizModal() {
           <span className="sr-only">Close</span>
         </DialogClose>
         
-        <div className="relative overflow-hidden">
+        {/* Clip decorations without allowing focus to scroll the question number out of view. */}
+        <div className="relative overflow-clip">
           {/* Decorative elements */}
           <div className="absolute top-0 left-0 w-24 h-24 bg-amber-200/40 rounded-full -translate-x-12 -translate-y-12" />
           <div className="absolute bottom-0 right-0 w-32 h-32 bg-amber-200/30 rounded-full translate-x-16 translate-y-16" />
           
           <div className="relative z-10 px-6 py-6 sm:p-10">
             <AnimatePresence mode="wait">
-              {currentQuestionIndex === 0 && !showResults && !isCalculating && (
-                <QuizWelcome key="welcome" onStart={goToNextQuestion} />
+              {isWelcome && !showResults && !isCalculating && (
+                <QuizWelcome key="welcome" onStart={startQuiz} totalQuestions={totalQuestions} />
               )}
               
-              {currentQuestionIndex > 0 && !showResults && !isCalculating && (
+              {!isWelcome && !showResults && !isCalculating && (
                 <motion.div
                   key={`question-${currentQuestionIndex}`}
                   initial={{ opacity: 0, x: 20 }}
@@ -72,7 +74,7 @@ export function QuizModal() {
                   transition={{ duration: 0.3 }}
                 >
                   <div className="mb-8">
-                    <QuizProgress progress={progress} currentStep={currentQuestionIndex} totalSteps={totalQuestions} />
+                    <QuizProgress progress={progress} currentStep={currentQuestionIndex + 1} totalSteps={totalQuestions} />
                   </div>
                   
                   <QuizQuestion 

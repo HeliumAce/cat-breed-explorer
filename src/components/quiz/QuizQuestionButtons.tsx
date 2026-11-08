@@ -19,7 +19,7 @@ export function QuizQuestionButtons({
 }: QuizQuestionButtonsProps) {
   return (
     <div className="flex justify-between pt-6">
-      {currentQuestionIndex > 1 ? (
+      {currentQuestionIndex > 0 ? (
         <Button
           type="button"
           variant="ghost"

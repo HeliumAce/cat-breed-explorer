@@ -21,7 +21,7 @@ export function SliderQuestion({
   return (
     <div className="space-y-6 py-4">
       <Slider
-        defaultValue={[
+        value={[
           typeof selectedOption === "number"
             ? selectedOption
             : Math.round((sliderConfig.min + sliderConfig.max) / 2),

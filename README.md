@@ -163,12 +163,15 @@ The application is fully responsive and optimized for:
 ### Available Scripts
 
 - `npm test` - Run breed-data, image-availability, rating-display, quiz-matching, and lint-parser regression tests
+- `npm run test:quiz` - Run the full quiz flow in a browser, including Back/edit, rapid clicks and calculation cancellation
 - `npm run typecheck` - Check TypeScript types
 - `npm audit` - Check production and development dependencies for known vulnerabilities
 - `vercel dev` - Start local development server with API routes (recommended)
 - `npm run dev` - Start frontend-only development server  
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
+
+The quiz browser suite uses an existing Playwright installation. If it is outside this project's Node resolution path, set `PLAYWRIGHT_MODULE_PATH` to its `playwright/index.mjs`; optionally set `CHROME_PATH` to an existing Chrome executable. It starts its own local Vite server and uses in-memory breed fixtures, so it needs no API credentials or live breed requests. The scoring regressions also run in the regular `npm test` suite.
 
 ### Dependency security
 

@@ -1,5 +1,4 @@
 
-import { PawPrint } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface QuizProgressProps {
@@ -17,7 +16,15 @@ export function QuizProgress({ progress, currentStep, totalSteps }: QuizProgress
         </span>
       </div>
       
-      <div className="relative h-2 w-full bg-amber-100 rounded-full overflow-hidden">
+      <div
+        role="progressbar"
+        aria-label="Quiz progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress}
+        aria-valuetext={`Question ${currentStep} of ${totalSteps}`}
+        className="relative h-2 w-full bg-amber-100 rounded-full overflow-hidden"
+      >
         <motion.div
           className="absolute left-0 top-0 h-full bg-amber-500"
           initial={{ width: 0 }}

@@ -30,7 +30,7 @@ export function QuizQuestion({
   // Properly type the state to handle all possible answer types
   const [selectedOption, setSelectedOption] = useState<
     string | number | string[] | number[]
-  >(getAnswerForQuestion(question.id) || (question.type === "checkbox" || question.isMultiSelect ? [] : ""));
+  >(getAnswerForQuestion(question.id) ?? (question.type === "checkbox" || question.isMultiSelect ? [] : ""));
   const [hasAnswered, setHasAnswered] = useState(false);
 
   // Reset selected option when question changes

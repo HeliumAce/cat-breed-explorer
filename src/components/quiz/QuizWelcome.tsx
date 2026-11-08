@@ -5,9 +5,10 @@ import { Cat, HeartHandshake, Sparkles } from "lucide-react";
 
 interface QuizWelcomeProps {
   onStart: () => void;
+  totalQuestions: number;
 }
 
-export function QuizWelcome({ onStart }: QuizWelcomeProps) {
+export function QuizWelcome({ onStart, totalQuestions }: QuizWelcomeProps) {
   return (
     <div className="flex flex-col items-center justify-center py-6">
       <motion.div
@@ -39,7 +40,7 @@ export function QuizWelcome({ onStart }: QuizWelcomeProps) {
         transition={{ delay: 0.4 }}
         className="text-muted-foreground text-center mb-8 max-w-md"
       >
-        Let's find your feline soulmate in 9 lives... err, questions!
+        Let's find your feline soulmate in {totalQuestions} questions!
       </motion.p>
       
       <motion.div
