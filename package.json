@@ -16,6 +16,7 @@
     "test:quiz": "node --test tests/quiz-flow.browser.mjs",
     "test:branding": "node --test tests/branding.browser.mjs",
     "test:loading": "node --test tests/loading.browser.mjs",
+    "test:background": "node --test tests/background.browser.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
