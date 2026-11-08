@@ -164,6 +164,7 @@ The application is fully responsive and optimized for:
 
 - `npm test` - Run breed-data, image-availability, rating-display, quiz-matching, and lint-parser regression tests
 - `npm run test:quiz` - Run the full quiz flow in a browser, including Back/edit, rapid clicks and calculation cancellation
+- `npm run test:branding` - Check the accessible brand heading, responsive SVG sizing and layout stability while images load at desktop and mobile widths
 - `npm run typecheck` - Check TypeScript types
 - `npm audit` - Check production and development dependencies for known vulnerabilities
 - `vercel dev` - Start local development server with API routes (recommended)
@@ -172,6 +173,8 @@ The application is fully responsive and optimized for:
 - `npm run preview` - Preview production build locally
 
 The quiz browser suite uses an existing Playwright installation. If it is outside this project's Node resolution path, set `PLAYWRIGHT_MODULE_PATH` to its `playwright/index.mjs`; optionally set `CHROME_PATH` to an existing Chrome executable. It starts its own local Vite server and uses in-memory breed fixtures, so it needs no API credentials or live breed requests. The scoring regressions also run in the regular `npm test` suite.
+
+The branding browser suite uses the same Playwright and Chrome settings and starts its own local Vite server. It checks the actual home page with catalogue requests stubbed, so it also needs no API credentials. Brand SVGs in `public/brand` and favicons in `public` are unmodified assets from the supplied Cat Breed Explorer brand kit. The hero keeps an 84 × 84px icon box above a wordmark capped at 600px, with one screen-reader H1. The 16px and 32px PNGs and multi-size ICO retain the supplied small-size artwork; the SVG is a scalable alternative and the Apple touch icon is 180px.
 
 ### Dependency security
 

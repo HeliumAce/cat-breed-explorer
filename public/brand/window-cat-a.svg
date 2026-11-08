@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="264" viewBox="0 0 288 264" role="img" aria-labelledby="title"><title id="title">Window Cat A</title><g id="window-cat-a">
+ <path id="window-frame" fill="#4B200B" d="M12 264C5.4 264 0 258.6 0 252V144C0 64.5 64.5 0 144 0S288 64.5 288 144V252C288 258.6 282.6 264 276 264Z"/>
+ <path id="amber-window" fill="#ED8500" d="M19 244V144C19 75 75 19 144 19S269 75 269 144V244Z"/>
+ <path id="cat-silhouette" fill="#FFF7EA" d="M20 244V224C22 199 35 181 53 166C53 138 54 105 65 94C74 84 91 99 121 123C139 119 154 117 171 118C196 91 210 79 221 86C233 94 238 122 241 147C258 162 266 180 269 197V244Z"/>
+ <g id="face" fill="none" stroke="#4B200B" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+  <path id="left-eye-arch" d="M95 185C98 164 118 155 131 169"/>
+  <path id="right-eye-arch" d="M186 175C186 153 207 145 220 160"/>
+  <path id="whiskers-left" d="M43 196C54 195 64 197 74 200M43 217C53 212 64 209 75 209"/>
+  <path id="whiskers-right" d="M235 188C246 184 256 182 263 183M235 201C246 200 255 201 265 204"/>
+ </g>
+ <path id="left-pupil" fill="#4B200B" d="M117 163C129 161 137 172 139 182C135 190 125 190 120 185C115 181 113 170 117 163Z"/>
+ <path id="right-pupil" fill="#4B200B" d="M207 150C218 150 226 162 227 171C222 177 213 176 208 171C203 166 202 156 207 150Z"/>
+ <path id="nose" fill="#4B200B" d="M160 195C165 191 176 190 181 192C185 195 179 203 175 207C171 210 160 203 158 199C157 197 158 196 160 195Z"/>
+ <g id="paws" fill="#FFF7EA" stroke="#4B200B" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M65 251C65 232 78 220 95 220C113 220 126 232 126 249C126 257 122 261 115 261H77C69 261 65 258 65 251Z"/>
+  <path d="M188 251C188 232 202 220 220 220C238 220 250 232 250 249C250 257 246 261 239 261H200C192 261 188 258 188 251Z"/>
+  <path d="M84 246V260M104 245V260M208 245V260M228 245V260"/>
+ </g></g></svg>

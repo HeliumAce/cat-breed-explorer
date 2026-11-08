@@ -6,7 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { BreedCard } from "@/components/BreedCard";
 import { LoadingInline } from "@/components/Loading";
 import { useBreeds } from "@/hooks/useBreeds";
-import { Cat, PawPrint } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import { QuizButton } from "@/components/quiz/QuizButton";
 import { AdoptionButton } from "@/components/adoption/AdoptionButton";
 
@@ -30,17 +30,30 @@ const Index = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex justify-center"
             >
-              <div className="rounded-full bg-amber-100 p-3 mb-4">
-                <Cat className="h-8 w-8 text-amber-600" />
-              </div>
+              <img
+                src="/brand/window-cat-a.svg"
+                width="84"
+                height="84"
+                alt=""
+                aria-hidden="true"
+                className="block h-[84px] w-[84px] object-contain mb-3"
+              />
             </motion.div>
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-4"
+              className="mx-auto mb-4 w-full max-w-[600px] leading-none"
             >
-              Cat Breed Explorer
+              <span className="sr-only">Cat Breed Explorer</span>
+              <img
+                src="/brand/whisker-wordmark.svg"
+                width="1010"
+                height="142"
+                alt=""
+                aria-hidden="true"
+                className="block h-auto w-full"
+              />
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 10 }}
