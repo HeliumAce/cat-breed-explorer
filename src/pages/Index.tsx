@@ -38,7 +38,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-4"
+              className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-4"
             >
               Cat Breed Explorer
             </motion.h1>
@@ -88,7 +88,7 @@ const Index = () => {
           {!isLoading && breeds.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <PawPrint className="h-12 w-12 text-muted mb-4" />
-              <h3 className="text-lg font-medium text-foreground">No breeds found</h3>
+              <h3 className="font-display text-lg font-medium text-foreground">No breeds found</h3>
               <p className="text-muted-foreground mt-1">Try adjusting your search</p>
             </div>
           )}
@@ -96,7 +96,7 @@ const Index = () => {
           {!isLoading && breeds.length > 0 && (
             <>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-medium text-foreground">
+                <h2 className="font-display text-lg font-medium text-foreground">
                   {searchTerm ? `Results for "${searchTerm}"` : "All breeds"}
                 </h2>
                 <p className="text-sm text-muted-foreground">

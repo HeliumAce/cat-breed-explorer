@@ -46,7 +46,7 @@ export function LocationCard({ location, isSelected = false, onSelect }: Locatio
         <div className="flex items-center gap-3">
           {getLocationTypeIcon(location.type)}
           <div>
-            <h3 className="font-medium text-foreground">{location.name}</h3>
+            <h3 className="font-display font-medium text-foreground">{location.name}</h3>
             <p className="text-sm text-muted-foreground">{location.address}</p>
           </div>
         </div>

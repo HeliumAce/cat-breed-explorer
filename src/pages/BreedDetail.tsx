@@ -26,7 +26,7 @@ const BreedDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-amber-50">
         <div className="text-center max-w-md mx-auto px-4">
           <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Breed not found</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground mb-2">Breed not found</h1>
           <p className="text-muted-foreground mb-6">
             We couldn't find the cat breed you're looking for.
           </p>
@@ -70,7 +70,7 @@ const BreedDetail = () => {
                   </div>
                 </div>
                 
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{breed.name}</h1>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-4">{breed.name}</h1>
                 
                 {breed.temperament && <div className="flex flex-wrap gap-4 mb-6" role="group" aria-label="Temperament">
                   {breed.temperament.split(", ").map((trait) => (

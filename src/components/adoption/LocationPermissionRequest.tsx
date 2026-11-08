@@ -51,7 +51,7 @@ export function LocationPermissionRequest({
           {!showManualInput ? (
             <div className="text-center">
               <MapPin className="h-12 w-12 text-amber-500 mx-auto mb-2" />
-              <h3 className="text-lg font-medium mb-2">Allow location access</h3>
+              <h3 className="font-display text-lg font-medium mb-2">Allow location access</h3>
               <p className="text-muted-foreground mb-4">
                 We need your location to find nearby adoption centers
               </p>
@@ -74,7 +74,7 @@ export function LocationPermissionRequest({
           ) : (
             <div>
               <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-medium">Enter your location</h3>
+                <h3 className="font-display text-lg font-medium">Enter your location</h3>
                 <Button
                   variant="ghost"
                   size="sm"

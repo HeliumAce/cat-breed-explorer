@@ -50,7 +50,7 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Your purr-fect match!</h2>
+        <h2 className="font-display text-2xl font-bold mb-2">Your purr-fect match!</h2>
         <p className="text-muted-foreground mb-6">
           Based on your preferences, comparing {breedMatches.length} breeds with complete ratings.
         </p>
@@ -60,7 +60,7 @@ export function QuizResults({ onReset, onClose }: QuizResultsProps) {
         <PrimaryMatch match={primaryMatch} onClose={onClose} />
         
         {otherMatches.length > 0 && (
-          <h3 className="text-lg font-medium mt-6 mb-2">
+          <h3 className="font-display text-lg font-medium mt-6 mb-2">
             Other possible pals
           </h3>
         )}

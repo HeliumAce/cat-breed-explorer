@@ -40,7 +40,7 @@ export function BreedEditorialContent({ content }: { content?: BreedContentEntry
         >
           <div className="flex items-center gap-2 mb-4">
             <InfoIcon className="h-5 w-5 text-amber-600" />
-            <h2 id="breed-fun-facts" className="text-xl font-semibold text-foreground">Fun facts</h2>
+            <h2 id="breed-fun-facts" className="font-display text-xl font-semibold text-foreground">Fun facts</h2>
           </div>
           <ul className="space-y-3">
             {content.facts.map((fact, index) => (
@@ -63,7 +63,7 @@ export function BreedEditorialContent({ content }: { content?: BreedContentEntry
         >
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="h-5 w-5 text-amber-600" />
-            <h2 id="breed-bonding-tips" className="text-xl font-semibold text-foreground">Bonding tips</h2>
+            <h2 id="breed-bonding-tips" className="font-display text-xl font-semibold text-foreground">Bonding tips</h2>
           </div>
           <ul className="space-y-3">
             {content.bondingTips.map(tip => (

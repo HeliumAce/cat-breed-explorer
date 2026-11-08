@@ -33,7 +33,7 @@ export function OtherMatches({ matches, onClose }: OtherMatchesProps) {
               </div>
               
               <div>
-                <h3 className="font-semibold">{match.name}</h3>
+                <h3 className="font-display font-semibold">{match.name}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-1">
                   {match.matchReasons[0]}
                 </p>

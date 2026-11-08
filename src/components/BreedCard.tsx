@@ -44,7 +44,7 @@ export function BreedCard({ breed, index }: BreedCardProps) {
             </div>
           </div>
           <div className="p-4">
-            <h3 className="font-semibold text-lg text-foreground group-hover:text-amber-700 transition-colors duration-300">
+            <h3 className="font-display font-semibold text-lg text-foreground group-hover:text-amber-700 transition-colors duration-300">
               {breed.name}
             </h3>
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2 h-10">

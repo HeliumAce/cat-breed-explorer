@@ -118,7 +118,7 @@ export function QuizQuestion({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-bold mb-2">{question.question}</h3>
+        <h3 className="font-display text-xl font-bold mb-2">{question.question}</h3>
         {question.description && (
           <p className="text-muted-foreground mb-4">{question.description}</p>
         )}

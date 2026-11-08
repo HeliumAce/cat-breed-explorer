@@ -34,7 +34,7 @@ export function PrimaryMatch({ match, onClose }: PrimaryMatchProps) {
         </div>
         
         <div className="flex-1 text-center sm:text-left">
-          <h3 className="text-xl font-bold mb-2">{match.name}</h3>
+          <h3 className="font-display text-xl font-bold mb-2">{match.name}</h3>
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{match.description}</p>
           
           <div className="space-y-1 mb-4">

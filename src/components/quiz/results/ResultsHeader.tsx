@@ -17,7 +17,7 @@ export function ResultsHeader() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-2xl font-bold mb-2"
+        className="font-display text-2xl font-bold mb-2"
       >
         Your purr-fect match!
       </motion.h2>

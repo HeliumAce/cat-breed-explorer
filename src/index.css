@@ -1,5 +1,20 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Latin variable fonts; sources and SIL Open Font Licenses are in public/fonts. */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/figtree-latin-wght-400-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-opsz-wght-500-700.woff2') format('woff2');
+}
 
 @tailwind base;
 @tailwind components;
@@ -93,12 +108,12 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
 
   html {
-    font-family: 'Inter', sans-serif;
-    @apply scroll-smooth;
+    @apply font-sans antialiased scroll-smooth;
+    font-synthesis: none;
   }
 }
 

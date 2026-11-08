@@ -93,7 +93,7 @@ export function QuizModal() {
                   className="flex flex-col items-center justify-center py-16"
                 >
                   <Cat className="h-16 w-16 text-amber-600 animate-bounce mb-4" />
-                  <h2 className="text-2xl font-bold text-center mb-2">Calculating your cat-culations...</h2>
+                  <h2 className="font-display text-2xl font-bold text-center mb-2">Calculating your cat-culations...</h2>
                   <p className="text-muted-foreground text-center mb-6">Finding your purr-fect match!</p>
                   <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
                 </motion.div>

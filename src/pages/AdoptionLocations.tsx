@@ -78,7 +78,7 @@ const AdoptionLocations = () => {
                 <div className="bg-white rounded-lg border border-amber-100 shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-amber-100">
                     <div className="flex justify-between items-center mb-3">
-                      <h2 className="font-semibold flex items-center gap-2">
+                      <h2 className="font-display font-semibold flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-amber-500" />
                         Nearby locations
                       </h2>
@@ -125,7 +125,7 @@ const AdoptionLocations = () => {
             <div className="transition-all duration-300">
               <div className="bg-white rounded-lg border border-amber-100 shadow-sm p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-semibold">Adoption locations</h2>
+                  <h2 className="font-display font-semibold">Adoption locations</h2>
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -149,7 +149,7 @@ const AdoptionLocations = () => {
                 {isError && (
                   <div className="text-center py-8">
                     <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-2" />
-                    <h3 className="font-medium text-lg mb-1">Error loading locations</h3>
+                    <h3 className="font-display font-medium text-lg mb-1">Error loading locations</h3>
                     <p className="text-muted-foreground">
                       We couldn't load adoption locations. Please try again later.
                     </p>
@@ -166,7 +166,7 @@ const AdoptionLocations = () => {
                 {!isLoading && !isError && locations.length === 0 && (
                   <div className="text-center py-8">
                     <Cat className="h-10 w-10 text-amber-500 mx-auto mb-2" />
-                    <h3 className="font-medium text-lg mb-1">No locations found</h3>
+                    <h3 className="font-display font-medium text-lg mb-1">No locations found</h3>
                     <p className="text-muted-foreground">
                       {typeFilter !== 'all' 
                         ? `We couldn't find any ${typeFilter === 'shelter' ? 'shelters' : typeFilter === 'humane' ? 'humane societies' : 'pet stores'} near you.`
