@@ -13,7 +13,7 @@ const server = await createServer({
 after(() => server.close());
 const service = await server.ssrLoadModule('/src/services/breed-service.ts');
 const { calculateBreedMatches } = await server.ssrLoadModule('/src/utils/quiz-matching.ts');
-const { breedRatings, ratingAttributes, hasCompleteRatings, withLocalRatings, excludedBreedRatings, breedRatingAliases, isQuizEligible } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
+const { breedRatings, ratingAttributes, hasCompleteRatings, withLocalBreedTraits, isRating, excludedBreedRatings, breedRatingAliases, isQuizEligible } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
 const { BreedRating } = await server.ssrLoadModule('/src/components/BreedRating.tsx');
 const catalogue = JSON.parse(await readFile(new URL('./fixtures/breed-catalogue.json', import.meta.url), 'utf8'));
 
@@ -49,11 +49,14 @@ test('list and detail requests receive the same local star ratings', async (t) =
   assert.equal(coreBreed.energy_level, undefined, 'upstream data is not mutated');
 });
 
-test('every rated breed has all ten valid ratings with sources and explanations', () => {
+test('every reviewed trait is a valid rating or explicitly unavailable, with evidence', () => {
   assert.equal(Object.keys(breedRatings).length, 106);
   assert.equal(ratingAttributes.length, 10);
   for (const entry of Object.values(breedRatings)) {
-    assert.equal(hasCompleteRatings(entry.ratings), true);
+    for (const { key } of ratingAttributes) {
+      assert.ok(isRating(entry.ratings[key]) || entry.ratings[key] === null, `${entry.name}.${key}`);
+      if (entry.ratings[key] === null) assert.match(entry.rationale[key], /^Unavailable:/);
+    }
     assert.ok(entry.sources.length > 0);
     for (const source of entry.sources) assert.equal(new URL(source).protocol, 'https:');
     assert.ok(['breed-profile', 'related-breed', 'mixed-population', 'limited'].includes(entry.evidenceBasis));
@@ -91,7 +94,7 @@ test('list and detail services enrich every rated catalogue entry consistently',
     const detail = await service.fetchBreedById(breed.id);
     for (const { key } of ratingAttributes) {
       assert.equal(breed[key], detail[key], `${breed.id}.${key}`);
-      assert.equal(breed[key], breedRatings[breed.id]?.ratings[key], `${breed.id}.${key}`);
+      assert.equal(breed[key], breedRatings[breed.id]?.ratings[key] ?? null, `${breed.id}.${key}`);
     }
     assert.equal(breed.description, coreBreed.description);
   }
@@ -101,9 +104,9 @@ test('list and detail services enrich every rated catalogue entry consistently',
 test('Kellas remains unrated and cannot enter the quiz even with upstream ratings', () => {
   const kellas = { ...coreBreed, ...breedRatings.siam.ratings, id: 'kell', name: 'Kellas Cat' };
   assert.equal(isQuizEligible(kellas), false);
-  const unrated = withLocalRatings(kellas);
+  const unrated = withLocalBreedTraits(kellas);
   assert.equal(unrated.description, kellas.description);
-  for (const { key } of ratingAttributes) assert.equal(unrated[key], undefined);
+  for (const { key } of ratingAttributes) assert.equal(unrated[key], null);
   assert.deepEqual(calculateBreedMatches([{ questionId: 2, answer: 'high' }], [kellas]), []);
   assert.equal(kellas.energy_level, 5, 'upstream input is not mutated');
 });
@@ -131,12 +134,14 @@ test('the full catalogue produces distinct, repeatable recommendations for diffe
   ];
   const calmResults = calculateBreedMatches(calm, ratedBreeds);
   const energeticResults = calculateBreedMatches(energetic, ratedBreeds);
-  assert.equal(calmResults.length, 105);
-  assert.equal(energeticResults.length, 105);
+  const eligibleIds = new Set(ratedBreeds.filter(isQuizEligible).map(breed => breedRatingAliases[breed.id] ?? breed.id));
+  assert.equal(calmResults.length, eligibleIds.size);
+  assert.equal(energeticResults.length, eligibleIds.size);
+  assert.ok(ratedBreeds.some(breed => !hasCompleteRatings(breed)), 'the catalogue includes explicitly unavailable traits');
   assert.notEqual(calmResults[0].id, energeticResults[0].id);
   assert.ok(breedRatings[calmResults[0].id].ratings.energy_level <= 2);
   assert.equal(breedRatings[energeticResults[0].id].ratings.energy_level, 5);
-  assert.equal(breedRatings[energeticResults[0].id].ratings.vocalisation, 5);
+  assert.ok(breedRatings[energeticResults[0].id].ratings.vocalisation >= 4);
   assert.ok(calmResults.every(result => result.matchPercentage >= 0 && result.matchPercentage <= 100));
   assert.deepEqual(calmResults, calculateBreedMatches(calm, ratedBreeds.toReversed()));
 });
@@ -212,9 +217,12 @@ test('grooming and shedding dealbreakers use the same 1–5 direction as the nee
   assert.equal(penalized.matchPercentage, 40);
 });
 
-test('new unknown breeds do not silently receive generic ratings', async (t) => {
-  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ ...coreBreed, id: 'new-breed' })));
+test('new unknown breeds cannot receive generic or unreviewed upstream traits', async (t) => {
+  const upstream = { ...coreBreed, ...breedRatings.siam.ratings, id: 'new-breed', temperament: 'Minimal grooming needed' };
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify(upstream)));
   const breed = await service.fetchBreedById('new-breed');
-  assert.equal(breed.adaptability, undefined);
-  assert.equal(breed.energy_level, undefined);
+  for (const { key } of ratingAttributes) assert.equal(breed[key], null);
+  assert.equal(breed.temperament, '');
+  assert.equal(breed.description, upstream.description);
+  assert.deepEqual(calculateBreedMatches([{ questionId: 2, answer: 'high' }], [upstream, breed]), []);
 });

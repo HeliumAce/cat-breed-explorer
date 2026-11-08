@@ -7,6 +7,15 @@ export type TraitRatings = Record<
   Rating
 >;
 
+export type ReviewedTraitRatings = Record<keyof TraitRatings, Rating | null>;
+
+export const temperamentLabelVocabulary = [
+  'Active', 'Adaptable', 'Affectionate', 'Calm', 'Confident', 'Curious',
+  'Gentle', 'Independent', 'Intelligent', 'Interactive', 'Loyal',
+  'Mischievous', 'Playful', 'Quiet', 'Reserved', 'Sensitive', 'Sociable', 'Talkative',
+] as const;
+export type TemperamentLabel = typeof temperamentLabelVocabulary[number];
+
 export const ratingAttributes: { key: keyof TraitRatings; label: string; display: 'stars' | 'scale' }[] = [
   { key: 'adaptability', label: 'Adaptability', display: 'stars' },
   { key: 'affection_level', label: 'Affection', display: 'stars' },
@@ -24,13 +33,15 @@ export function isRating(value: unknown): value is Rating {
   return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
-export function hasCompleteRatings(breed: Breed): boolean {
+export function hasCompleteRatings(breed: Partial<Record<keyof TraitRatings, unknown>>): boolean {
   return ratingAttributes.every(({ key }) => isRating(breed[key]));
 }
 
 export interface BreedRatingEntry {
   name: string;
-  ratings: TraitRatings;
+  ratings: ReviewedTraitRatings;
+  temperamentLabels: TemperamentLabel[];
+  temperamentEvidence: { source: string; section: string; summary: string };
   sources: string[];
   rationale: Record<keyof TraitRatings, string>;
   evidenceBasis: 'breed-profile' | 'related-breed' | 'mixed-population' | 'limited';
@@ -40,12 +51,15 @@ export interface BreedRatingEntry {
 
 // Authored editorial estimates, not scores supplied or endorsed by the sources.
 // 1 = low, 3 = moderate, 5 = high. Individual cats vary.
+// null = insufficient evidence, never an average or a zero. Coat/extra-toe
+// population labels and parent breeds do not establish a personality score.
 // Evidence is recorded per entry; related-breed and sparse-evidence inferences
 // are explicit. No ratings are inferred or randomized at request time.
 export const ratingMethodology = {
-  version: 2,
+  version: 3,
   preparedOn: '2026-11-07',
   catalogueCheckedOn: '2026-11-07',
+  traitsAuditedOn: '2026-11-07',
   status: 'editorial',
 } as const;
 
@@ -60,7 +74,10 @@ export const excludedBreedRatings: Record<string, { name: string; reason: string
 export const breedRatingAliases: Record<string, string> = { chas: 'chau' };
 
 export function isQuizEligible(breed: Breed): boolean {
-  return !excludedBreedRatings[breed.id] && hasCompleteRatings(breed);
+  return Object.prototype.hasOwnProperty.call(breedRatings, breed.id)
+    && !Object.prototype.hasOwnProperty.call(excludedBreedRatings, breed.id)
+    && hasCompleteRatings(breedRatings[breed.id].ratings)
+    && hasCompleteRatings(breed);
 }
 
 export const breedRatings: Record<string, BreedRatingEntry> = {
@@ -77,6 +94,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/abyssinian/",
+      "section": "Personality and activity level",
+      "summary": "Exploration, climbing and interactive problem-solving are emphasised; affection often takes the form of shared activity."
     },
     "sources": [
       "https://cfa.org/breed/abyssinian/",
@@ -110,6 +138,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Curious",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/aegean-cat/",
+      "section": "Personality and activity level",
+      "summary": "The island-cat profile describes an outgoing, vocal companion that enjoys activity and family attention."
+    },
     "sources": [
       "https://www.catster.com/cat-breeds/aegean-cat/"
     ],
@@ -140,6 +179,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 5,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Adaptable",
+      "Playful",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/american-bobtail/",
+      "section": "Personality and activity level",
+      "summary": "Family attachment, moderate activity and learning games support these labels without implying constant high energy."
     },
     "sources": [
       "https://tica.org/breed/american-bobtail/"
@@ -172,6 +222,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful",
+      "Adaptable"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/american-curl/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes curious family involvement, adjustment to new situations and persistent kitten-like play; voices are soft."
+    },
     "sources": [
       "https://tica.org/breed/american-curl/"
     ],
@@ -202,6 +263,16 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 3,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/american-ringtail-cat/",
+      "section": "Personality and activity level",
+      "summary": "Exploration and family affection are supported; the source does not establish exceptional intelligence."
     },
     "sources": [
       "https://www.catster.com/cat-breeds/american-ringtail-cat/"
@@ -234,6 +305,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Calm",
+      "Playful",
+      "Independent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/american-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "The profile balances even temperament and self-directed time with ordinary play."
+    },
     "sources": [
       "https://tica.org/breed/american-shorthair/"
     ],
@@ -265,6 +347,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Playful",
+      "Adaptable"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/american-wirehair/",
+      "section": "Personality and activity level",
+      "summary": "An easygoing companion with playful, family-oriented interactions; no exceptional vocal or activity claim."
+    },
     "sources": [
       "https://tica.org/breed/american-wirehair/"
     ],
@@ -285,35 +378,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "aphr": {
     "name": "Aphrodite Giant",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 4,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
-      "grooming": 3,
-      "shedding_level": 4,
-      "dog_friendly": 3,
-      "social_needs": 4
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://en.woc.center/articles/standards-apl/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://tica.org/phocadownload/all-2019.pdf",
-      "https://www.catbreedexplorer.com/api/breeds?id=aphr"
+      "https://en.woc.center/articles/standards-apl/"
     ],
     "rationale": {
-      "adaptability": "Natural, athletic profile suggests reasonable flexibility.",
-      "affection_level": "Gentle, affectionate API description supports closeness.",
-      "energy_level": "Strong athletic build and active profile support high activity.",
-      "intelligence": "Intelligent API description supports an above-moderate estimate.",
-      "child_friendly": "Gentleness supports an above-moderate estimate with supervised handling.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Seasonally varying coat needs routine combing.",
-      "shedding_level": "Seasonal undercoat supports above-moderate loose-hair expectations.",
-      "dog_friendly": "Moderate provisional estimate; dog-specific evidence is limited.",
-      "social_needs": "Social API description supports frequent interaction."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Registry standard supports physical and gentle-temperament context; several behavioural values are provisional interpretations of the API profile."
+    "notes": "Conformation standards support size, shape and seasonal coat, but not a uniform temperament or maintenance score across coat varieties."
   },
   "amau": {
     "name": "Arabian Mau",
@@ -328,6 +426,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 3,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Active",
+      "Independent",
+      "Curious",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/arabian-mau/",
+      "section": "Personality and activity level",
+      "summary": "The profile describes high activity and vocal interaction alongside independence rather than prolonged lap time."
     },
     "sources": [
       "https://www.catster.com/cat-breeds/arabian-mau/"
@@ -359,6 +468,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/",
+      "section": "Personality and activity level",
+      "summary": "GCCF's Tiffanie/Asian description supports investigation, companionship and conversational interaction."
     },
     "sources": [
       "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/"
@@ -392,6 +512,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Sociable",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/australian-mist/",
+      "section": "Personality and activity level",
+      "summary": "The profile describes a tolerant family companion that enjoys play without being constantly active."
+    },
     "sources": [
       "https://tica.org/breed/australian-mist/"
     ],
@@ -417,11 +548,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 5,
       "intelligence": 5,
       "child_friendly": 4,
-      "vocalisation": 5,
+      "vocalisation": 4,
       "grooming": 2,
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Active",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/balinese/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes frequent conversation and social activity, with a softer, less insistent voice than the Siamese."
     },
     "sources": [
       "https://tica.org/breed/balinese/"
@@ -432,7 +574,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Athletic Siamese-group play supports very high activity.",
       "intelligence": "Interactive problem-solving supports a high editorial estimate.",
       "child_friendly": "Social nature can suit respectful children.",
-      "vocalisation": "Talkative Siamese-group communication supports a high estimate.",
+      "vocalisation": "Frequent conversation is supported, but TICA describes a softer, less insistent voice than the Siamese; above-moderate rather than the maximum estimate.",
       "grooming": "Fine semi-long coat needs light routine combing.",
       "shedding_level": "Lower shedding burden is an editorial fine-coat estimate.",
       "dog_friendly": "Social nature can support cat-friendly dogs.",
@@ -442,37 +584,43 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "bamb": {
     "name": "Bambino",
-    "groomingCare": "skin",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 4,
       "shedding_level": 1,
-      "dog_friendly": 4,
-      "social_needs": 5
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://tica.org/breed/sphynx/",
-      "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/"
+      "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
+      "https://www.petmd.com/cat/breeds/sphynx"
     ],
     "rationale": {
-      "adaptability": "Provisional estimate from sociable Sphynx-related background.",
-      "affection_level": "Affectionate companion profile supports strong closeness.",
-      "energy_level": "Playful profile supports high activity; short legs do not establish low energy.",
-      "intelligence": "Curiosity supports an above-moderate provisional estimate.",
-      "child_friendly": "Social character can suit gentle children with careful handling.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Hairlessness still requires regular skin and ear care.",
-      "shedding_level": "Little coat hair to shed; this does not mean allergen-free.",
-      "dog_friendly": "Social character may support compatible dogs after careful introductions.",
-      "social_needs": "People-oriented background suggests substantial companionship needs."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Related hairless-care guidance supports regular skin and ear care; adjust the routine to actual fur coverage with a vet.",
+      "shedding_level": "Very sparse coat supports low hair shedding; this does not imply low allergens or low skin-care needs.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Behavioural estimates use the API description and Sphynx ancestry; hybrid-specific evidence is limited."
+    "groomingCare": "skin",
+    "notes": "Only near-bare coat care is estimated from related hairless guidance. Sphynx/Munchkin ancestry does not establish a Bambino personality."
   },
   "beng": {
     "name": "Bengal",
@@ -487,6 +635,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Confident",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/bengal/",
+      "section": "Personality and activity level",
+      "summary": "Climbing, investigating and interactive activity are central; no guarantee about dogs or handling follows from the labels."
     },
     "sources": [
       "https://tica.org/breed/bengal/"
@@ -519,6 +678,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Quiet",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/birman/",
+      "section": "Personality and activity level",
+      "summary": "A laidback, soft-voiced companion can still enjoy fetch and thinking toys; playful does not mean persistently high energy."
+    },
     "sources": [
       "https://tica.org/breed/birman/"
     ],
@@ -549,6 +719,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 5,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful",
+      "Curious"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/bombay/",
+      "section": "Personality and activity level",
+      "summary": "The source emphasises family involvement, affection and games rather than independence."
     },
     "sources": [
       "https://tica.org/breed/bombay/"
@@ -581,6 +762,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Curious",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/brazilian-shorthair-cat/",
+      "section": "Personality and activity level",
+      "summary": "The profile supports energetic exploration, social attention and vocal communication."
+    },
     "sources": [
       "https://www.catster.com/cat-breeds/brazilian-shorthair-cat/"
     ],
@@ -611,6 +803,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 4,
       "dog_friendly": 4,
       "social_needs": 2
+    },
+    "temperamentLabels": [
+      "Calm",
+      "Independent",
+      "Quiet",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/british-longhair/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes low activity, quiet company and comfort with time alone; the longer coat does not change that temperament."
     },
     "sources": [
       "https://tica.org/breed/british-longhair/"
@@ -643,6 +846,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 2
     },
+    "temperamentLabels": [
+      "Calm",
+      "Independent",
+      "Quiet",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/british-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes quiet nearby companionship and independence rather than a need to be carried or constantly held."
+    },
     "sources": [
       "https://tica.org/breed/british-shorthair/"
     ],
@@ -673,6 +887,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 4,
       "dog_friendly": 4,
       "social_needs": 2
+    },
+    "temperamentLabels": [
+      "Calm",
+      "Independent",
+      "Quiet",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/british-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "Tipping is a British Shorthair colour variety; no distinct personality is inferred from the pattern."
     },
     "sources": [
       "https://tica.org/breed/british-shorthair/"
@@ -706,6 +931,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 5,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/burmese/",
+      "section": "Personality and activity level",
+      "summary": "Burmese profiles emphasise close family contact and playful social participation."
+    },
     "sources": [
       "https://tica.org/breed/burmese/"
     ],
@@ -731,11 +967,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 3,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 3,
+      "vocalisation": 2,
       "grooming": 2,
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Playful",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/burmilla/",
+      "section": "Personality and activity level",
+      "summary": "TICA explicitly describes a playful but quiet and gentle companion."
     },
     "sources": [
       "https://tica.org/breed/burmilla/"
@@ -746,7 +993,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Playful into adulthood without the highest activity intensity.",
       "intelligence": "Inquisitive trick-learning supports an above-moderate estimate.",
       "child_friendly": "Sociable temperament can suit respectful children.",
-      "vocalisation": "Moderate communication balances the described parent-breed tendencies.",
+      "vocalisation": "TICA explicitly describes a quiet, gentle companion despite its playfulness.",
       "grooming": "Short coat needs light routine care; some lines are longer coated.",
       "shedding_level": "Moderate coat-hair burden is an editorial estimate.",
       "dog_friendly": "Social disposition can support compatible dogs.",
@@ -757,35 +1004,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "burm": {
     "name": "Burmoir",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 4,
-      "energy_level": 3,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
-      "grooming": 2,
-      "shedding_level": 3,
-      "dog_friendly": 4,
-      "social_needs": 4
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=burm",
       "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/"
     ],
     "rationale": {
-      "adaptability": "Provisional interpretation of its Burmese-type, social description.",
-      "affection_level": "Affectionate API profile supports closeness.",
-      "energy_level": "Playful description supports a moderate activity estimate.",
-      "intelligence": "Intelligent API description supports an above-moderate estimate.",
-      "child_friendly": "Moderate-to-high estimate inferred from sociable companion background.",
-      "vocalisation": "Moderate provisional estimate; direct evidence is sparse.",
-      "grooming": "Burmese-type coat suggests light routine grooming.",
-      "shedding_level": "Moderate provisional coat estimate.",
-      "dog_friendly": "Moderate-to-high estimate inferred from social companion background.",
-      "social_needs": "Social API profile supports regular interaction."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Burmoir has limited independent documentation; the API description and related Asian/Burmese group provide context, not measured breed scores."
+    "notes": "Could not corroborate this API label independently. Asian/Burmilla documentation does not establish Burmoir as a distinct breed or a safe alias."
   },
   "cspa": {
     "name": "California Spangled",
@@ -801,9 +1053,19 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Affectionate",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.petmd.com/cat/breeds/c_ct_california_spangled_cat",
+      "section": "Personality and activity level",
+      "summary": "PetMD describes an athletic hunter-style player that is affectionate and responsive to mental activity."
+    },
     "sources": [
-      "https://www.petinsurance.com/healthzone/pet-breeds/cat-breeds/california-spangled/",
-      "https://www.catbreedexplorer.com/api/breeds?id=cspa"
+      "https://www.petmd.com/cat/breeds/c_ct_california_spangled_cat"
     ],
     "rationale": {
       "adaptability": "Social companion description supports reasonable flexibility.",
@@ -817,40 +1079,46 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": "Moderate provisional estimate; dog-specific evidence is limited.",
       "social_needs": "Social, interactive profile suggests regular companionship."
     },
-    "evidenceBasis": "limited",
-    "notes": "Rare-breed behavioural values are provisional editorial interpretations of available profiles."
+    "evidenceBasis": "breed-profile",
+    "notes": "PetMD supports companion behaviour; obsolete rarity counts and recognition forecasts are not used."
   },
   "cara": {
     "name": "Caracat",
     "ratings": {
-      "adaptability": 2,
-      "affection_level": 3,
-      "energy_level": 5,
-      "intelligence": 4,
-      "child_friendly": 1,
-      "vocalisation": 4,
-      "grooming": 2,
-      "shedding_level": 3,
-      "dog_friendly": 2,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://catvets.com/resource/2025-hybrid-cats-position-statement/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://catvets.com/resource/2025-hybrid-cats-position-statement/"
     ],
     "rationale": {
-      "adaptability": "Generation-sensitive hybrid needs suggest low household flexibility.",
-      "affection_level": "Bonding is possible, but domestic affection patterns are uncertain.",
-      "energy_level": "Wild-hybrid activity demands support the highest activity category.",
-      "intelligence": "Exploration supports an above-moderate provisional learning estimate.",
-      "child_friendly": "Low pet-household suitability estimate given unpredictable early-generation behaviour.",
-      "vocalisation": "Above-moderate provisional estimate; communication varies with ancestry.",
-      "grooming": "Short coat suggests light brushing; other care demands are not captured here.",
-      "shedding_level": "Moderate provisional coat-hair estimate.",
-      "dog_friendly": "Low compatibility estimate; introductions cannot guarantee tolerance.",
-      "social_needs": "Moderate provisional estimate; human companionship needs vary by generation."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Hybrid scores are cautious editorial estimates, not a claim that Caracats are suitable ordinary pets. The API does not identify generation."
+    "notes": "The API gives no generation or verified pedigree. FelineVMA identifies specialist husbandry needs for early wild-domestic hybrids; routine pet bonding tips would be inappropriate without stronger evidence."
   },
   "ctif": {
     "name": "Chantilly-Tiffany",
@@ -865,6 +1133,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 3,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Loyal",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.hillspet.com/cat-care/cat-breeds/chantilly",
+      "section": "Personality and activity level",
+      "summary": "Hill's describes a devoted, sweet companion that enjoys people and interactive play; chirping alone is not loud demanding behaviour."
     },
     "sources": [
       "https://www.hillspet.com/cat-care/cat-breeds/chantilly",
@@ -898,6 +1177,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 2
     },
+    "temperamentLabels": [
+      "Calm",
+      "Quiet",
+      "Loyal",
+      "Reserved"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/chartreux/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes placid companionship, some reserve and quiet voices, with play still possible."
+    },
     "sources": [
       "https://tica.org/breed/chartreux/"
     ],
@@ -923,11 +1213,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 5,
       "intelligence": 5,
       "child_friendly": 2,
-      "vocalisation": 3,
+      "vocalisation": 4,
       "grooming": 1,
       "shedding_level": 2,
       "dog_friendly": 3,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/chausie/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes an active, people-oriented learner that is very talkative."
     },
     "sources": [
       "https://tica.org/breed/chausie/"
@@ -938,7 +1239,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Extremely sustained play and athleticism support the highest category.",
       "intelligence": "Opening cabinets and interactive challenges support a high estimate.",
       "child_friendly": "Profile favours adults or families without young children.",
-      "vocalisation": "Moderate communication is an editorial estimate.",
+      "vocalisation": "TICA calls the breed very talkative; the prior moderate estimate understated the direct profile.",
       "grooming": "Short coat needs simple routine brushing.",
       "shedding_level": "Lower hair burden is an editorial short-coat estimate.",
       "dog_friendly": "Moderate estimate; individual compatibility and introductions matter.",
@@ -954,11 +1255,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 5,
       "intelligence": 5,
       "child_friendly": 2,
-      "vocalisation": 3,
+      "vocalisation": 4,
       "grooming": 1,
       "shedding_level": 2,
       "dog_friendly": 3,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/chausie/",
+      "section": "Personality and activity level",
+      "summary": "Same reviewed breed as chau; the API spelling is an alias, not a distinct temperament."
     },
     "sources": [
       "https://tica.org/breed/chausie/"
@@ -969,7 +1281,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Extremely sustained play and athleticism support the highest category.",
       "intelligence": "Opening cabinets and interactive challenges support a high estimate.",
       "child_friendly": "Profile favours adults or families without young children.",
-      "vocalisation": "Moderate communication is an editorial estimate.",
+      "vocalisation": "TICA calls the breed very talkative; the prior moderate estimate understated the direct profile.",
       "grooming": "Short coat needs simple routine brushing.",
       "shedding_level": "Lower hair burden is an editorial short-coat estimate.",
       "dog_friendly": "Moderate estimate; individual compatibility and introductions matter.",
@@ -991,6 +1303,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful",
+      "Sociable"
+    ],
+    "temperamentEvidence": {
+      "source": "https://catzinc.org/wp-content/uploads/2018/09/cheetoh.pdf",
+      "section": "General description",
+      "summary": "The standard describes social curiosity and athletic play; absolute promises of gentleness are not repeated."
     },
     "sources": [
       "https://catzinc.org/wp-content/uploads/2018/09/cheetoh.pdf",
@@ -1024,6 +1347,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/colorpoint-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "The CFA profile describes an outgoing, social and vocal Siamese-related companion."
+    },
     "sources": [
       "https://cfa.org/breed/colorpoint-shorthair/"
     ],
@@ -1049,11 +1383,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 5,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 3,
+      "vocalisation": 2,
       "grooming": 2,
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Playful",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/cornish-rex/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes acrobatic play and lap affection but says the breed is usually quiet."
     },
     "sources": [
       "https://tica.org/breed/cornish-rex/"
@@ -1064,7 +1409,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Persistent running and jumping support very high activity.",
       "intelligence": "Interactive curiosity supports an above-moderate estimate.",
       "child_friendly": "Social profile can suit respectful children.",
-      "vocalisation": "Moderate communication is an editorial estimate.",
+      "vocalisation": "TICA says Cornish Rex cats are usually quiet; athletic play does not imply a high vocal need.",
       "grooming": "Delicate wavy coat needs gentle care, not vigorous brushing.",
       "shedding_level": "Sparse coat supports a low loose-hair estimate.",
       "dog_friendly": "Profile explicitly includes cat-friendly dogs.",
@@ -1080,11 +1425,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 3,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 2,
-      "grooming": 3,
+      "vocalisation": 3,
+      "grooming": 2,
       "shedding_level": 4,
       "dog_friendly": 4,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Calm",
+      "Playful",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/cymric/",
+      "section": "Personality and activity level",
+      "summary": "The Cymric shares the Manx's even temperament and family attachment; a soft voice may still be conversational."
     },
     "sources": [
       "https://tica.org/breed/cymric/"
@@ -1095,8 +1451,8 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Enjoys play but is not among the most relentlessly active breeds.",
       "intelligence": "Trainability and interactive play support an above-moderate estimate.",
       "child_friendly": "Gentle character can suit respectful children.",
-      "vocalisation": "Low vocal demand is an editorial estimate.",
-      "grooming": "Long double coat requires routine combing.",
+      "vocalisation": "TICA distinguishes a soft voice from conversational frequency; moderate communication is compatible with gentle trilling.",
+      "grooming": "TICA describes mostly weekly combing, with more during shedding seasons; long hair alone does not require a higher burden.",
       "shedding_level": "Dense long coat supports above-moderate seasonal shedding.",
       "dog_friendly": "Social household character can support compatible dogs.",
       "social_needs": "Regular family involvement without exceptional dependence."
@@ -1106,49 +1462,66 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "cypr": {
     "name": "Cyprus",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 4,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
-      "grooming": 2,
-      "shedding_level": 3,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://pubmed.ncbi.nlm.nih.gov/15073370/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://tica.org/phocadownload/all-2019.pdf",
-      "https://www.catbreedexplorer.com/api/breeds?id=cypr"
+      "https://pubmed.ncbi.nlm.nih.gov/15073370/",
+      "https://en.woc.center/articles/standards-apl/"
     ],
     "rationale": {
-      "adaptability": "Natural island-cat background suggests reasonable flexibility.",
-      "affection_level": "Affectionate, loyal API description supports closeness.",
-      "energy_level": "Athletic, playful profile supports high activity.",
-      "intelligence": "Curiosity supports an above-moderate estimate.",
-      "child_friendly": "Gentle companion inference supports respectful children.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Uses a lighter-care estimate for the API Cyprus population entry.",
-      "shedding_level": "Moderate provisional seasonal shedding estimate.",
-      "dog_friendly": "Moderate provisional estimate; dog-specific evidence is limited.",
-      "social_needs": "Social but not assigned exceptional dependence."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Cyprus is a population label, not an interchangeable pedigree with every Aphrodite. Related registry context is used cautiously."
+    "notes": "Archaeology supports an ancient cat–human association on Cyprus, but not a uniform modern breed temperament or an automatic alias to the pedigree Aphrodite. A population-specific profile is still needed."
   },
   "drex": {
     "name": "Devon Rex",
     "ratings": {
       "adaptability": 5,
       "affection_level": 5,
-      "energy_level": 4,
+      "energy_level": 3,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 3,
+      "vocalisation": 2,
       "grooming": 2,
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Mischievous",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/devon-rex/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes close household involvement and playful mischief without much talking."
     },
     "sources": [
       "https://tica.org/breed/devon-rex/"
@@ -1156,10 +1529,10 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
     "rationale": {
       "adaptability": "Social, interactive household manner supports flexibility.",
       "affection_level": "Close involvement with people supports high affection.",
-      "energy_level": "Frequent play supports high activity, below the most extreme athletes.",
+      "energy_level": "TICA explicitly describes a moderately active cat that enjoys toys; close social involvement is not constant high activity.",
       "intelligence": "Puzzle solving and fetching support an above-moderate estimate.",
       "child_friendly": "Social profile can suit respectful children.",
-      "vocalisation": "Moderate conversational tendency is an editorial estimate.",
+      "vocalisation": "TICA says Devons are not particularly talkative, with occasional chirps.",
       "grooming": "Fine wavy coat needs gentle upkeep and ear attention.",
       "shedding_level": "Sparse coat supports a low loose-hair estimate.",
       "dog_friendly": "Profile explicitly includes cat-friendly dogs.",
@@ -1170,102 +1543,122 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "doml": {
     "name": "Domestic Longhair",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 3,
-      "energy_level": 3,
-      "intelligence": 3,
-      "child_friendly": 3,
-      "vocalisation": 3,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 4,
-      "shedding_level": 4,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=doml"
+      "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Mixed ancestry does not establish adaptability; neutral editorial estimate.",
-      "affection_level": "Mixed ancestry does not establish affection; neutral editorial estimate.",
-      "energy_level": "Mixed ancestry does not establish energy; neutral editorial estimate.",
-      "intelligence": "Mixed ancestry does not establish learning; neutral editorial estimate.",
-      "child_friendly": "Mixed ancestry does not establish child compatibility; individual history matters.",
-      "vocalisation": "Mixed ancestry does not establish vocalization; neutral editorial estimate.",
-      "grooming": "Care estimate reflects this entry coat length, not temperament.",
-      "shedding_level": "Loose-hair estimate reflects coat upkeep; actual shedding varies.",
-      "dog_friendly": "Mixed ancestry does not establish dog compatibility; introductions matter.",
-      "social_needs": "Mixed ancestry does not establish social needs; individual history matters."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Cats Protection recommends daily care for long coats; substantial routine maintenance is supported without assuming Persian-level coat density.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "mixed-population",
-    "notes": "Domestic coat-length categories contain many unrelated cats. Behaviour values are neutral placeholders for population uncertainty, not an individual prediction."
+    "notes": "Domestic Longhair is a diverse coat-length population. Daily long-coat care is supported; temperament and shedding amount cannot be inferred from hair length."
   },
   "domm": {
     "name": "Domestic Mediumhair",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 3,
-      "energy_level": 3,
-      "intelligence": 3,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 3,
-      "shedding_level": 3,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=domm"
+      "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Mixed ancestry does not establish adaptability; neutral editorial estimate.",
-      "affection_level": "Mixed ancestry does not establish affection; neutral editorial estimate.",
-      "energy_level": "Mixed ancestry does not establish energy; neutral editorial estimate.",
-      "intelligence": "Mixed ancestry does not establish learning; neutral editorial estimate.",
-      "child_friendly": "Mixed ancestry does not establish child compatibility; individual history matters.",
-      "vocalisation": "Mixed ancestry does not establish vocalization; neutral editorial estimate.",
-      "grooming": "Care estimate reflects this entry coat length, not temperament.",
-      "shedding_level": "Loose-hair estimate reflects coat upkeep; actual shedding varies.",
-      "dog_friendly": "Mixed ancestry does not establish dog compatibility; introductions matter.",
-      "social_needs": "Mixed ancestry does not establish social needs; individual history matters."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "mixed-population",
-    "notes": "Domestic coat-length categories contain many unrelated cats. Behaviour values are neutral placeholders for population uncertainty, not an individual prediction."
+    "notes": "Domestic Mediumhair is a diverse coat-length population. Individual coat density, shedding, grooming effort and temperament vary too much for one numerical profile."
   },
   "doms": {
     "name": "Domestic Shorthair",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 3,
-      "energy_level": 3,
-      "intelligence": 3,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 1,
-      "shedding_level": 3,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": 2,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=doms"
+      "https://www.pdsa.org.uk/pet-help-and-advice/looking-after-your-pet/kittens-cats/domestic-breeds",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Mixed ancestry does not establish adaptability; neutral editorial estimate.",
-      "affection_level": "Mixed ancestry does not establish affection; neutral editorial estimate.",
-      "energy_level": "Mixed ancestry does not establish energy; neutral editorial estimate.",
-      "intelligence": "Mixed ancestry does not establish learning; neutral editorial estimate.",
-      "child_friendly": "Mixed ancestry does not establish child compatibility; individual history matters.",
-      "vocalisation": "Mixed ancestry does not establish vocalization; neutral editorial estimate.",
-      "grooming": "Care estimate reflects this entry coat length, not temperament.",
-      "shedding_level": "Loose-hair estimate reflects coat upkeep; actual shedding varies.",
-      "dog_friendly": "Mixed ancestry does not establish dog compatibility; introductions matter.",
-      "social_needs": "Mixed ancestry does not establish social needs; individual history matters."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Cats Protection supports light weekly short-coat brushing; adjust to the individual.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "mixed-population",
-    "notes": "Domestic coat-length categories contain many unrelated cats. Behaviour values are neutral placeholders for population uncertainty, not an individual prediction."
+    "notes": "Domestic Shorthair is a diverse coat-length population, not a single personality. Short-coat grooming can be estimated; behavioural and shedding variation cannot be represented by a neutral three."
   },
   "dons": {
     "name": "Donskoy",
-    "groomingCare": "skin",
     "ratings": {
       "adaptability": 4,
       "affection_level": 5,
@@ -1277,6 +1670,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/donskoy/",
+      "section": "Personality and activity level",
+      "summary": "The direct Donskoy profile supports social family involvement and play, independently of its coat."
     },
     "sources": [
       "https://tica.org/breed/donskoy/"
@@ -1293,7 +1697,8 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": "Social profile may support compatible dogs.",
       "social_needs": "Frequent social contact is desirable."
     },
-    "evidenceBasis": "breed-profile"
+    "evidenceBasis": "breed-profile",
+    "groomingCare": "skin"
   },
   "lihu": {
     "name": "Dragon Li",
@@ -1308,6 +1713,16 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Active",
+      "Independent",
+      "Curious"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/chinese-dragon-li-cat/",
+      "section": "Personality and activity level",
+      "summary": "The source describes an exploring, hunting-oriented cat with an independent streak; no superlative trainability claim."
     },
     "sources": [
       "https://www.catster.com/cat-breeds/chinese-dragon-li-cat/"
@@ -1328,37 +1743,43 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "dwel": {
     "name": "Dwelf",
-    "groomingCare": "skin",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 4,
       "shedding_level": 1,
-      "dog_friendly": 4,
-      "social_needs": 5
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
-      "https://www.catbreedexplorer.com/api/breeds?id=dwel"
+      "https://www.petmd.com/cat/breeds/sphynx"
     ],
     "rationale": {
-      "adaptability": "Provisional estimate from social domestic parent-breed context.",
-      "affection_level": "Sphynx-related companion background suggests strong affection.",
-      "energy_level": "Playful background suggests high activity; leg length is not an energy score.",
-      "intelligence": "Above-moderate provisional estimate from interactive parent-breed context.",
-      "child_friendly": "Gentle, supervised handling is essential; estimate is provisional.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Hairless skin and ears need regular maintenance.",
-      "shedding_level": "Little coat hair to shed; not an allergen claim.",
-      "dog_friendly": "Provisional social-background estimate for compatible dogs.",
-      "social_needs": "Companion-focused ancestry suggests frequent interaction."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Related hairless-care guidance supports regular skin and ear care; adjust the routine to actual fur coverage with a vet.",
+      "shedding_level": "Very sparse coat supports low hair shedding; this does not imply low allergens or low skin-care needs.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Limited hybrid-specific evidence; estimates use documented Sphynx, Munchkin and American Curl ancestry."
+    "groomingCare": "skin",
+    "notes": "Only near-bare coat care is estimated. Three parent breeds and the API care sentence do not establish behaviour."
   },
   "emau": {
     "name": "Egyptian Mau",
@@ -1373,6 +1794,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 3,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Loyal",
+      "Playful",
+      "Reserved"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/egyptian-mau/",
+      "section": "Personality and activity level",
+      "summary": "The source supports athletic play and attachment to familiar people, with reserve around unfamiliar situations."
     },
     "sources": [
       "https://tica.org/breed/egyptian-mau/"
@@ -1393,37 +1825,43 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "elfc": {
     "name": "Elf Cat",
-    "groomingCare": "skin",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 4,
       "shedding_level": 1,
-      "dog_friendly": 4,
-      "social_needs": 5
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
-      "https://www.catbreedexplorer.com/api/breeds?id=elfc"
+      "https://www.petmd.com/cat/breeds/sphynx"
     ],
     "rationale": {
-      "adaptability": "Provisional estimate from sociable domestic parent breeds.",
-      "affection_level": "Sphynx/Curl companion background suggests high affection.",
-      "energy_level": "Playful parent-breed context supports high activity.",
-      "intelligence": "Curiosity supports an above-moderate provisional estimate.",
-      "child_friendly": "Social-background estimate for gentle children.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Regular skin and ear care remain necessary without a full coat.",
-      "shedding_level": "Little coat hair to shed; not an allergen claim.",
-      "dog_friendly": "Provisional sociability estimate for compatible dogs.",
-      "social_needs": "Companion-focused parent-breed context suggests substantial company needs."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Related hairless-care guidance supports regular skin and ear care; adjust the routine to actual fur coverage with a vet.",
+      "shedding_level": "Very sparse coat supports low hair shedding; this does not imply low allergens or low skin-care needs.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Hybrid-specific evidence is limited; documented Sphynx and American Curl ancestry supplies context."
+    "groomingCare": "skin",
+    "notes": "Only near-bare coat care is estimated. Curled ears and Sphynx ancestry do not establish personality."
   },
   "ebur": {
     "name": "European Burmese",
@@ -1438,6 +1876,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/european-burmese/",
+      "section": "Personality and activity level",
+      "summary": "CFA describes a closely involved, playful family companion; the European form has its own direct profile."
     },
     "sources": [
       "https://cfa.org/breed/european-burmese/"
@@ -1462,7 +1911,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "adaptability": 4,
       "affection_level": 3,
       "energy_level": 3,
-      "intelligence": 3,
+      "intelligence": 4,
       "child_friendly": 4,
       "vocalisation": 2,
       "grooming": 1,
@@ -1470,15 +1919,25 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Curious",
+      "Playful",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://fifeweb.org/wp-content/uploads/2026/05/Breed-Profile-EUR.pdf",
+      "section": "Temperament",
+      "summary": "FIFe's breed council profile describes a balanced, curious cat suited to an active family, with moderate activity."
+    },
     "sources": [
-      "https://www.gccfcats.org/getting-a-cat/unrecognised-breeds/",
-      "https://www.catbreedexplorer.com/api/breeds?id=eshr"
+      "https://fifeweb.org/wp-content/uploads/2026/05/Breed-Profile-EUR.pdf"
     ],
     "rationale": {
-      "adaptability": "Adaptable API profile supports above-moderate flexibility.",
+      "adaptability": "FIFe describes a balanced, adaptable cat able to handle an active family environment.",
       "affection_level": "Friendly companion profile without exceptional dependence.",
-      "energy_level": "Calm and active descriptions balance to a moderate estimate.",
-      "intelligence": "Moderate estimate avoids implying a measured cognitive rank.",
+      "energy_level": "FIFe explicitly describes medium activity with ordinary hunting-style play.",
+      "intelligence": "FIFe's breed council profile directly describes intelligence, curiosity and mental agility; an above-moderate editorial estimate is now supported.",
       "child_friendly": "Sweet temperament can suit respectful children.",
       "vocalisation": "Lower vocal demand is a provisional estimate.",
       "grooming": "Short dense coat needs simple routine grooming.",
@@ -1486,41 +1945,53 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": "Moderate provisional estimate; individual introductions matter.",
       "social_needs": "Regular company balanced with independent activity."
     },
-    "evidenceBasis": "limited",
-    "notes": "Behavioural estimates use the API profile; GCCF recognition information supplies breed context rather than numerical trait evidence."
+    "evidenceBasis": "breed-profile",
+    "notes": "Reviewed against the FIFe breed council profile; this pedigree European is distinct from a generic domestic shorthair population."
   },
   "exlh": {
     "name": "Exotic Longhair",
     "ratings": {
       "adaptability": 4,
-      "affection_level": 4,
+      "affection_level": 5,
       "energy_level": 2,
       "intelligence": 3,
       "child_friendly": 4,
       "vocalisation": 1,
       "grooming": 5,
       "shedding_level": 5,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "dog_friendly": 4,
+      "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Quiet",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/exotic/",
+      "section": "Personality and activity level",
+      "summary": "CFA's Exotic personality description also informs the longhair; coat length provides no evidence of different affection or sociability."
     },
     "sources": [
+      "https://cfa.org/breed/exotic/",
       "https://tica.org/breed/exotic-shorthair/",
       "https://tica.org/breed/persian/"
     ],
     "rationale": {
       "adaptability": "Persian-group companion context supports predictable-home adjustment.",
-      "affection_level": "Sweet companion character supports above-moderate affection.",
+      "affection_level": "Use the same Exotic companion estimate as the shorthaired form; CFA's shared profile supplies no reason for less affection.",
       "energy_level": "Quiet, settled Persian-group style suggests lower activity.",
       "intelligence": "Moderate editorial estimate without comparative cognitive evidence.",
-      "child_friendly": "Gentle temperament can suit respectful children.",
+      "child_friendly": "Use the shared Exotic estimate for respectfully handled children; coat length does not establish compatibility.",
       "vocalisation": "Quiet Persian-group communication supports low vocalization.",
       "grooming": "Long dense Persian-type coat needs intensive combing.",
       "shedding_level": "Dense long coat supports a high seasonal loose-hair estimate.",
-      "dog_friendly": "Moderate estimate for calm, carefully introduced dogs.",
-      "social_needs": "Enjoys company without the highest interaction intensity."
+      "dog_friendly": "CFA describes carefully introduced coexistence with dogs for Exotics; use the same estimate as the shorthaired form.",
+      "social_needs": "Use the same Exotic companionship estimate as the shorthaired form; a long coat does not establish lower social needs."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Longhaired Exotic/Persian-group estimate; coat-care values differ from the shorthaired Exotic."
+    "notes": "Longhair Exotic classification verified in CFA. Behaviour agrees with the shorthaired Exotic; dense long-coat care remains distinct."
   },
   "esho": {
     "name": "Exotic Shorthair",
@@ -1535,6 +2006,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 4,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Quiet",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/exotic-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a gentle, quiet companion with some playfulness and close family contact."
     },
     "sources": [
       "https://tica.org/breed/exotic-shorthair/"
@@ -1567,6 +2049,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Playful",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/foldex-cat-exotic-fold/",
+      "section": "Personality and activity level",
+      "summary": "The profile supports gentle interaction and ordinary play; this is not a promise of tolerance for rough handling."
+    },
     "sources": [
       "https://www.catster.com/cat-breeds/foldex-cat-exotic-fold/"
     ],
@@ -1587,35 +2080,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "gene": {
     "name": "Genetta",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 4,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 2,
-      "shedding_level": 2,
-      "dog_friendly": 3,
-      "social_needs": 4
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.munchkincatguide.com/the-munchkin-cat-bengal-mix-the-genetta/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=gene",
-      "https://en.wikipedia.org/wiki/Munchkin_cat"
+      "https://www.munchkincatguide.com/the-munchkin-cat-bengal-mix-the-genetta/"
     ],
     "rationale": {
-      "adaptability": "Friendly API profile suggests reasonable flexibility.",
-      "affection_level": "Affectionate API description supports closeness.",
-      "energy_level": "Active, playful profile supports high activity.",
-      "intelligence": "Intelligent, curious profile supports an above-moderate estimate.",
-      "child_friendly": "Moderate provisional estimate; direct child-specific evidence is limited.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Short spotted coat suggests light routine grooming.",
-      "shedding_level": "Lower provisional loose-hair estimate.",
-      "dog_friendly": "Moderate provisional estimate; introductions and individual history matter.",
-      "social_needs": "Friendly interactive background suggests frequent company."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Experimental Munchkin/spotted-breed cross; behavioural values are provisional, not a validated Genetta temperament study."
+    "notes": "Available accounts describe an experimental project, but an independent standard and substantive care/behaviour evidence could not be corroborated. Parent-breed traits alone are insufficient."
   },
   "germ": {
     "name": "German Rex",
@@ -1630,6 +2128,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Active",
+      "Playful",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.petmd.com/cat/breeds/c_ct_german_rex_cat",
+      "section": "Personality and activity level",
+      "summary": "PetMD describes an active, friendly cat that can learn games and also seeks quiet petting."
     },
     "sources": [
       "https://www.petmd.com/cat/breeds/c_ct_german_rex_cat"
@@ -1662,6 +2171,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/havana/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes close attention to people, investigation and interactive games."
+    },
     "sources": [
       "https://tica.org/breed/havana/"
     ],
@@ -1692,6 +2212,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Confident",
+      "Playful",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/highlander/",
+      "section": "Personality and activity level",
+      "summary": "TICA distinguishes physically energetic chase games from a relatively quiet voice."
     },
     "sources": [
       "https://tica.org/breed/highlander/"
@@ -1724,6 +2255,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Calm",
+      "Gentle",
+      "Quiet",
+      "Affectionate"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/himalayan/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes an easygoing, sofa-sharing cat that prefers a calm environment but can enjoy toys."
+    },
     "sources": [
       "https://tica.org/breed/himalayan/"
     ],
@@ -1755,6 +2297,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 5,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Active",
+      "Intelligent",
+      "Playful",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/japanese-bobtail/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes exploration, learning and a wide range of songlike chirps and meows."
+    },
     "sources": [
       "https://tica.org/breed/japanese-bobtail/"
     ],
@@ -1780,13 +2333,25 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 5,
       "intelligence": 5,
       "child_friendly": 4,
-      "vocalisation": 5,
+      "vocalisation": 4,
       "grooming": 2,
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Active",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/balinese/",
+      "section": "Personality and activity level",
+      "summary": "CFA's Balinese/Javanese account supports playful close involvement; the colour division is not a separate personality."
+    },
     "sources": [
+      "https://cfa.org/breed/balinese/",
       "https://tica.org/breed/balinese/"
     ],
     "rationale": {
@@ -1795,7 +2360,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Athletic group profile supports very high activity.",
       "intelligence": "Inquisitive group character supports a high learning estimate.",
       "child_friendly": "Social group character can suit respectful children.",
-      "vocalisation": "Talkative group character supports high vocalization.",
+      "vocalisation": "Use the related Balinese estimate: conversational but softer and less insistent than the Siamese.",
       "grooming": "Fine semi-long coat needs light routine combing.",
       "shedding_level": "Lower loose-hair estimate for fine semi-long coat.",
       "dog_friendly": "Social group character can support compatible dogs.",
@@ -1807,35 +2372,41 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "kana": {
     "name": "Kanaani",
     "ratings": {
-      "adaptability": 2,
-      "affection_level": 3,
-      "energy_level": 5,
-      "intelligence": 4,
-      "child_friendly": 2,
-      "vocalisation": 3,
-      "grooming": 1,
-      "shedding_level": 2,
-      "dog_friendly": 2,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": 2,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://wcf.de/pdf-en/breed/KAN_en_2010-01-01.pdf",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://twko.org/index.php/the-kanaani-cats/",
-      "https://www.catbreedexplorer.com/api/breeds?id=kana"
+      "https://wcf.de/pdf-en/breed/KAN_en_2010-01-01.pdf",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Independent, athletic profile suggests a need for gradual adjustment.",
-      "affection_level": "Bonding can coexist with an independent style.",
-      "energy_level": "Athletic movement and active profile support very high activity.",
-      "intelligence": "Curiosity supports an above-moderate provisional estimate.",
-      "child_friendly": "Conservative estimate where young-child compatibility evidence is sparse.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Short coat needs simple routine grooming.",
-      "shedding_level": "Lower loose-hair estimate for its close coat.",
-      "dog_friendly": "Conservative estimate where dog-specific evidence is sparse.",
-      "social_needs": "Regular interaction balanced with independence."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "A documented short coat plus general short-coat care guidance supports light routine grooming; other traits remain unavailable.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Direct behavioural evidence is limited; low compatibility values express uncertainty, not a claim that every individual is aggressive."
+    "notes": "WCF documents conformation and a short coat. Its body type and ancestry do not establish behaviour, child/dog compatibility or shedding amount."
   },
   "khao": {
     "name": "Khao Manee",
@@ -1850,6 +2421,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/khao-manee/",
+      "section": "Personality and activity level",
+      "summary": "CFA supports an inquisitive, socially involved cat; calm and relaxed do not represent its usual activity level."
     },
     "sources": [
       "https://cfa.org/breed/khao-manee/"
@@ -1882,6 +2464,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sensitive",
+      "Playful",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/korat/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes close bonds, awareness of household changes and learning; vocal behaviour varies between individuals."
+    },
     "sources": [
       "https://tica.org/breed/korat/"
     ],
@@ -1912,6 +2505,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 5,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Adaptable",
+      "Playful",
+      "Gentle",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/kurilian-bobtail/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes moderate activity, social adaptability and learning, without requiring an independent or solitary label."
     },
     "sources": [
       "https://tica.org/breed/kurilian-bobtail/"
@@ -1944,6 +2548,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Playful",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/laperm/",
+      "section": "Personality and activity level",
+      "summary": "TICA emphasises lap contact, gentle play and a voice that is not generally frequent."
+    },
     "sources": [
       "https://tica.org/breed/laperm/"
     ],
@@ -1975,6 +2590,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Playful",
+      "Reserved"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/lykoi/",
+      "section": "Personality and activity level",
+      "summary": "The profile supports investigation and hunting games with an initially cautious approach to unfamiliar people."
+    },
     "sources": [
       "https://tica.org/breed/lykoi/"
     ],
@@ -2001,14 +2627,25 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": 4,
       "child_friendly": 5,
       "vocalisation": 2,
-      "grooming": 4,
+      "grooming": 3,
       "shedding_level": 4,
       "dog_friendly": 5,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Gentle",
+      "Affectionate",
+      "Playful",
+      "Independent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/maine-coon/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a friendly household companion that enjoys company without demanding constant attention."
+    },
     "sources": [
-      "https://cfa.org/breed/maine-coon-cat/",
-      "https://tica.org/breed/maine-coon/"
+      "https://tica.org/breed/maine-coon/",
+      "https://cfa.org/breed/maine-coon/"
     ],
     "rationale": {
       "adaptability": "Sociable with family members and often comfortable with other household animals.",
@@ -2017,7 +2654,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Problem-solving play and curiosity support an above-moderate estimate.",
       "child_friendly": "Generally described as getting along well with children, with supervised handling.",
       "vocalisation": "Often chirps or trills, but is not usually an insistent talker.",
-      "grooming": "Long coat requires regular combing; maintenance varies with coat texture.",
+      "grooming": "TICA describes weekly care for silky coats and daily combing for cottony coats; moderate overall effort represents this variation better than a uniformly high burden.",
       "shedding_level": "A substantial coat supports an above-moderate shedding estimate.",
       "dog_friendly": "Often suits households with compatible dogs and careful introductions.",
       "social_needs": "Values family interaction while retaining a degree of independence."
@@ -2027,35 +2664,41 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "mala": {
     "name": "Malayan",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 4,
-      "grooming": 1,
-      "shedding_level": 2,
-      "dog_friendly": 4,
-      "social_needs": 5
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.zoetispetcare.com/breed-explorer/breed/asian",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/",
-      "https://www.catbreedexplorer.com/api/breeds?id=mala"
+      "https://www.zoetispetcare.com/breed-explorer/breed/asian",
+      "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/asian/"
     ],
     "rationale": {
-      "adaptability": "Provisional estimate from social Burmese/Asian companion context.",
-      "affection_level": "People-oriented API description supports high affection.",
-      "energy_level": "Playful, interactive profile supports high activity.",
-      "intelligence": "Intelligent companion context supports an above-moderate estimate.",
-      "child_friendly": "Social context can suit respectful children.",
-      "vocalisation": "API explicitly describes a vocal character.",
-      "grooming": "Short satin-like coat suggests minimal combing.",
-      "shedding_level": "Lower loose-hair estimate for its short coat.",
-      "dog_friendly": "Social background may support compatible dogs.",
-      "social_needs": "People-oriented interactive profile supports high company needs."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Uses Burmese/Asian-group context for the API Malayan variety rather than claiming a separately measured personality."
+    "notes": "This label has inconsistent historical and modern usage. A veterinary breed guide uses it as an Asian nickname; a separate profile needs the API identity clarified before assigning facts or temperament."
   },
   "manx": {
     "name": "Manx",
@@ -2065,11 +2708,22 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": 3,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 2,
+      "vocalisation": 3,
       "grooming": 2,
       "shedding_level": 4,
       "dog_friendly": 4,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Calm",
+      "Playful",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/manx/",
+      "section": "Personality and activity level",
+      "summary": "The TICA Manx/Cymric group account supports calm family attachment and play; the short coat does not create a different personality."
     },
     "sources": [
       "https://tica.org/breed/manx/"
@@ -2080,7 +2734,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Playful bursts balanced with mature calmness.",
       "intelligence": "Fetching and puzzle learning support an above-moderate estimate.",
       "child_friendly": "Gentle companion style can suit respectful children.",
-      "vocalisation": "Lower vocal demand is an editorial estimate.",
+      "vocalisation": "The shared Manx/Cymric profile describes soft voices that can still be conversational; frequency is not the same as volume.",
       "grooming": "Dense short coat needs routine brushing.",
       "shedding_level": "Dense double coat supports above-moderate seasonal loose hair.",
       "dog_friendly": "Social household character can support compatible dogs.",
@@ -2090,37 +2744,43 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "mins": {
     "name": "Minskin",
-    "groomingCare": "skin",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 3,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 3,
       "shedding_level": 1,
-      "dog_friendly": 4,
-      "social_needs": 4
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://tica.org/phocadownload/2007-annual.pdf",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.wrinklebottom.com/elf-bambino-dwelf-minskin-hairless-hybrids/",
-      "https://www.catbreedexplorer.com/api/breeds?id=mins"
+      "https://tica.org/phocadownload/2007-annual.pdf",
+      "https://www.petmd.com/cat/breeds/sphynx"
     ],
     "rationale": {
-      "adaptability": "Friendly companion background suggests reasonable flexibility.",
-      "affection_level": "Sweet, affectionate API description supports high closeness.",
-      "energy_level": "Playful profile supports high activity.",
-      "intelligence": "Intelligent API description supports an above-moderate estimate.",
-      "child_friendly": "Friendly profile may suit gently supervised children.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is limited.",
-      "grooming": "Sparse body coat still needs regular skin and ear attention.",
-      "shedding_level": "Sparse coat supports low coat-hair shedding.",
-      "dog_friendly": "Social-background estimate for compatible dogs.",
-      "social_needs": "Affectionate companion background suggests frequent company."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Related hairless-care guidance supports regular skin and ear care; adjust the routine to actual fur coverage with a vet.",
+      "shedding_level": "Very sparse coat supports low hair shedding; this does not imply low allergens or low skin-care needs.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Hybrid-specific evidence is limited; parent-breed context and the API profile inform provisional scores."
+    "groomingCare": "skin",
+    "notes": "The historical standard documents sparse fur coverage. Coat/skin care is a related-care estimate; a desired standard temperament is insufficient for numerical personality or compatibility ratings."
   },
   "minu": {
     "name": "Minuet",
@@ -2135,6 +2795,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Curious",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/minuet/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a people-oriented companion with gentle manners and self-starting play."
     },
     "sources": [
       "https://tica.org/breed/minuet/"
@@ -2167,6 +2838,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Curious",
+      "Playful",
+      "Affectionate"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/munchkin/",
+      "section": "Personality and activity level",
+      "summary": "The direct Munchkin profile supports exploration, outgoing interaction and play."
+    },
     "sources": [
       "https://tica.org/breed/munchkin/"
     ],
@@ -2193,10 +2875,21 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": 3,
       "child_friendly": 4,
       "vocalisation": 2,
-      "grooming": 5,
-      "shedding_level": 4,
+      "grooming": 4,
+      "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Curious",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/minuet/",
+      "section": "Personality and activity level",
+      "summary": "Napoleon Longhair is the older longhair Minuet label; coat maintenance differs, not the supported temperament."
     },
     "sources": [
       "https://tica.org/breed/minuet/"
@@ -2208,13 +2901,13 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Uses the moderate Minuet learning estimate.",
       "child_friendly": "Uses the gentle Minuet estimate for respectful children.",
       "vocalisation": "Uses the lower Minuet vocal estimate.",
-      "grooming": "Explicit longhaired Persian-related variety needs frequent thorough combing.",
-      "shedding_level": "Long coat supports above-moderate loose hair.",
+      "grooming": "TICA recommends regular daily or alternate-day combing for the Minuet coat, which is less massive than a Persian's; the explicit longhair needs substantial care.",
+      "shedding_level": "Use the moderate Minuet estimate; a longer coat alone does not establish heavier shedding.",
       "dog_friendly": "Uses the Minuet companion estimate for compatible dogs.",
       "social_needs": "Uses the people-oriented Minuet company estimate."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Napoleon is the former Minuet name; this API entry specifically represents the longhaired variety."
+    "notes": "Former Minuet name, explicit longhair variety. Behaviour uses the same Minuet assessment; substantial coat care does not imply heavier shedding automatically."
   },
   "nebe": {
     "name": "Nebelung",
@@ -2229,6 +2922,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 3,
       "social_needs": 2
+    },
+    "temperamentLabels": [
+      "Reserved",
+      "Quiet",
+      "Loyal",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/nebelung/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes strong familiar bonds, dislike of change and reserve with visitors, alongside retrieving and climbing play."
     },
     "sources": [
       "https://tica.org/breed/nebelung/"
@@ -2261,6 +2965,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful",
+      "Adaptable"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/norwegian-forest/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes mild manners, environmental adaptability and interactive play rather than extreme vocal demand."
+    },
     "sources": [
       "https://tica.org/breed/norwegian-forest/"
     ],
@@ -2292,6 +3007,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 5,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Curious",
+      "Sociable",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/ocicat/",
+      "section": "Personality and activity level",
+      "summary": "The profile describes an outgoing, social learner; the spotted coat does not establish wild ancestry."
+    },
     "sources": [
       "https://tica.org/breed/ocicat/"
     ],
@@ -2312,35 +3038,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "ojos": {
     "name": "Ojos Azules",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 4,
-      "energy_level": 3,
-      "intelligence": 3,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 2,
-      "shedding_level": 3,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://tica.org/phocadownload/2001-semi_2001.pdf",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=ojos",
       "https://tica.org/phocadownload/2001-semi_2001.pdf"
     ],
     "rationale": {
-      "adaptability": "Moderate provisional estimate; direct behavioural evidence is sparse.",
-      "affection_level": "Friendly, affectionate API description supports closeness.",
-      "energy_level": "Moderate provisional activity estimate.",
-      "intelligence": "Moderate estimate avoids claiming a measured cognitive rank.",
-      "child_friendly": "Moderate provisional estimate; individual history matters.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is sparse.",
-      "grooming": "Routine grooming estimate across short and longer coats.",
-      "shedding_level": "Moderate provisional shedding estimate.",
-      "dog_friendly": "Moderate provisional estimate; introductions remain important.",
-      "social_needs": "Social profile suggests regular but not necessarily constant company."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Historical breed-standard context and API descriptions are sparse; eye colour does not establish temperament."
+    "notes": "Historical TICA documentation supports appearance and classification, but current population and care evidence is too sparse for a complete profile. Do not infer temperament from blue eyes or claim current recognition from an old standard."
   },
   "ori1": {
     "name": "Oriental Longhair",
@@ -2355,6 +3086,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 5,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/oriental-longhair/",
+      "section": "Personality and activity level",
+      "summary": "TICA's Siamese-group description supports high social and vocal involvement; coat length does not establish a separate temperament."
     },
     "sources": [
       "https://tica.org/breed/oriental-longhair/"
@@ -2387,6 +3129,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 5,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/oriental-shorthair/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes high social and vocal involvement and a strong interest in household activity."
+    },
     "sources": [
       "https://tica.org/breed/oriental-shorthair/"
     ],
@@ -2407,34 +3160,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "pant": {
     "name": "Pantherette",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 4,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 1,
-      "shedding_level": 2,
-      "dog_friendly": 3,
-      "social_needs": 4
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.catbreedexplorer.com/api/breeds?id=pant",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://www.catbreedexplorer.com/api/breeds?id=pant"
     ],
     "rationale": {
-      "adaptability": "Moderate provisional estimate for an experimental companion type.",
-      "affection_level": "Affection estimate is provisional; direct breed evidence is sparse.",
-      "energy_level": "Athletic experimental profile suggests high activity.",
-      "intelligence": "Curiosity estimate is provisional rather than measured.",
-      "child_friendly": "Moderate provisional estimate; direct child-specific evidence is sparse.",
-      "vocalisation": "Moderate provisional estimate; direct vocal evidence is sparse.",
-      "grooming": "API specifically describes minimal coat grooming.",
-      "shedding_level": "Lower provisional coat-hair estimate.",
-      "dog_friendly": "Moderate provisional estimate; individual introductions matter.",
-      "social_needs": "Regular interaction estimate is provisional."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Pantherette has sparse independent documentation. Values are explicitly provisional interpretations of the API entry, not inferred from black colour alone."
+    "notes": "The API record contains shifted CSV values, no history and a grooming phrase in the temperament field. Independent contemporary lineage and behaviour evidence is insufficient."
   },
   "pers": {
     "name": "Persian",
@@ -2449,6 +3208,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 5,
       "dog_friendly": 3,
       "social_needs": 3
+    },
+    "temperamentLabels": [
+      "Calm",
+      "Quiet",
+      "Gentle",
+      "Affectionate"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/persian/",
+      "section": "Personality and activity level",
+      "summary": "CFA and TICA support quiet affection and low activity, with short play invitations still appropriate."
     },
     "sources": [
       "https://cfa.org/breed/persian/",
@@ -2470,7 +3240,6 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "pete": {
     "name": "Peterbald",
-    "groomingCare": "skin",
     "ratings": {
       "adaptability": 4,
       "affection_level": 5,
@@ -2482,6 +3251,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Sociable",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/peterbald/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes close household participation and often vocal communication; skin care depends on the actual coat type."
     },
     "sources": [
       "https://tica.org/breed/peterbald/"
@@ -2498,7 +3278,8 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": "Social profile includes other household animals.",
       "social_needs": "Strong company-seeking character supports high social needs."
     },
-    "evidenceBasis": "breed-profile"
+    "evidenceBasis": "breed-profile",
+    "groomingCare": "skin"
   },
   "pixi": {
     "name": "Pixie-bob",
@@ -2513,6 +3294,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Loyal",
+      "Playful",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/pixiebob/",
+      "section": "Personality and activity level",
+      "summary": "The profile supports family attachment and interactive play with a balanced temperament."
     },
     "sources": [
       "https://tica.org/breed/pixiebob/"
@@ -2534,68 +3326,80 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "poly": {
     "name": "Polydactyl",
     "ratings": {
-      "adaptability": 3,
-      "affection_level": 3,
-      "energy_level": 3,
-      "intelligence": 3,
-      "child_friendly": 3,
-      "vocalisation": 3,
-      "grooming": 3,
-      "shedding_level": 3,
-      "dog_friendly": 3,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://www.hemingwayhome.com/our-cats",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=poly",
-      "https://tica.org/breed/pixiebob/"
+      "https://www.hemingwayhome.com/our-cats",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Toe count does not predict adaptability; neutral editorial estimate.",
-      "affection_level": "Toe count does not predict affection; neutral editorial estimate.",
-      "energy_level": "Toe count does not predict energy; neutral editorial estimate.",
-      "intelligence": "Toe count does not predict learning; neutral editorial estimate.",
-      "child_friendly": "Toe count does not predict child compatibility; neutral editorial estimate.",
-      "vocalisation": "Toe count does not predict vocalization; neutral editorial estimate.",
-      "grooming": "Coat type varies; middle estimate includes routine nail inspection.",
-      "shedding_level": "Coat type varies; neutral shedding estimate.",
-      "dog_friendly": "Toe count does not predict dog compatibility; neutral editorial estimate.",
-      "social_needs": "Toe count does not predict social needs; neutral editorial estimate."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "mixed-population",
-    "notes": "Polydactyly is a physical trait across breeds. Middle values represent uncertainty, not a claim that all extra-toed cats share a personality."
+    "notes": "Extra toes do not establish coat, personality, intelligence or compatibility. Extra-claw checks belong in care tips, not a fabricated overall grooming score."
   },
   "raas": {
     "name": "Raas",
     "ratings": {
-      "adaptability": 2,
-      "affection_level": 3,
-      "energy_level": 4,
-      "intelligence": 3,
-      "child_friendly": 2,
-      "vocalisation": 2,
-      "grooming": 1,
-      "shedding_level": 3,
-      "dog_friendly": 2,
-      "social_needs": 2
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": 2,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://link.springer.com/article/10.1007/s00294-026-01340-5",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
-      "https://www.catbreedexplorer.com/api/breeds?id=raas",
-      "https://en.wikipedia.org/wiki/Raas_cat"
+      "https://link.springer.com/article/10.1007/s00294-026-01340-5",
+      "https://www.cats.org.uk/help-and-advice/caring-for-your-cat/grooming"
     ],
     "rationale": {
-      "adaptability": "Independent island-population profile suggests gradual adjustment.",
-      "affection_level": "Moderate provisional affection estimate.",
-      "energy_level": "Athletic, active API profile supports high activity.",
-      "intelligence": "Moderate provisional estimate without comparative learning evidence.",
-      "child_friendly": "Conservative estimate where child-specific evidence is limited.",
-      "vocalisation": "Lower vocal demand is a provisional estimate.",
-      "grooming": "Short coat suggests simple routine grooming.",
-      "shedding_level": "Moderate provisional seasonal shedding estimate.",
-      "dog_friendly": "Conservative estimate where dog-specific evidence is limited.",
-      "social_needs": "Independent profile suggests lower need for constant company."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "A documented short coat plus general short-coat care guidance supports light routine grooming; other traits remain unavailable.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Limited direct behavioural evidence; estimates describe the API profile and should not override an individual cat assessment."
+    "notes": "The Busok genetic study documents population and coat, not personality. Island origin does not establish independence, energy or household compatibility."
   },
   "raga": {
     "name": "Ragamuffin",
@@ -2606,10 +3410,21 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": 3,
       "child_friendly": 5,
       "vocalisation": 2,
-      "grooming": 3,
+      "grooming": 2,
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Calm",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/ragamuffin/",
+      "section": "Personality and activity level",
+      "summary": "CFA describes a patient, people-oriented companion that can enjoy games despite generally low activity."
     },
     "sources": [
       "https://cfa.org/breed/ragamuffin/"
@@ -2621,7 +3436,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Moderate estimate balances responsiveness with no measured cognitive rank.",
       "child_friendly": "Agreeable family profile supports a high estimate for respectful children.",
       "vocalisation": "Lower vocal demand is an editorial estimate.",
-      "grooming": "Plush semi-long coat needs routine combing.",
+      "grooming": "CFA recommends combing once or twice a week and says daily grooming is unnecessary because the coat resists tangles.",
       "shedding_level": "Moderate seasonal loose hair is an editorial estimate.",
       "dog_friendly": "Gentle companion character may support compatible dogs.",
       "social_needs": "Devoted people orientation suggests frequent company."
@@ -2637,10 +3452,21 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": 4,
       "child_friendly": 5,
       "vocalisation": 2,
-      "grooming": 3,
+      "grooming": 2,
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Calm",
+      "Quiet"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/ragdoll/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a laidback, quiet companion while acknowledging that individuals and younger cats still play."
     },
     "sources": [
       "https://cfa.org/breed/ragdoll/",
@@ -2653,7 +3479,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Trainability and learning games support an above-moderate estimate.",
       "child_friendly": "Gentle temperament can suit respectful children, with supervised introductions.",
       "vocalisation": "Generally quiet, with occasional soft calls.",
-      "grooming": "Long coat needs routine combing, typically weekly or more.",
+      "grooming": "TICA describes little routine grooming with weekly combing and extra checks during shedding; a long coat alone does not imply intensive care.",
       "shedding_level": "Seasonal shedding merits a moderate estimate despite a lighter undercoat.",
       "dog_friendly": "Gentle introductions can support coexistence with cat-friendly dogs.",
       "social_needs": "Usually stays near people and seeks regular company."
@@ -2673,6 +3499,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 3,
       "social_needs": 2
+    },
+    "temperamentLabels": [
+      "Reserved",
+      "Quiet",
+      "Loyal",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/russian-blue/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports selective familiar bonds, quiet surroundings and playful interaction; individuals may also converse."
     },
     "sources": [
       "https://tica.org/breed/russian-blue/",
@@ -2696,34 +3533,40 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "safa": {
     "name": "Safari",
     "ratings": {
-      "adaptability": 2,
-      "affection_level": 3,
-      "energy_level": 5,
-      "intelligence": 4,
-      "child_friendly": 1,
-      "vocalisation": 3,
-      "grooming": 2,
-      "shedding_level": 3,
-      "dog_friendly": 2,
-      "social_needs": 3
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
+      "grooming": null,
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://catvets.com/resource/2025-hybrid-cats-position-statement/",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://catvets.com/resource/2025-hybrid-cats-position-statement/"
     ],
     "rationale": {
-      "adaptability": "Generation-sensitive hybrid needs suggest low household flexibility.",
-      "affection_level": "Domestic-style affection is uncertain across generations.",
-      "energy_level": "Wild-hybrid activity needs support a high estimate.",
-      "intelligence": "Exploration supports an above-moderate provisional learning estimate.",
-      "child_friendly": "Low household-suitability estimate given uncertain early-generation behaviour.",
-      "vocalisation": "Moderate provisional communication estimate.",
-      "grooming": "Short coat suggests light brushing; other care demands are separate.",
-      "shedding_level": "Moderate provisional loose-hair estimate.",
-      "dog_friendly": "Low compatibility estimate; individual introductions are not a guarantee.",
-      "social_needs": "Moderate provisional companionship estimate."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "limited",
-    "notes": "Safari hybrid generation is unknown in the API; scores are cautious editorial estimates, not an endorsement as an ordinary household pet."
+    "notes": "The Geoffroy’s cat hybrid label does not establish generation, pedigree or suitability for ordinary pet interactions. Specialist evidence is required before publishing bonding activities."
   },
   "sava": {
     "name": "Savannah",
@@ -2738,6 +3581,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Confident",
+      "Interactive"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/savannah/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports active exploration and human interaction in the established breed; no guarantee follows for an unknown early-generation hybrid."
     },
     "sources": [
       "https://tica.org/breed/savannah/"
@@ -2771,6 +3625,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Gentle",
+      "Playful",
+      "Calm"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/scottish-fold/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a less active family companion; reduced activity or reluctance to jump must not be assumed to be harmless temperament."
+    },
     "sources": [
       "https://tica.org/breed/scottish-fold/"
     ],
@@ -2802,6 +3667,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Calm",
+      "Gentle",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/selkirk-rex/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a relaxed, patient cat with some playful moments, not a persistently high-energy breed."
+    },
     "sources": [
       "https://tica.org/breed/selkirk-rex/"
     ],
@@ -2832,6 +3708,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Confident",
+      "Curious",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/serengeti/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes energetic exploration and willingness to converse; the serval-like appearance does not determine ancestry."
     },
     "sources": [
       "https://tica.org/breed/serengeti/"
@@ -2865,6 +3752,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/siamese/",
+      "section": "Personality and activity level",
+      "summary": "CFA and TICA support highly involved, energetic and insistent vocal companionship."
+    },
     "sources": [
       "https://cfa.org/breed/siamese/",
       "https://tica.org/breed/siamese/"
@@ -2897,6 +3795,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 3
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Affectionate",
+      "Curious",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/siberian/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports flexible family interaction and athletic play; a thick coat alone does not establish very high grooming effort."
+    },
     "sources": [
       "https://tica.org/breed/siberian/"
     ],
@@ -2927,6 +3836,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/singapura/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a busy, exploring and highly interactive cat that remains playful as an adult."
     },
     "sources": [
       "https://tica.org/breed/singapura/"
@@ -2959,7 +3879,19 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://cfa.org/breed/singapura/",
+      "section": "Personality and activity level",
+      "summary": "CFA recognises sepia agouti in Singapuras already; the API's tabby label does not establish a separate personality."
+    },
     "sources": [
+      "https://cfa.org/breed/singapura/",
       "https://tica.org/breed/singapura/",
       "https://www.catbreedexplorer.com/api/breeds?id=sinp"
     ],
@@ -2981,35 +3913,41 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "skoo": {
     "name": "Skookum",
     "ratings": {
-      "adaptability": 4,
-      "affection_level": 5,
-      "energy_level": 4,
-      "intelligence": 4,
-      "child_friendly": 4,
-      "vocalisation": 2,
+      "adaptability": null,
+      "affection_level": null,
+      "energy_level": null,
+      "intelligence": null,
+      "child_friendly": null,
+      "vocalisation": null,
       "grooming": 2,
-      "shedding_level": 2,
-      "dog_friendly": 4,
-      "social_needs": 4
+      "shedding_level": null,
+      "dog_friendly": null,
+      "social_needs": null
+    },
+    "temperamentLabels": [],
+    "temperamentEvidence": {
+      "source": "https://catzinc.org/wp-content/uploads/2018/09/skookum.pdf",
+      "section": "Evidence limit",
+      "summary": "Temperament labels withheld; see the entry review notes for the evidence limit."
     },
     "sources": [
       "https://catzinc.org/wp-content/uploads/2018/09/skookum.pdf",
-      "https://www.omlet.us/breeds/cats/skookum/"
+      "https://tica.org/breed/laperm/"
     ],
     "rationale": {
-      "adaptability": "Easygoing companion background suggests reasonable flexibility.",
-      "affection_level": "Affectionate Munchkin/LaPerm background supports high closeness.",
-      "energy_level": "Playful profile supports high activity.",
-      "intelligence": "Curiosity supports an above-moderate estimate.",
-      "child_friendly": "Gentle companion context can suit respectfully supervised children.",
-      "vocalisation": "Lower vocal demand is an editorial related-breed estimate.",
-      "grooming": "Curly coat needs gentle routine care.",
-      "shedding_level": "Lower loose-hair burden is an editorial coat estimate.",
-      "dog_friendly": "Social parent-breed context may support compatible dogs.",
-      "social_needs": "Affectionate companion context suggests frequent company."
+      "adaptability": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "affection_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "energy_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "intelligence": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "child_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "vocalisation": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "grooming": "Related LaPerm guidance supports light, gentle coat care; adapt to curl, coat length and actual tangles.",
+      "shedding_level": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "dog_friendly": "Unavailable: corroborated evidence for this trait is insufficient; see review notes.",
+      "social_needs": "Unavailable: corroborated evidence for this trait is insufficient; see review notes."
     },
     "evidenceBasis": "related-breed",
-    "notes": "Experimental breed estimates use its documented Munchkin/LaPerm background; direct behavioural evidence remains limited."
+    "notes": "The standard documents curls and coat lengths. Gentle coat care is a related LaPerm estimate; parent-breed personalities do not establish Skookum behaviour or shedding amount."
   },
   "snow": {
     "name": "Snowshoe",
@@ -3024,6 +3962,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Loyal",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/snowshoe/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a family-oriented companion that can be shy initially and uses soft, variable vocal communication."
     },
     "sources": [
       "https://tica.org/breed/snowshoe/"
@@ -3045,30 +3994,41 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   "soko": {
     "name": "Sokoke",
     "ratings": {
-      "adaptability": 3,
+      "adaptability": 4,
       "affection_level": 4,
-      "energy_level": 3,
+      "energy_level": 4,
       "intelligence": 4,
-      "child_friendly": 3,
+      "child_friendly": 4,
       "vocalisation": 3,
       "grooming": 1,
       "shedding_level": 2,
-      "dog_friendly": 3,
+      "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/sokoke/",
+      "section": "Personality and activity level",
+      "summary": "GCCF describes family-oriented play and lively interaction; its moderate-activity overview and energetic personality account support an above-moderate estimate."
     },
     "sources": [
       "https://www.gccfcats.org/getting-a-cat/choosing/cat-breeds/sokoke/"
     ],
     "rationale": {
-      "adaptability": "Close family attachment suggests gradual introduction to changes.",
+      "adaptability": "GCCF describes ready adjustment and willingness to meet people; above-moderate flexibility is supported with individual introductions.",
       "affection_level": "Family-oriented character supports above-moderate affection.",
-      "energy_level": "Registry profile describes moderate activity.",
+      "energy_level": "GCCF's moderate-activity overview and very playful personality account support above-moderate activity without an extreme claim.",
       "intelligence": "Keen awareness and interactive learning support an above-moderate estimate.",
-      "child_friendly": "Moderate estimate; direct young-child evidence is limited.",
+      "child_friendly": "GCCF directly describes family suitability with children; the estimate assumes gentle supervised handling.",
       "vocalisation": "Moderate communication is an editorial estimate.",
       "grooming": "Close short coat is described as low maintenance.",
       "shedding_level": "Lower coat-hair burden is an editorial estimate.",
-      "dog_friendly": "Moderate estimate; direct dog-specific evidence is limited.",
+      "dog_friendly": "GCCF directly includes homes with dogs; compatibility still depends on individual introductions.",
       "social_needs": "Strong family bonds suggest frequent interaction."
     },
     "evidenceBasis": "breed-profile"
@@ -3082,10 +4042,21 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": 5,
       "child_friendly": 4,
       "vocalisation": 2,
-      "grooming": 3,
+      "grooming": 2,
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/somali/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes energetic exploration, persistent curiosity and social interaction; its silky coat is relatively easy to maintain."
     },
     "sources": [
       "https://tica.org/breed/somali/"
@@ -3097,7 +4068,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Interactive exploration supports a high editorial estimate.",
       "child_friendly": "Engaged families with respectful children can suit this active style.",
       "vocalisation": "Lower vocal demand is an editorial estimate.",
-      "grooming": "Semi-long coat needs routine combing.",
+      "grooming": "TICA describes an easy-care silky coat that rarely mats; light routine care is appropriate despite semi-long hair.",
       "shedding_level": "Moderate seasonal loose hair is an editorial estimate.",
       "dog_friendly": "Social companion character may support compatible dogs.",
       "social_needs": "Happiest with frequent company and shared activity."
@@ -3106,21 +4077,32 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "sphy": {
     "name": "Sphynx",
-    "groomingCare": "skin",
     "ratings": {
       "adaptability": 5,
       "affection_level": 5,
       "energy_level": 4,
       "intelligence": 4,
       "child_friendly": 4,
-      "vocalisation": 3,
+      "vocalisation": 4,
       "grooming": 4,
       "shedding_level": 1,
       "dog_friendly": 5,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Sociable",
+      "Curious"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/sphynx/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports lively, affectionate family involvement; PetMD additionally describes conversation throughout the day."
+    },
     "sources": [
-      "https://tica.org/breed/sphynx/"
+      "https://tica.org/breed/sphynx/",
+      "https://www.petmd.com/cat/breeds/sphynx"
     ],
     "rationale": {
       "adaptability": "Gregarious, visitor-friendly character supports household flexibility.",
@@ -3128,13 +4110,14 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Agile, lively play supports high activity.",
       "intelligence": "Opening cupboards and interactive play support an above-moderate estimate.",
       "child_friendly": "Friendly family character can suit carefully supervised children.",
-      "vocalisation": "Moderate communication is an editorial estimate.",
+      "vocalisation": "PetMD describes chatting throughout the day; this supports an above-moderate communication estimate rather than the API's Quiet label.",
       "grooming": "Hairlessness requires skin and ear maintenance despite little brushing.",
       "shedding_level": "Little coat hair to shed; not an allergen claim.",
       "dog_friendly": "Profile explicitly includes compatibility with dogs.",
       "social_needs": "Strong desire for constant involvement supports high social needs."
     },
-    "evidenceBasis": "breed-profile"
+    "evidenceBasis": "breed-profile",
+    "groomingCare": "skin"
   },
   "suph": {
     "name": "Suphalak",
@@ -3149,6 +4132,16 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/suphalak-cat/",
+      "section": "Personality and activity level",
+      "summary": "The companion profile supports social interaction and ordinary play; the WCF conformation standard does not itself establish temperament."
     },
     "sources": [
       "https://www.catster.com/cat-breeds/suphalak-cat/",
@@ -3183,6 +4176,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 5
     },
+    "temperamentLabels": [
+      "Active",
+      "Affectionate",
+      "Interactive",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/thai/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports an energetic, socially involved and vocal companion."
+    },
     "sources": [
       "https://tica.org/breed/thai/"
     ],
@@ -3213,6 +4217,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 2,
       "dog_friendly": 5,
       "social_needs": 5
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Sociable",
+      "Playful",
+      "Talkative"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/tonkinese/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes conversational but less insistent vocal behaviour than the Siamese, with lap contact and games."
     },
     "sources": [
       "https://tica.org/breed/tonkinese/"
@@ -3245,6 +4260,15 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 3,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Affectionate",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/toybob/",
+      "section": "Personality and activity level",
+      "summary": "The short direct profile describes affectionate companionship and play; no extra label is added just to reach a count."
+    },
     "sources": [
       "https://tica.org/breed/toybob/"
     ],
@@ -3276,8 +4300,20 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Adaptable",
+      "Calm",
+      "Interactive",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/toyger/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes a laidback, trainable companion with ordinary play; quiet temperament is not treated as proof of a silent voice."
+    },
     "sources": [
-      "https://tica.org/breed/toyger/"
+      "https://tica.org/breed/toyger/",
+      "https://www.petmd.com/cat/breeds/toyger"
     ],
     "rationale": {
       "adaptability": "Easygoing, calm companion character supports broad household flexibility.",
@@ -3285,7 +4321,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "energy_level": "Active games without exceptionally intense energy.",
       "intelligence": "Trick learning and agility support an above-moderate estimate.",
       "child_friendly": "Companion profile can suit respectful children.",
-      "vocalisation": "Quiet temperament supports lower vocalization.",
+      "vocalisation": "PetMD describes greetings but not exceptional chattiness, supporting a lower communication estimate independently of calm temperament.",
       "grooming": "Short coat needs minimal routine grooming.",
       "shedding_level": "Lower coat-hair burden is an editorial estimate.",
       "dog_friendly": "Easygoing sociability may support compatible dogs.",
@@ -3307,6 +4343,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": 4,
       "social_needs": 4
     },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Playful",
+      "Intelligent"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/turkish-angora/",
+      "section": "Personality and activity level",
+      "summary": "TICA supports athletic exploration and learning; the silky semi-long coat has relatively light maintenance needs."
+    },
     "sources": [
       "https://tica.org/breed/turkish-angora/"
     ],
@@ -3317,7 +4364,7 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Agility, fetching and learning commands support a high estimate.",
       "child_friendly": "Older respectful children better match its active, assertive style.",
       "vocalisation": "Moderate communication is an editorial estimate.",
-      "grooming": "Fine silky coat needs light routine combing.",
+      "grooming": "TICA recommends a weekly comb-through for a fine silky coat that rarely mats; light routine care reflects the source.",
       "shedding_level": "Moderate seasonal loose hair is an editorial estimate.",
       "dog_friendly": "Profile includes dogs as possible companions.",
       "social_needs": "Best suited to regular human or compatible-pet company."
@@ -3334,9 +4381,20 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "child_friendly": 3,
       "vocalisation": 3,
       "grooming": 2,
-      "shedding_level": 3,
+      "shedding_level": 2,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Active",
+      "Curious",
+      "Playful",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://tica.org/breed/turkish-van/",
+      "section": "Personality and activity level",
+      "summary": "TICA describes vigorous activity and selective close bonds; a dislike of being carried is not lack of affection."
     },
     "sources": [
       "https://tica.org/breed/turkish-van/"
@@ -3348,8 +4406,8 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "intelligence": "Interactive problem-solving supports a high estimate.",
       "child_friendly": "Respectful older children better suit its handling preferences.",
       "vocalisation": "Moderate communication is an editorial estimate.",
-      "grooming": "Semi-long coat without a heavy undercoat needs routine combing.",
-      "shedding_level": "Seasonal coat variation supports moderate shedding.",
+      "grooming": "TICA describes an easy-care single coat with weekly combing, increasing care when the winter coat is heavier.",
+      "shedding_level": "TICA explicitly says the coat does not shed much; seasonal variation does not establish a high overall shedding burden.",
       "dog_friendly": "Social character may support compatible dogs.",
       "social_needs": "Requires frequent family attention and interaction."
     },
@@ -3357,7 +4415,6 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   },
   "ukra": {
     "name": "Ukrainian Levkoy",
-    "groomingCare": "skin",
     "ratings": {
       "adaptability": 4,
       "affection_level": 5,
@@ -3369,6 +4426,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 1,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Sociable",
+      "Playful"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.catster.com/cat-breeds/ukrainian-levkoy-cat/",
+      "section": "Personality and activity level",
+      "summary": "The profile describes active exploration and company; the folded-ear or bare-skin appearance does not establish docility."
     },
     "sources": [
       "https://www.catster.com/cat-breeds/ukrainian-levkoy-cat/"
@@ -3385,7 +4453,8 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "dog_friendly": "Social disposition may support compatible dogs.",
       "social_needs": "Frequent family interaction is desirable."
     },
-    "evidenceBasis": "breed-profile"
+    "evidenceBasis": "breed-profile",
+    "groomingCare": "skin"
   },
   "ycho": {
     "name": "York Chocolate",
@@ -3400,6 +4469,17 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
       "shedding_level": 3,
       "dog_friendly": 4,
       "social_needs": 4
+    },
+    "temperamentLabels": [
+      "Affectionate",
+      "Curious",
+      "Playful",
+      "Loyal"
+    ],
+    "temperamentEvidence": {
+      "source": "https://www.petmd.com/cat/breeds/c_ct_york_chocolate",
+      "section": "Personality and activity level",
+      "summary": "PetMD describes household participation, close familiar bonds and hunting-style play."
     },
     "sources": [
       "https://www.petmd.com/cat/breeds/c_ct_york_chocolate"
@@ -3420,11 +4500,15 @@ export const breedRatings: Record<string, BreedRatingEntry> = {
   }
 };
 
-export function withLocalRatings<T extends Breed>(breed: T): T {
-  if (excludedBreedRatings[breed.id]) {
-    const unavailable = Object.fromEntries(ratingAttributes.map(({ key }) => [key, undefined]));
-    return { ...breed, ...unavailable };
-  }
-  const entry = breedRatings[breed.id];
-  return entry ? { ...breed, ...entry.ratings } : breed;
+export function withLocalBreedTraits<T extends Breed>(breed: T): T {
+  const entry = Object.prototype.hasOwnProperty.call(breedRatings, breed.id)
+    ? breedRatings[breed.id] : undefined;
+  const unavailable = Object.fromEntries(ratingAttributes.map(({ key }) => [key, null]));
+  // Apply the same reviewed data to list, search, detail and quiz inputs.
+  // Raw API temperament can contain care instructions or malformed CSV fields.
+  return {
+    ...breed,
+    ...(entry?.ratings ?? unavailable),
+    temperament: entry?.temperamentLabels.join(', ') ?? '',
+  };
 }

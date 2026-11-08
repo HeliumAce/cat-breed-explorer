@@ -10,7 +10,7 @@ const server = await createServer({
 after(() => server.close());
 const service = await server.ssrLoadModule('/src/services/breed-service.ts');
 const { calculateBreedMatches } = await server.ssrLoadModule('/src/utils/quiz-matching.ts');
-const { withLocalRatings } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
+const { withLocalBreedTraits } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
 
 const image = { id: 'api-photo', url: 'https://example.test/api-photo.jpg', width: 400, height: 400 };
 const breed = { id: 'abys', name: 'Abyssinian', image };
@@ -30,7 +30,7 @@ test('the catalogue excludes missing and empty images without stock-photo except
 });
 
 test('an API reference image is resolved before a breed enters the catalogue and quiz', async (t) => {
-  const upstream = { id: 'mala', name: 'Malayan', reference_image_id: 'api-photo' };
+  const upstream = { id: 'ebur', name: 'European Burmese', reference_image_id: 'api-photo' };
   const requests = [];
   t.mock.method(globalThis, 'fetch', async (url) => {
     requests.push(String(url));
@@ -38,7 +38,7 @@ test('an API reference image is resolved before a breed enters the catalogue and
   });
 
   const list = await service.fetchBreeds();
-  assert.deepEqual(list.map(breed => breed.id), ['mala']);
+  assert.deepEqual(list.map(breed => breed.id), ['ebur']);
   assert.deepEqual(list[0].image, image);
   assert.equal(requests.length, 2);
   assert.ok(requests[1].endsWith('/images/api-photo') || requests[1].endsWith('/breed-image?id=api-photo'));
@@ -61,7 +61,7 @@ test('failed or incomplete reference lookups exclude only the affected breeds', 
 test('API image additions and removals automatically change catalogue and quiz eligibility', async (t) => {
   let available = false;
   t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify([
-    { id: 'mala', name: 'Malayan', ...(available ? { image } : {}) },
+    { id: 'ebur', name: 'European Burmese', ...(available ? { image } : {}) },
   ])));
 
   assert.deepEqual(await service.fetchBreeds(), []);
@@ -69,8 +69,8 @@ test('API image additions and removals automatically change catalogue and quiz e
 
   available = true;
   const list = await service.fetchBreeds();
-  assert.deepEqual(list.map(breed => breed.id), ['mala']);
-  assert.deepEqual(calculateBreedMatches(answers, list).map(breed => breed.id), ['mala']);
+  assert.deepEqual(list.map(breed => breed.id), ['ebur']);
+  assert.deepEqual(calculateBreedMatches(answers, list).map(breed => breed.id), ['ebur']);
 
   available = false;
   assert.deepEqual(await service.fetchBreeds(), []);
@@ -78,7 +78,7 @@ test('API image additions and removals automatically change catalogue and quiz e
 
 test('quiz matching also rejects image-less input passed directly to it', () => {
   const withoutImage = { id: 'ragd', name: 'Ragdoll', reference_image_id: 'unresolved-photo' };
-  const list = [breed, withoutImage].map(withLocalRatings);
+  const list = [breed, withoutImage].map(withLocalBreedTraits);
   assert.deepEqual(calculateBreedMatches(answers, list).map(breed => breed.id), ['abys']);
 });
 

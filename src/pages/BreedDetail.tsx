@@ -72,7 +72,7 @@ const BreedDetail = () => {
                 
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{breed.name}</h1>
                 
-                <div className="flex flex-wrap gap-4 mb-6">
+                {breed.temperament && <div className="flex flex-wrap gap-4 mb-6" role="group" aria-label="Temperament">
                   {breed.temperament.split(", ").map((trait) => (
                     <div 
                       key={trait}
@@ -81,7 +81,7 @@ const BreedDetail = () => {
                       {trait}
                     </div>
                   ))}
-                </div>
+                </div>}
                 
                 <div className="prose prose-amber max-w-none mb-8">
                   <p className="text-muted-foreground">{breed.description}</p>

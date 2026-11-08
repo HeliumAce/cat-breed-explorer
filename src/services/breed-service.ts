@@ -1,6 +1,6 @@
 
 import { Breed, BreedWithImage, Image } from '@/types/breeds';
-import { withLocalRatings } from '@/data/breed-ratings';
+import { withLocalBreedTraits } from '@/data/breed-ratings';
 import { API_KEY, API_URL } from '@/config/api-config';
 import { hasBreedImage } from '@/utils/breed-images';
 
@@ -24,7 +24,7 @@ export const fetchBreeds = async (): Promise<BreedWithImage[]> => {
 
   const breeds: Breed[] = await response.json();
 
-  const resolvedBreeds = await Promise.all(breeds.map(withLocalRatings).map(resolveBreedImage));
+  const resolvedBreeds = await Promise.all(breeds.map(withLocalBreedTraits).map(resolveBreedImage));
   return resolvedBreeds.filter(hasBreedImage);
 };
 
@@ -70,5 +70,5 @@ export const fetchBreedById = async (breedId: string): Promise<Breed> => {
     throw new Error('Failed to fetch cat breed');
   }
 
-  return resolveBreedImage(withLocalRatings(await response.json()));
+  return resolveBreedImage(withLocalBreedTraits(await response.json()));
 };

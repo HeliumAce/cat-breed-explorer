@@ -14,7 +14,7 @@ const server = await createServer({
 });
 after(() => server.close());
 const { breedContent, breedContentSources, breedContentReviewGaps, getBreedContent } = await server.ssrLoadModule('/src/data/breed-content.ts');
-const { ratingAttributes, excludedBreedRatings, breedRatingAliases } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
+const { ratingAttributes, excludedBreedRatings, breedRatingAliases, withLocalBreedTraits } = await server.ssrLoadModule('/src/data/breed-ratings.ts');
 const { BreedEditorialContent } = await server.ssrLoadModule('/src/components/BreedEditorialContent.tsx');
 const { default: BreedDetail } = await server.ssrLoadModule('/src/pages/BreedDetail.tsx');
 const catalogue = JSON.parse(await readFile(new URL('./fixtures/breed-catalogue.json', import.meta.url), 'utf8'));
@@ -23,11 +23,11 @@ const escapeHtml = value => renderToStaticMarkup(createElement('span', null, val
 
 function renderDetail(id, extra = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } });
-  client.setQueryData(['breed', id], {
-    id, name: breedContent[id]?.name ?? 'New API breed', description: 'Overview supplied by the API.',
+  client.setQueryData(['breed', id], withLocalBreedTraits({
+    id, name: getBreedContent(id)?.name ?? 'New API breed', description: 'Overview supplied by the API.',
     origin: 'API origin', life_span: '12-16', temperament: 'API temperament',
     weight: { metric: '3-5', imperial: '7-11' }, ...extra,
-  });
+  }));
   try {
     return renderToStaticMarkup(createElement(QueryClientProvider, { client },
       createElement(StaticRouter, { location: `/breeds/${id}` },
@@ -133,7 +133,7 @@ test('unreviewed and new API breeds keep their overview without fabricated facts
     assert.equal(renderToStaticMarkup(createElement(BreedEditorialContent, { content: getBreedContent(id) })), '');
     const html = renderDetail(id, { intelligence: 5, affection_level: 5, energy_level: 5, dog_friendly: 5 });
     assert.match(html, /Overview supplied by the API\./);
-    assert.match(html, /aria-label="Energy: 5 out of 5 stars"/);
+    assert.match(html, /Rating unavailable/);
     assert.doesNotMatch(html, /Fun facts|Bonding tips|exceptional intelligence|one of the most affectionate|Source:/);
   }
 });
