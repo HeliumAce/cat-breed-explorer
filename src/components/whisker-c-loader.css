@@ -1,0 +1,13 @@
+.whisker-c-loader { display:block; flex:none; overflow:visible; }
+.whisker-c-loader .wc-stroke { stroke-dasharray:1; stroke-dashoffset:0; }
+.whisker-c-loader .wc-accents { animation:wc-reset 2.4s ease-in-out infinite; }
+.whisker-c-loader .wc-whisker-1 { animation:wc-draw-1 2.4s ease-in-out infinite; }
+.whisker-c-loader .wc-whisker-2 { animation:wc-draw-2 2.4s ease-in-out infinite; }
+.whisker-c-loader .wc-whisker-3 { animation:wc-draw-3 2.4s ease-in-out infinite; }
+.whisker-c-loader .wc-ears { animation:wc-draw-ears 2.4s ease-in-out infinite; }
+@keyframes wc-draw-1 { 0% {stroke-dashoffset:1;opacity:0} 1% {opacity:1} 14%,100% {stroke-dashoffset:0;opacity:1} }
+@keyframes wc-draw-2 { 0%,6% {stroke-dashoffset:1;opacity:0} 7% {opacity:1} 20%,100% {stroke-dashoffset:0;opacity:1} }
+@keyframes wc-draw-3 { 0%,12% {stroke-dashoffset:1;opacity:0} 13% {opacity:1} 26%,100% {stroke-dashoffset:0;opacity:1} }
+@keyframes wc-draw-ears { 0%,28% {stroke-dashoffset:1;opacity:0} 29% {opacity:1} 62%,100% {stroke-dashoffset:0;opacity:1} }
+@keyframes wc-reset { 0%,77% {opacity:1} 90%,100% {opacity:0} }
+@media (prefers-reduced-motion:reduce) { .whisker-c-loader .wc-accents, .whisker-c-loader .wc-stroke { animation:none; opacity:1; stroke-dashoffset:0; } }
