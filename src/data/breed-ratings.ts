@@ -18,12 +18,12 @@ export type TemperamentLabel = typeof temperamentLabelVocabulary[number];
 
 export const ratingAttributes: { key: keyof TraitRatings; label: string; display: 'stars' | 'scale' }[] = [
   { key: 'adaptability', label: 'Adaptability', display: 'stars' },
-  { key: 'affection_level', label: 'Affection', display: 'stars' },
-  { key: 'energy_level', label: 'Energy', display: 'stars' },
-  { key: 'intelligence', label: 'Intelligence', display: 'stars' },
-  { key: 'child_friendly', label: 'Child friendly', display: 'stars' },
-  { key: 'vocalisation', label: 'Vocalization', display: 'stars' },
-  { key: 'dog_friendly', label: 'Dog friendliness', display: 'stars' },
+  { key: 'affection_level', label: 'Affection', display: 'scale' },
+  { key: 'energy_level', label: 'Energy', display: 'scale' },
+  { key: 'intelligence', label: 'Intelligence', display: 'scale' },
+  { key: 'child_friendly', label: 'Child friendly', display: 'scale' },
+  { key: 'vocalisation', label: 'Vocalization', display: 'scale' },
+  { key: 'dog_friendly', label: 'Dog friendliness', display: 'scale' },
   { key: 'shedding_level', label: 'Shedding', display: 'scale' },
   { key: 'grooming', label: 'Grooming needs', display: 'scale' },
   { key: 'social_needs', label: 'Social needs', display: 'scale' },

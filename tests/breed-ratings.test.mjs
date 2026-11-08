@@ -25,7 +25,7 @@ const coreBreed = {
   image: { id: 'cat-image', url: 'https://example.test/cat.jpg', width: 400, height: 400 },
 };
 
-test('list and detail requests receive the same local star ratings', async (t) => {
+test('list and detail requests receive the same local trait ratings', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url) => new Response(JSON.stringify(
     String(url).endsWith('/breeds') ? [coreBreed] : coreBreed,
   )));
@@ -176,16 +176,21 @@ test('multiple household members cannot produce a score above 100', () => {
   assert.equal(results.find(result => result.id === 'ragd').matchPercentage, 90);
 });
 
-test('star cards fill the supplied score and expose an accessible label', () => {
-  const markup = renderToStaticMarkup(createElement(BreedRating, { label: 'Affection', value: 4 }));
+test('adaptability keeps stars and exposes an accessible label', () => {
+  const starAttributes = ratingAttributes.filter(attribute => attribute.display === 'stars');
+  assert.deepEqual(starAttributes.map(attribute => attribute.key), ['adaptability']);
+  const markup = renderToStaticMarkup(createElement(BreedRating, { ...starAttributes[0], value: 4 }));
   assert.equal((markup.match(/fill-amber-500/g) || []).length, 4);
   assert.equal((markup.match(/<svg/g) || []).length, 5);
-  assert.match(markup, /aria-label="Affection: 4 out of 5 stars"/);
+  assert.match(markup, /aria-label="Adaptability: 4 out of 5 stars"/);
 });
 
-test('need scales show Low to High with a meter instead of stars', () => {
+test('all nine attributes show Low to High with a meter instead of stars', () => {
   const scaleAttributes = ratingAttributes.filter(attribute => attribute.display === 'scale');
-  assert.deepEqual(scaleAttributes.map(attribute => attribute.key).sort(), ['grooming', 'shedding_level', 'social_needs']);
+  assert.deepEqual(scaleAttributes.map(attribute => attribute.key), [
+    'affection_level', 'energy_level', 'intelligence', 'child_friendly', 'vocalisation',
+    'dog_friendly', 'shedding_level', 'grooming', 'social_needs',
+  ]);
   for (const { label } of scaleAttributes) {
     for (const value of [1, 3, 5]) {
       const markup = renderToStaticMarkup(createElement(BreedRating, { label, value, display: 'scale' }));
